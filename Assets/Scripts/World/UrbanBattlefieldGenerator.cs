@@ -30,6 +30,11 @@ namespace WarBattleMobile.World
         [SerializeField, Range(0, 80)] private int roadDamagePatches = 24;
         [SerializeField, Range(0, 40)] private int roadPotholes = 10;
 
+        [Header("Street Props")]
+        [SerializeField] private bool addStreetProps = true;
+        [SerializeField, Range(0, 24)] private int streetLampCount = 10;
+        [SerializeField, Range(0, 18)] private int warningSignCount = 6;
+
         [Header("Objectives")]
         [SerializeField] private int capturePointCount = 3;
         [SerializeField, Min(1f)] private float captureRadius = 11f;
@@ -52,6 +57,8 @@ namespace WarBattleMobile.World
         private Material asphaltPatchMaterial;
         private Material potholeMaterial;
         private Material curbMaterial;
+        private Material lampMaterial;
+        private Material signMaterial;
 
         private float MapSize => blocksPerSide * blockSize + (blocksPerSide + 1) * roadWidth;
 
@@ -81,6 +88,7 @@ namespace WarBattleMobile.World
             BuildRoadGrid(size);
             if (addRoadMarkings) BuildRoadMarkings(size);
             if (addRoadSurfaceWear) BuildRoadSurfaceWear(size);
+            if (addStreetProps) BuildStreetProps(size);
             BuildCityBlocks();
             if (addStreetCover) BuildStreetCover();
             if (addBoundaryWalls) BuildBoundary(size);
@@ -114,6 +122,8 @@ namespace WarBattleMobile.World
             asphaltPatchMaterial = MakeMaterial(new Color(0.085f, 0.09f, 0.095f));
             potholeMaterial = MakeMaterial(new Color(0.045f, 0.05f, 0.055f));
             curbMaterial = MakeMaterial(new Color(0.31f, 0.31f, 0.29f));
+            lampMaterial = MakeMaterial(new Color(0.16f, 0.17f, 0.17f));
+            signMaterial = MakeMaterial(new Color(0.72f, 0.48f, 0.12f));
         }
 
         private Material MakeMaterial(Color color)
@@ -340,6 +350,71 @@ namespace WarBattleMobile.World
                 CreateCube("Street Curb", new Vector3(coordinate - edge, 0.16f, 0f),
                     new Vector3(0.32f, 0.28f, size + roadWidth), curbMaterial, false);
             }
+        }
+
+
+        private void BuildStreetProps(float size)
+        {
+            float half = size * 0.5f;
+            float edge = roadWidth * 0.5f - 1.15f;
+
+            for (int i = 0; i < streetLampCount; i++)
+            {
+                bool horizontal = Random.value > 0.5f;
+                float along = Random.Range(-half + 5f, half - 5f);
+                float side = Random.value > 0.5f ? edge : -edge;
+                Vector3 basePosition = horizontal
+                    ? new Vector3(along, 0f, side)
+                    : new Vector3(side, 0f, along);
+
+                // A simple two-piece lamp silhouette. Decorative colliders are
+                // intentionally omitted so props cannot snag mobile tank movement.
+                CreateCylinder("Street Lamp Pole",
+                    basePosition + new Vector3(0f, 3.1f, 0f),
+                    new Vector3(0.16f, 3.1f, 0.16f), lampMaterial);
+                Vector3 armOffset = horizontal
+                    ? new Vector3(0f, 5.9f, side > 0f ? -0.65f : 0.65f)
+                    : new Vector3(side > 0f ? -0.65f : 0.65f, 5.9f, 0f);
+                CreateCube("Street Lamp Arm", basePosition + armOffset,
+                    horizontal ? new Vector3(0.14f, 0.14f, 1.25f) :
+                    new Vector3(1.25f, 0.14f, 0.14f), lampMaterial, false);
+                CreateCube("Street Lamp Head", basePosition + armOffset +
+                    new Vector3(0f, -0.12f, 0f),
+                    new Vector3(0.55f, 0.18f, 0.38f), rooftopMaterial, false);
+            }
+
+            for (int i = 0; i < warningSignCount; i++)
+            {
+                bool horizontal = Random.value > 0.5f;
+                float along = Random.Range(-half + 6f, half - 6f);
+                float side = Random.value > 0.5f ? edge : -edge;
+                Vector3 basePosition = horizontal
+                    ? new Vector3(along, 0f, side)
+                    : new Vector3(side, 0f, along);
+
+                CreateCylinder("Road Sign Post", basePosition + new Vector3(0f, 1.35f, 0f),
+                    new Vector3(0.12f, 1.35f, 0.12f), lampMaterial);
+                GameObject sign = CreateCube("Damaged Warning Sign",
+                    basePosition + new Vector3(0f, 2.55f, 0f),
+                    new Vector3(0.95f, 0.75f, 0.09f), signMaterial, false);
+                sign.transform.rotation = Quaternion.Euler(
+                    Random.Range(-4f, 4f), Random.Range(0f, 360f), Random.Range(-9f, 9f));
+            }
+        }
+
+        private GameObject CreateCylinder(string objectName, Vector3 position,
+            Vector3 scale, Material material)
+        {
+            GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            cylinder.name = objectName;
+            cylinder.transform.SetParent(generatedRoot, false);
+            cylinder.transform.localPosition = position;
+            cylinder.transform.localScale = scale;
+            Renderer renderer = cylinder.GetComponent<Renderer>();
+            if (renderer != null) renderer.sharedMaterial = material;
+            Collider collider = cylinder.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            return cylinder;
         }
 
         private void CreateRubble(Vector3 buildingCenter, float width, float depth)
