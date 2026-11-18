@@ -1,0 +1,44 @@
+name: Unity Android build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-build:
+    name: Generate project and build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required Unity license secret
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "::error::Missing UNITY_LICENSE repository secret. Add a valid Unity Personal license file contents under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Android APK with Unity
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: .
+          unityVersion: 6000.0.35f1
+          targetPlatform: Android
+          buildMethod: WarBattleMobile.EditorTools.WarBattleMobileCi.BuildAndroid
+          buildsPath: Build
+          buildName: WAR-BATTLE-MOBILE
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WAR-BATTLE-MOBILE-Android
+          path: Build/Android/WAR-BATTLE-MOBILE.apk
+          if-no-files-found: error
+          retention-days: 14
