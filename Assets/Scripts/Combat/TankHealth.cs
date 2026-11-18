@@ -90,7 +90,7 @@ namespace WarBattleMobile.Combat
 
         public void ApplyDamage(TankModule module, float damage)
         {
-            if (IsDestroyed || damage <= 0f) return;
+            if (IsDestroyed || damage <= 0f || float.IsNaN(damage) || float.IsInfinity(damage)) return;
 
             if (!states.TryGetValue(module, out TankModuleState state))
             {
