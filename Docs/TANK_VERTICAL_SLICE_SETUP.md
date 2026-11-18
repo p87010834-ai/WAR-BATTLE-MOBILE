@@ -238,3 +238,13 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - When the player tank spawns or respawns, the manager now binds its TankHealth, TankWeapon, and TankFaction to `TankCombatHUD`. The HUD also displays VICTORY, DEFEAT, or DRAW when `TankMatchRules.MatchEnded` fires.
 - `CapturePoint` tracks the number of colliders belonging to each tank inside its trigger. A tank with multiple non-trigger colliders no longer leaves the capture zone's occupant list when only one collider exits.
 - The repository still does not contain a configured Unity scene, tank prefabs, a projectile prefab, production art/audio assets, a minimap camera/RenderTexture, or Android build settings. These must be created/assigned in Unity and validated in Play Mode. A successful GitHub write is not evidence of Unity compilation or gameplay testing.
+
+
+## 22. Match scoring and capture consistency fixes
+
+- Match score now accumulates fractional points independently for Blue and Red, multiplied by the number of capture points each team currently owns. A team no longer receives a full point for time accrued before it captured an objective.
+- `ScoreChanged` now reports the team whose score actually increased.
+- Starting a match refreshes the capture-point list, so objectives generated before a manually started match are included.
+- Capture progress is now owned by the attacking team. If the opposing team takes over an empty or uncontested zone, it starts from zero rather than inheriting the previous side's partial capture.
+- Capture zones count overlapping colliders per tank. A vehicle with multiple colliders remains present until its final collider leaves the trigger.
+- These logic fixes are source-reviewed and stored in GitHub; they still require Unity compilation and Play Mode tests with real tank colliders and scene timing.
