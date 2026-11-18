@@ -300,3 +300,12 @@ Direct shell impacts on vehicles assigned to the firing tank's team are ignored 
 Tank shell impact damage is resolved against the struck armour zone using impact angle, effective armour thickness and remaining penetration. The default shell blast is visual/environmental and does not apply vehicle splash damage, so a shell that fails to penetrate cannot still damage tank hulls through the blast-radius path. The projectile exposes an explicit `blastDamagesVehicles` option for future explosive ammunition types; it is disabled by default. Verify penetration and ricochet behavior in Unity Play Mode before tuning final ammunition values.
 
 The follow camera now identifies its own vehicle through the owning `TankHealth` component, rather than checking only the camera-target transform. This prevents sibling hull/armour hitboxes from pushing the camera forward while still allowing collision avoidance against terrain and other vehicles.
+
+
+## Bot navigation, score-limit, and match-end lifecycle safeguards
+
+- Bot obstacle avoidance now sorts forward ray hits by distance and skips colliders belonging to the bot itself. This avoids the bot treating its own hitboxes as the first obstacle and makes the first external obstruction drive its reverse-and-steer response.
+- Bot target selection now excludes disabled/inactive factions, neutral teams, and disabled or destroyed tank-health components.
+- Match scores are capped at the configured score limit even when a long frame or several owned capture points produce multiple whole points at once. Both teams' score updates are applied before the winner is evaluated, preserving a draw if both reach the limit in the same update.
+- The spawn manager discovers the scene's match rules when no reference is assigned. Initial-spawn retries, new spawns, and delayed respawns stop once the match has ended. If no match-rules component exists, the prototype spawn behavior remains unchanged.
+- These are source-level lifecycle safeguards. Verify bot obstacle behavior, simultaneous score-limit cases, and end-of-match respawn lockout in Unity Play Mode; no Unity compilation or gameplay test is claimed by this change.
