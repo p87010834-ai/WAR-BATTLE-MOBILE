@@ -130,8 +130,7 @@ namespace WarBattleMobile.World
             {
                 if (point == null || point.Team != team) continue;
                 Vector3 candidatePosition = point.transform.position + spawnOffset;
-                if (Physics.CheckSphere(candidatePosition, clearanceRadius,
-                    obstructionLayers, QueryTriggerInteraction.Ignore))
+                if (IsSpawnBlocked(candidatePosition))
                     continue;
 
                 float nearestEnemy = float.MaxValue;
@@ -160,12 +159,20 @@ namespace WarBattleMobile.World
                 {
                     if (point == null || point.Team != team) continue;
                     Vector3 candidatePosition = point.transform.position + spawnOffset;
-                    if (!Physics.CheckSphere(candidatePosition, clearanceRadius,
-                        obstructionLayers, QueryTriggerInteraction.Ignore))
+                    if (!IsSpawnBlocked(candidatePosition))
                         return point;
                 }
             }
             return best;
+        }
+
+        private bool IsSpawnBlocked(Vector3 position)
+        {
+            // Lift the clearance sphere so the ground plane beneath the vehicle
+            // does not count as an obstruction.
+            Vector3 sphereCenter = position + Vector3.up * clearanceRadius;
+            return Physics.CheckSphere(sphereCenter, clearanceRadius,
+                obstructionLayers, QueryTriggerInteraction.Ignore);
         }
 
         private void OnVehicleDestroyed(VehicleSlot slot, GameObject destroyedVehicle)
@@ -181,25 +188,14 @@ namespace WarBattleMobile.World
         {
             yield return new WaitForSeconds(respawnDelay);
             if (this == null || !isActiveAndEnabled) yield break;
-            SpawnSlot(slot);
-            if (slot.Instance == null)
+            while (slot.Instance == null && this != null && isActiveAndEnabled)
             {
-                // Retry later if all spawn locations are currently unsafe.
-                yield return new WaitForSeconds(2f);
                 slot.RespawnQueued = false;
                 SpawnSlot(slot);
+                if (slot.Instance == null)
+                    yield return new WaitForSeconds(2f);
             }
         }
 
-        private void OnDestroy()
-        {
-            foreach (VehicleSlot slot in slots)
-            {
-                if (slot.Instance == null) continue;
-                TankHealth health = slot.Instance.GetComponent<TankHealth>();
-                if (health != null)
-                    health.TankDestroyed = null;
-            }
-        }
     }
 }
