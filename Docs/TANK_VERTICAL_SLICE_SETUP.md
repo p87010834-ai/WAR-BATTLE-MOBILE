@@ -158,3 +158,13 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - In the Unity Editor/standalone, hold the right mouse button and move to orbit; use the mouse wheel to zoom.
 - Keep the camera's collision layer mask configured for buildings and terrain. Exclude the player's own vehicle layer if possible to avoid camera collision against its own colliders.
 - This camera is a functional prototype. Shoulder swapping, camera shake, aim reticle, lock-on, accessibility settings, cinematic transitions, and physical-device tuning remain future work. The camera and controls have not yet been compiled or tested in Unity.
+
+
+## 14. Tank combat audio and projectile sound
+
+- Add `TankAudioController` to each tank root (player and bot). It creates spatial AudioSources for the engine and track loops automatically; assign loop clips and one-shot clips in the Inspector.
+- Assign engine idle/moving loop audio to `Engine Loop` and continuous track movement audio to `Track Loop`. Engine pitch responds to movement speed/throttle; track audio pauses when the tank is stationary.
+- Assign `Cannon Fire`, `Reload Start`, `Armour Hit`, `Module Disabled`, and `Vehicle Destroyed` clips. Cannon and reload sounds play when a round is fired; damage and module events trigger their corresponding sounds.
+- On the projectile prefab's `TankProjectile`, optionally assign `Flight Loop Clip` for a moving spatial shell whistle, `Impact Clip` for a normal impact, and `Ricochet Clip` for a ricochet. The flight loop is attached to the projectile so it moves through the world; impact audio is played at the collision position.
+- Use short, clean, seamless loop clips for engines/tracks and mono clips for positional one-shots where possible. Import distant ambience as stereo only when it is intended to be non-positional. Tune AudioSource min/max distance and volume in the Inspector for mobile speakers/headphones.
+- This system provides audio hooks and runtime sources, not bundled sound assets. The project still needs properly licensed/created audio clips assigned in prefabs, plus mixer groups, snapshots, audio pooling, performance profiling, and Android device mix testing. No sound assets are included automatically.
