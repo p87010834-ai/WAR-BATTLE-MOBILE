@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using WarBattleMobile.Combat;
 
 namespace WarBattleMobile.World
@@ -128,8 +129,17 @@ namespace WarBattleMobile.World
 
         private Material MakeMaterial(Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            // URP/Lit renders correctly only when a URP asset is active. If the
+            // project is opened before pipeline setup, keep the greybox visible
+            // with the built-in Standard shader instead of creating pink materials.
+            bool urpActive = GraphicsSettings.currentRenderPipeline != null;
+            Shader shader = urpActive
+                ? Shader.Find("Universal Render Pipeline/Lit")
+                : Shader.Find("Standard");
             if (shader == null) shader = Shader.Find("Standard");
+            if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+                throw new System.InvalidOperationException("No compatible Lit shader is available.");
             Material material = new Material(shader);
             material.color = color;
             return material;
