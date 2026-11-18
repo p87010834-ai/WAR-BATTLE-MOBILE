@@ -64,7 +64,7 @@ The ammunition rack is disabled without an automatic explosion in this prototype
 - Left virtual joystick: call `TankMovement.SetMoveInput(Vector2)` continuously; send zero when released.
 - Right aiming touch area: call `TankTurretAim.SetAimScreenPosition(Vector2)` with screen pixel coordinates.
 - Fire button: call `TankWeapon.Fire()` on button press.
-- Subscribe to `TankWeapon.AmmunitionChanged` for ammunition/reload UI.
+- Subscribe to `TankWeapon.AmmunitionChanged` for ammunition/reload UI. The weapon also exposes `ReloadProgress01` (0 to 1) and `IsReloading` for a live reload bar.
 - Subscribe to `TankHealth.ModuleHealthChanged` and `ModuleDisabled` to display module damage.
 
 ## 6. Current limitations and next tasks
@@ -101,3 +101,14 @@ AI limitations: target selection is nearest-enemy only; driving uses simple forw
 - Bots seek the nearest neutral or enemy-owned capture point when they have no active enemy target. They stop inside the objective radius and contest it through team presence.
 
 Prototype limitations: no spawn system, respawn flow, team balancing, round reset, overtime, network authority, NavMesh routing, or sophisticated multi-bot roles. Simple AI may get stuck on complex geometry. Match rules collect capture points once when the scene starts, so create all points before the match begins.
+
+
+## 9. Runtime combat HUD
+
+- Add `TankCombatHUD` to a scene UI manager GameObject.
+- Assign the local player's `TankHealth`, `TankWeapon`, and `TankFaction` references in the Inspector. Assign the scene's `TankMatchRules`; if left empty, the HUD searches for one at startup.
+- The HUD creates its own Screen Space Overlay canvas. It displays Blue/Red score, match countdown, hull health, individual module condition, ammunition count, and reload progress.
+- The module panel shows engine, transmission, turret, gun breech, optics, ammunition rack, and both tracks. Disabled modules are marked OFFLINE.
+- For a live minimap, create a second orthographic camera looking down at the battlefield, set its target texture to a RenderTexture asset, and assign that same RenderTexture to `TankCombatHUD.minimapTexture`. Set the minimap camera's culling mask to the map/vehicle layers you want visible. If no texture is assigned, the HUD displays a setup placeholder rather than a blank map.
+- The minimap camera, RenderTexture asset, scene references, safe-area positioning, final visual styling, and device-specific scaling still require Unity Editor setup and testing.
+- This HUD uses Unity's built-in `UnityEngine.UI` legacy Text/Image components; ensure the Unity UI package is available in the project.
