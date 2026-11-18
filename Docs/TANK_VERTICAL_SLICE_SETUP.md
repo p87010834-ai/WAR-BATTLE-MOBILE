@@ -345,3 +345,10 @@ These are source-level safeguards, not proof of a working build. They still requ
 The scene validator counts living Blue and Red combat vehicles, verifies that at least one spawned vehicle carries MobileTankControls, and reports configured spawn slots that have not yet produced an active vehicle. TankSpawnManager exposes read-only configured/active slot counts for this check. Bot target evaluation caches the allied-bot list once per target refresh instead of re-querying the scene for every enemy candidate.
 
 The validator runs after scene startup (late execution order), so it can inspect the roster produced by the spawn manager. A missing team or missing player-control component is an error; temporarily unfilled spawn slots are a warning because the manager retries blocked spawns.
+
+
+## Editor asset validation menu
+
+After opening the project in Unity, run **Tools > WAR BATTLE MOBILE > Build Tank Vertical Slice** once to generate the greybox scene and placeholder prefabs. Then run **Tools > WAR BATTLE MOBILE > Validate Tank Vertical Slice Assets**. The asset validator checks that the generated scene and all three prefabs exist, the scene is enabled in Build Settings, player/bot prefabs contain their required root components and armour hitboxes, and the projectile prefab has its collider and Rigidbody.
+
+This is an Editor-side asset/reference check only. It does not compile or execute gameplay, prove that spawn positions are clear, or replace Play Mode and Android device tests. After the asset check passes, open **Assets/WarBattleMobile/Scenes/TankVerticalSlice.unity**, enter Play Mode, and inspect both the Console and the runtime **Tank Vertical Slice Validator** output.
