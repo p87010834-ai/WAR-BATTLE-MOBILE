@@ -162,7 +162,7 @@ namespace WarBattleMobile.World
                 float nearestEnemy = float.MaxValue;
                 foreach (TankFaction faction in factions)
                 {
-                    if (faction == null || faction.Team == TankTeam.Neutral || faction.Team == team)
+                    if (faction == null || faction.Team == TankTeam.Neutral || faction.Team == slot.Team)
                         continue;
                     float distance = Vector3.Distance(candidatePosition, faction.transform.position);
                     if (distance < nearestEnemy) nearestEnemy = distance;
