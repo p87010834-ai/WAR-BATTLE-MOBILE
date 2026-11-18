@@ -71,7 +71,7 @@ The ammunition rack is disabled without an automatic explosion in this prototype
 
 - Ballistics use Unity Rigidbody gravity and first-contact collision; no multi-layer penetration, fragments, spall, fuse, or server authority yet.
 - Armour and penetration calculations are gameplay approximations, not a validated real-world simulation.
-- AI navigation, match rules, capture map, HUD, minimap, touch-control prefab, automated tests, and Android device testing remain to be built.
+- Advanced AI navigation, final art, a configured minimap camera/RenderTexture, automated tests, and Android device testing remain outstanding. Core starter scripts for match rules, capture points, HUD, touch controls, and spawning are present but still need Unity scene/prefab integration.
 - These scripts have not been compiled in Unity or tested on a device.
 
 
@@ -100,7 +100,7 @@ AI limitations: target selection is nearest-enemy only; driving uses simple forw
 - Subscribe to CapturePoint.OwnershipChanged and ProgressChanged for objective markers and capture bars. Subscribe to TankMatchRules.ScoreChanged, TimeChanged, and MatchEnded for the scoreboard, timer, and result screen.
 - Bots seek the nearest neutral or enemy-owned capture point when they have no active enemy target. They stop inside the objective radius and contest it through team presence.
 
-Prototype limitations: no spawn system, respawn flow, team balancing, round reset, overtime, network authority, NavMesh routing, or sophisticated multi-bot roles. Simple AI may get stuck on complex geometry. Match rules collect capture points once when the scene starts, so create all points before the match begins.
+Prototype limitations: team spawning and basic respawn are implemented by TankSpawnManager, but there is no team balancing, round reset, overtime, network authority, NavMesh routing, or sophisticated multi-bot roles. Simple AI may get stuck on complex geometry. Match rules collect capture points once when the scene starts, so create all points before the match begins.
 
 
 ## 9. Runtime combat HUD
