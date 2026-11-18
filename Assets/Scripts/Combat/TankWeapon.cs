@@ -24,6 +24,8 @@ namespace WarBattleMobile.Combat
         public float ReloadProgress01 => !IsReloading ? 1f :
             1f - Mathf.Clamp01((reloadEndsAt - Time.time) / Mathf.Max(0.1f, reloadSeconds));
         private float reloadEndsAt;
+        private Vector2 aimScreenPosition;
+        private bool hasAimScreenPosition;
 
         private void Awake()
         {
@@ -66,13 +68,21 @@ namespace WarBattleMobile.Combat
             AmmunitionChanged?.Invoke(ammunition, reloadSeconds);
         }
 
-        // Player firing uses the centre of the assigned camera when available.
+        public void SetAimScreenPosition(Vector2 screenPosition)
+        {
+            aimScreenPosition = screenPosition;
+            hasAimScreenPosition = true;
+        }
+
+        // Fire follows the latest touch aim point; without touch input it uses screen centre.
         public void Fire()
         {
             Vector3 direction = muzzle != null ? muzzle.forward : transform.forward;
             if (aimCamera != null)
             {
-                Ray aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+                Ray aimRay = hasAimScreenPosition
+                    ? aimCamera.ScreenPointToRay(aimScreenPosition)
+                    : aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
                 if (Physics.Raycast(aimRay, out RaycastHit aimHit, maxRange, aimLayers,
                     QueryTriggerInteraction.Ignore))
                 {
