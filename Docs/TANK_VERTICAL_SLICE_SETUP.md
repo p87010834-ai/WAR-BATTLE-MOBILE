@@ -199,3 +199,13 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - When the hull is destroyed, emitters detach from the vehicle, emit a final burst, stop emitting, and clean themselves up after a short fade period. This allows the visual tail to remain briefly if the spawn manager removes the tank object.
 - These are deliberately simple placeholder particles, not authored production smoke/fire assets. Real VFX materials, heat distortion, sparks, spreading fire, persistent burning damage, extinguish mechanics, and Android performance tuning remain future work.
 - Unity compilation, Play Mode, and device testing have not yet been performed.
+
+
+## 18. Urban battlefield visual-detail pass
+
+- The procedural city generator now adds dark recessed-looking window panels to intact building facades, restrained rooftop ventilation units, roof parapets, and simple road-centre dashes/crosswalk markings.
+- Window density is configurable through `Facade Window Rows` and `Facade Windows Per Row`; defaults are deliberately conservative to limit primitive count on Android. Road markings can be disabled with `Add Road Markings`.
+- The detail pass is generated from primitive meshes and shared placeholder materials at runtime. It improves visual readability and gives the greybox city more architectural cues, but it is not a replacement for authored modular building meshes, texture atlases, baked lighting, decals, LODs, or GPU-instanced environment art.
+- These details are visual only and do not add collision to windows, rooftop equipment, or road paint. Test draw calls and frame time on the target Android device; reduce building density/detail settings if needed.
+- No production 3D tank models, UV textures, material maps, or art packs have been added by this code-only pass. The existing city remains procedural prototype geometry.
+- Unity compilation, Play Mode, and Android visual/performance tests have not yet been performed.
