@@ -26,6 +26,12 @@ A mobile combined-arms combat game planned for Unity 6 and URP, targeting Androi
 - Crew members represented only as visual models inside vehicles; no medical kits, healing, or revival mechanics.
 - Target installed size of approximately 8.5 GB, achieved through quality assets, compression, optimization, and optional resource downloads rather than artificial padding.
 
+## Unity project bootstrap
+
+The repository now includes a Unity 6 project shell, URP/UGUI package manifest, and an Editor menu tool that generates a greybox tank scene and placeholder player/bot/projectile prefabs. Open the folder in Unity and run **Tools > WAR BATTLE MOBILE > Build Tank Vertical Slice**. See [Assets/WarBattleMobile/SETUP.md](Assets/WarBattleMobile/SETUP.md).
+
+The generator is source code only and has not been executed in Unity in this workflow. The scene/prefabs are generated locally by the Unity Editor; no APK or verified playable build is currently available.
+
 ## Project status
 
 The repository contains an early Unity C# prototype for tank movement, turret aiming, projectile ballistics, modular damage, bots, capture points, match rules, spawning/respawning, camera, runtime HUD/touch controls, procedural greybox city generation, destructible environment, and placeholder combat effects/audio.
