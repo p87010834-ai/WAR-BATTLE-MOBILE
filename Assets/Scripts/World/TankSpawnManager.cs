@@ -118,6 +118,15 @@ namespace WarBattleMobile.World
 
             slot.Instance = vehicle;
             slot.RespawnQueued = false;
+            if (slot.IsPlayer)
+            {
+                TankCameraController cameraController = FindFirstObjectByType<TankCameraController>();
+                if (cameraController != null)
+                {
+                    Transform cameraTarget = vehicle.transform.Find("CameraTarget");
+                    cameraController.SetTarget(cameraTarget != null ? cameraTarget : vehicle.transform);
+                }
+            }
             health.TankDestroyed += () => OnVehicleDestroyed(slot, vehicle);
         }
 
