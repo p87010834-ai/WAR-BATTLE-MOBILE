@@ -123,3 +123,15 @@ Prototype limitations: no spawn system, respawn flow, team balancing, round rese
 - The aim touch position is sent to both `TankTurretAim` and `TankWeapon`, keeping turret aim and shell direction aligned.
 - The component creates an EventSystem with the legacy `StandaloneInputModule` only if the scene has no EventSystem. If using the new Input System exclusively, add an EventSystem with `InputSystemUIInputModule` before play.
 - This is a functional starter layout, not final art. Safe-area positioning, configurable button placement, left-handed layout, sensitivity settings, haptics, desktop keyboard/gamepad controls, and Android device testing remain future tasks.
+
+
+## 11. Procedural destroyed-city blockout
+
+- Add `UrbanBattlefieldGenerator` to an empty scene GameObject named `Battlefield Generator`.
+- Leave `Generate On Start` enabled to create the greybox city when Play begins, or use the component context menu command `Generate Urban Battlefield` while editing.
+- The generator creates a ground plane, a grid of crossing streets, randomly placed building blocks, a configurable number of damaged structures with rubble, concrete street barriers, perimeter walls, three capture objectives by default, and opposing spawn markers.
+- Set `Random Seed` to reproduce the same layout. Adjust `Blocks Per Side`, `Block Size`, `Road Width`, building density, building height, and ruin chance to vary the arena.
+- Capture objectives are created with `CapturePoint` triggers and visible placeholder rings. Place team tanks near the Blue/Red spawn markers; the markers are visual references and do not spawn vehicles automatically.
+- This generator is a greybox/prototype layout, not a finished city asset. It uses Unity primitive meshes and placeholder materials; it does not yet contain authored architecture, windows/interiors, road markings, lighting setup, navigation mesh, destructible buildings, debris simulation, audio, or optimized LODs.
+- Generated capture points are placed along the central east-west road. The generator creates all points at runtime before the first frame's match logic update; ensure `TankMatchRules` collects scene objectives after generation. If automatic scene-start ordering causes missed points, generate the map in the editor and disable runtime generation before adding/starting match rules.
+- The script creates placeholder materials at runtime. For production, replace them with shared URP materials and combine/instance repeated geometry to reduce draw calls.
