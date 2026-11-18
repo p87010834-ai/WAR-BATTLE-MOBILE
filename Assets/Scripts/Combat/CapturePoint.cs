@@ -16,6 +16,13 @@ namespace WarBattleMobile.Combat
         public TankTeam Owner => owner;
         public float CaptureProgress01 => Mathf.Clamp01(progress / captureSeconds);
         public bool IsContested { get; private set; }
+
+        public void Configure(string id, float captureDurationSeconds)
+        {
+            if (!string.IsNullOrWhiteSpace(id)) pointId = id;
+            captureSeconds = Mathf.Max(1f, captureDurationSeconds);
+        }
+
         public event Action<CapturePoint, TankTeam> OwnershipChanged;
         public event Action<CapturePoint, TankTeam, float> ProgressChanged;
 
