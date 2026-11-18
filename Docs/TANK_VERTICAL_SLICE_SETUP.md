@@ -178,3 +178,13 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - Regular buildings receive more health than already-ruined structures; barriers and abandoned cover use lower prototype health values.
 - Debris is capped per object and self-destructs after a short lifetime for mobile performance. This is a simple break-apart effect, not structural fracture: no interiors, collapse propagation, persistent rubble, dust/smoke particles, blast-radius damage, or server synchronization yet.
 - Play Mode profiling and Android device tuning remain required. These scripts have not been compiled or tested in Unity.
+
+
+## 16. Shell explosions and blast damage
+
+- `TankExplosion` creates a short-lived particle burst at shell impact and applies distance-falloff damage inside a configurable radius.
+- Configure each projectile's Blast Radius, Blast Damage, Blast Force, Blast Visual Scale, and Explosion Clip. A zero blast radius or zero blast damage disables area damage.
+- Nearby enemy tanks receive hull damage; nearby `DestructibleEnvironment` objects receive radial damage; non-kinematic rigidbodies receive an outward impulse. The firing tank is excluded from tank splash damage.
+- The overlap query is capped at 64 colliders and uses a non-allocating physics query. Multiple colliders belonging to the same tank or destructible are deduplicated per blast.
+- The generated particle effect is a lightweight placeholder burst, not a production fireball, smoke column, dust cloud, shockwave distortion, or shrapnel simulation. No persistent burning, chain reaction, line-of-sight occlusion, multiplayer replication, or pooled effects are implemented yet.
+- Assign a licensed explosion clip on the projectile prefab. Tune blast values and particle count on target Android devices; Unity compilation and Play Mode/device testing have not yet been performed.
