@@ -58,6 +58,18 @@ namespace WarBattleMobile.Combat
         public void Launch(Vector3 direction, float speed, float penetrationMm,
             float damageValue, float maxDistance, TankHealth firingTank)
         {
+            float directionMagnitude = direction.sqrMagnitude;
+            if (float.IsNaN(directionMagnitude) || float.IsInfinity(directionMagnitude) ||
+                directionMagnitude < 0.0001f || float.IsNaN(speed) || float.IsInfinity(speed) ||
+                float.IsNaN(penetrationMm) || float.IsInfinity(penetrationMm) ||
+                float.IsNaN(damageValue) || float.IsInfinity(damageValue) ||
+                float.IsNaN(maxDistance) || float.IsInfinity(maxDistance))
+            {
+                impacted = true;
+                Destroy(gameObject);
+                return;
+            }
+
             owner = firingTank;
             initialPenetration = Mathf.Max(0f, penetrationMm);
             damage = Mathf.Max(0f, damageValue);
