@@ -47,8 +47,16 @@ namespace WarBattleMobile.World
 
             if (FindFirstObjectByType<TankMatchRules>() == null)
                 Error("No TankMatchRules component found.", ref errors);
-            if (FindFirstObjectByType<TankSpawnManager>() == null)
+            TankSpawnManager spawnManager = FindFirstObjectByType<TankSpawnManager>();
+            if (spawnManager == null)
                 Error("No TankSpawnManager component found.", ref errors);
+            else if (!spawnManager.isActiveAndEnabled)
+                Error("TankSpawnManager exists but is disabled.", ref errors);
+
+            TankMatchRules matchRules = FindFirstObjectByType<TankMatchRules>();
+            if (matchRules != null && matchRules.IsFinished && matchRules.IsRunning)
+                Error("Match rules report both finished and running.", ref errors);
+
             if (FindFirstObjectByType<TankCombatHUD>() == null)
                 Warn("No TankCombatHUD found. Combat will run without the prototype HUD.", ref warnings);
 
