@@ -352,3 +352,23 @@ The validator runs after scene startup (late execution order), so it can inspect
 After opening the project in Unity, run **Tools > WAR BATTLE MOBILE > Build Tank Vertical Slice** once to generate the greybox scene and placeholder prefabs. Then run **Tools > WAR BATTLE MOBILE > Validate Tank Vertical Slice Assets**. The asset validator checks that the generated scene and all three prefabs exist, the scene is enabled in Build Settings, player/bot prefabs contain their required root components and armour hitboxes, and the projectile prefab has its collider and Rigidbody.
 
 This is an Editor-side asset/reference check only. It does not compile or execute gameplay, prove that spawn positions are clear, or replace Play Mode and Android device tests. After the asset check passes, open **Assets/WarBattleMobile/Scenes/TankVerticalSlice.unity**, enter Play Mode, and inspect both the Console and the runtime **Tank Vertical Slice Validator** output.
+
+## 12. Automated Android build (GitHub Actions)
+
+The repository includes a manual GitHub Actions workflow at `.github/workflows/unity-android.yml`. It uses the exact Unity Editor version recorded in `ProjectSettings/ProjectVersion.txt` (currently `6000.0.35f1`), generates the greybox tank scene and placeholder prefabs through the Editor setup script, then attempts an Android APK build and uploads the APK as a workflow artifact.
+
+### One-time repository setup
+
+1. In the GitHub repository, open **Settings → Secrets and variables → Actions**.
+2. Add a repository secret named `UNITY_LICENSE` containing the contents of a valid Unity license file suitable for Unity batch-mode activation. Do not commit the license file or paste it into chat.
+3. Confirm the Unity 6 installation/activation is permitted by the applicable Unity Personal terms and account eligibility.
+4. Open **Actions → Unity Android build → Run workflow** to start a build.
+
+The workflow is manual-only so it does not consume GitHub Actions minutes on every push. GitHub-hosted runner usage is subject to the repository's current plan limits. The first run may fail if the license secret is invalid, the Android module is unavailable, or Unity reports project compilation/build errors.
+
+### What the workflow does and does not prove
+
+- It generates the initial tank greybox scene and placeholder prefabs, then calls Unity's Android build pipeline.
+- A successful run proves that this generated project state compiled and produced an APK in the CI environment.
+- It does **not** prove that gameplay is fun, touch controls work correctly on a physical device, multiplayer is implemented, performance is acceptable, or the APK is store-ready.
+- No Unity build has been run from this repository by this documentation change. A successful GitHub Actions run and subsequent device testing are still required.
