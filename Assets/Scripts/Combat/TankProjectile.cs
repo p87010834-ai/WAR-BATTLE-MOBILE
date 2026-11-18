@@ -14,6 +14,7 @@ namespace WarBattleMobile.Combat
         [Header("Blast")]
         [SerializeField, Min(0f)] private float blastRadius = 5.5f;
         [SerializeField, Min(0f)] private float blastDamage = 85f;
+        [SerializeField] private bool blastDamagesVehicles;
         [SerializeField, Min(0f)] private float blastForce = 18f;
         [SerializeField, Range(0.1f, 3f)] private float blastVisualScale = 1f;
         [SerializeField] private AudioClip explosionClip;
@@ -138,7 +139,7 @@ namespace WarBattleMobile.Combat
             PlayImpactSound(impactClip);
             if (blastRadius > 0f && blastDamage > 0f)
                 TankExplosion.Detonate(contact.point, owner, blastRadius, blastDamage,
-                    blastForce, blastVisualScale, explosionClip);
+                    blastForce, blastVisualScale, explosionClip, blastDamagesVehicles);
             Destroy(gameObject);
         }
 
