@@ -109,7 +109,9 @@ namespace WarBattleMobile.Combat
                 (tankHealth.IsDestroyed || tankHealth.TurretDisabled ||
                  tankHealth.GunBreechDisabled || tankHealth.AmmunitionRackDisabled))
                 return;
-            if (direction.sqrMagnitude < 0.0001f) return;
+            float directionMagnitude = direction.sqrMagnitude;
+            if (float.IsNaN(directionMagnitude) || float.IsInfinity(directionMagnitude) ||
+                directionMagnitude < 0.0001f) return;
 
             direction.Normalize();
             GameObject projectileObject = Instantiate(
