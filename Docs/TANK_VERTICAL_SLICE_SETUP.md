@@ -67,7 +67,14 @@ The ammunition rack is disabled without an automatic explosion in this prototype
 - Subscribe to `TankWeapon.AmmunitionChanged` for ammunition/reload UI. The weapon also exposes `ReloadProgress01` (0 to 1) and `IsReloading` for a live reload bar.
 - Subscribe to `TankHealth.ModuleHealthChanged` and `ModuleDisabled` to display module damage.
 
-## 6. Current limitations and next tasks
+## 6. Runtime input validation
+
+- Tank damage ignores non-positive, NaN, and infinite values before they can corrupt module health.
+- Weapon firing rejects invalid world-space aim vectors before creating a projectile.
+- Projectiles reject invalid launch vectors and non-finite launch parameters and destroy the invalid projectile instead of injecting invalid physics state.
+- These are defensive runtime guards; they still require Unity compilation and Play Mode verification.
+
+## 7. Current limitations and next tasks
 
 - Ballistics use Unity Rigidbody gravity and first-contact collision; no multi-layer penetration, fragments, spall, fuse, or server authority yet.
 - Armour and penetration calculations are gameplay approximations, not a validated real-world simulation.
@@ -75,7 +82,7 @@ The ammunition rack is disabled without an automatic explosion in this prototype
 - These scripts have not been compiled in Unity or tested on a device.
 
 
-## 7. Basic tank bots
+## 8. Basic tank bots
 
 The first AI implementation is a simple combat opponent, not a full tactical commander.
 
@@ -90,7 +97,7 @@ The first AI implementation is a simple combat opponent, not a full tactical com
 AI limitations: target selection is nearest-enemy only; driving uses simple forward/reverse steering and a single obstacle ray, not NavMesh pathfinding. Bots do not yet use cover intelligently, capture objectives, coordinate squads, lead moving targets, or use server-authoritative decisions. Configure `lineOfSightLayers` to include terrain, obstacles, and vehicle hitboxes while excluding decorative triggers where appropriate.
 
 
-## 8. Capture points and match rules
+## 9. Capture points and match rules
 
 - Create a GameObject for each objective, add a BoxCollider or SphereCollider with Is Trigger enabled, and add CapturePoint.
 - Give each point a unique Point Id, set its capture duration, and size its trigger volume for the intended capture zone. The script enforces trigger mode at runtime.
@@ -103,7 +110,7 @@ AI limitations: target selection is nearest-enemy only; driving uses simple forw
 Prototype limitations: team spawning and basic respawn are implemented by TankSpawnManager, but there is no team balancing, round reset, overtime, network authority, NavMesh routing, or sophisticated multi-bot roles. Simple AI may get stuck on complex geometry. Match rules collect capture points once when the scene starts, so create all points before the match begins.
 
 
-## 9. Runtime combat HUD
+## 10. Runtime combat HUD
 
 - Add `TankCombatHUD` to a scene UI manager GameObject.
 - Assign the local player's `TankHealth`, `TankWeapon`, and `TankFaction` references in the Inspector. Assign the scene's `TankMatchRules`; if left empty, the HUD searches for one at startup.
@@ -114,7 +121,7 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - This HUD uses Unity's built-in `UnityEngine.UI` legacy Text/Image components; ensure the Unity UI package is available in the project.
 
 
-## 10. Runtime mobile touch controls
+## 11. Runtime mobile touch controls
 
 - Add `MobileTankControls` to the local player tank root. Enable `Create Controls`.
 - The script creates a Screen Space Overlay canvas with a movement joystick in the lower-left, drag-to-aim area on the lower-right, and a fire button in the lower-right corner.
