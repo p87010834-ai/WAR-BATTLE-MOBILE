@@ -183,8 +183,15 @@ namespace WarBattleMobile.World
                 float nearestEnemy = float.MaxValue;
                 foreach (TankFaction faction in factions)
                 {
-                    if (faction == null || faction.Team == TankTeam.Neutral || faction.Team == slot.Team)
+                    if (faction == null || !faction.isActiveAndEnabled ||
+                        !faction.IsCombatant || faction.Team == TankTeam.Neutral ||
+                        faction.Team == slot.Team)
                         continue;
+
+                    TankHealth enemyHealth = faction.GetComponent<TankHealth>();
+                    if (enemyHealth == null || !enemyHealth.isActiveAndEnabled || enemyHealth.IsDestroyed)
+                        continue;
+
                     float distance = Vector3.Distance(candidatePosition, faction.transform.position);
                     if (distance < nearestEnemy) nearestEnemy = distance;
                 }
@@ -240,11 +247,21 @@ namespace WarBattleMobile.World
 
         private bool IsSpawnBlocked(Vector3 position)
         {
-            // Lift the clearance sphere so the ground plane beneath the vehicle
-            // does not count as an obstruction.
+            // Inspect actual overlaps instead of CheckSphere: a sphere tangent to
+            // the floor can still be reported as blocked on some collider setups.
+            // Ignore triggers and shallow ground surfaces, but keep vehicles,
+            // walls, props and other solid obstacles as blockers.
             Vector3 sphereCenter = position + Vector3.up * clearanceRadius;
-            return Physics.CheckSphere(sphereCenter, clearanceRadius,
+            Collider[] overlaps = Physics.OverlapSphere(sphereCenter, clearanceRadius,
                 obstructionLayers, QueryTriggerInteraction.Ignore);
+
+            foreach (Collider overlap in overlaps)
+            {
+                if (overlap == null || overlap.isTrigger) continue;
+                if (overlap.bounds.max.y <= position.y + 0.12f) continue;
+                return true;
+            }
+            return false;
         }
 
         private void OnVehicleDestroyed(VehicleSlot slot, GameObject destroyedVehicle)
