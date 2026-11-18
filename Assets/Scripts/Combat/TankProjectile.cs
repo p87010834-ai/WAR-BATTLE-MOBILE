@@ -10,6 +10,12 @@ namespace WarBattleMobile.Combat
         [SerializeField, Min(0f)] private float minimumDamageFraction = 0.15f;
         [SerializeField, Min(0f)] private float penetrationDistanceLossPerMetre = 0.025f;
         [SerializeField, Min(0f)] private float impactImpulse = 8f;
+        [Header("Audio")]
+        [SerializeField] private AudioClip flightLoopClip;
+        [SerializeField] private AudioClip impactClip;
+        [SerializeField] private AudioClip ricochetClip;
+        [SerializeField, Range(0f, 1f)] private float flightVolume = 0.35f;
+        [SerializeField, Range(0f, 1f)] private float impactVolume = 0.8f;
 
         private Rigidbody body;
         private TankHealth owner;
@@ -19,6 +25,7 @@ namespace WarBattleMobile.Combat
         private Vector3 launchPosition;
         private bool launched;
         private bool impacted;
+        private AudioSource flightAudio;
 
         private void Awake()
         {
@@ -26,6 +33,18 @@ namespace WarBattleMobile.Combat
             body.useGravity = true;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.interpolation = RigidbodyInterpolation.Interpolate;
+            if (flightLoopClip != null)
+            {
+                flightAudio = gameObject.AddComponent<AudioSource>();
+                flightAudio.clip = flightLoopClip;
+                flightAudio.loop = true;
+                flightAudio.volume = flightVolume;
+                flightAudio.spatialBlend = 1f;
+                flightAudio.minDistance = 4f;
+                flightAudio.maxDistance = 90f;
+                flightAudio.dopplerLevel = 0.8f;
+                flightAudio.Play();
+            }
         }
 
         public void Launch(Vector3 direction, float speed, float penetrationMm,
@@ -78,6 +97,7 @@ namespace WarBattleMobile.Combat
             float impactAngle = Vector3.Angle(-incoming, contact.normal);
             if (impactAngle >= ricochetAngle)
             {
+                PlayImpactSound(ricochetClip);
                 Destroy(gameObject);
                 return;
             }
@@ -101,7 +121,14 @@ namespace WarBattleMobile.Combat
                 collision.rigidbody.AddForceAtPosition(incoming * impactImpulse,
                     contact.point, ForceMode.Impulse);
 
+            PlayImpactSound(impactClip);
             Destroy(gameObject);
+        }
+
+        private void PlayImpactSound(AudioClip clip)
+        {
+            if (clip != null)
+                AudioSource.PlayClipAtPoint(clip, transform.position, impactVolume);
         }
 
         private static TankModule ResolveModule(Collider hitCollider)
