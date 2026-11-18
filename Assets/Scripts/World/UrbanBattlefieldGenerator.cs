@@ -23,6 +23,9 @@ namespace WarBattleMobile.World
         [SerializeField, Min(5f)] private float minBuildingHeight = 7f;
         [SerializeField, Min(5f)] private float maxBuildingHeight = 22f;
         [SerializeField, Range(0f, 1f)] private float ruinChance = 0.28f;
+        [SerializeField, Range(1, 5)] private int facadeWindowRows = 3;
+        [SerializeField, Range(2, 5)] private int facadeWindowsPerRow = 3;
+        [SerializeField] private bool addRoadMarkings = true;
 
         [Header("Objectives")]
         [SerializeField] private int capturePointCount = 3;
@@ -39,6 +42,10 @@ namespace WarBattleMobile.World
         private Material ruinMaterial;
         private Material coverMaterial;
         private Material objectiveMaterial;
+        private Material glassMaterial;
+        private Material trimMaterial;
+        private Material roadMarkingMaterial;
+        private Material rooftopMaterial;
 
         private float MapSize => blocksPerSide * blockSize + (blocksPerSide + 1) * roadWidth;
 
@@ -66,6 +73,7 @@ namespace WarBattleMobile.World
                 groundMaterial, true);
 
             BuildRoadGrid(size);
+            if (addRoadMarkings) BuildRoadMarkings(size);
             BuildCityBlocks();
             if (addStreetCover) BuildStreetCover();
             if (addBoundaryWalls) BuildBoundary(size);
@@ -92,6 +100,10 @@ namespace WarBattleMobile.World
             ruinMaterial = MakeMaterial(new Color(0.29f, 0.28f, 0.26f));
             coverMaterial = MakeMaterial(new Color(0.21f, 0.23f, 0.22f));
             objectiveMaterial = MakeMaterial(new Color(0.12f, 0.55f, 0.95f, 0.55f));
+            glassMaterial = MakeMaterial(new Color(0.12f, 0.19f, 0.22f));
+            trimMaterial = MakeMaterial(new Color(0.19f, 0.2f, 0.2f));
+            roadMarkingMaterial = MakeMaterial(new Color(0.72f, 0.68f, 0.54f));
+            rooftopMaterial = MakeMaterial(new Color(0.25f, 0.25f, 0.23f));
         }
 
         private Material MakeMaterial(Color color)
@@ -167,6 +179,8 @@ namespace WarBattleMobile.World
                 else
                 {
                     AddFacadeBands(position, width, height, depth);
+                    AddBuildingWindows(position, width, height, depth);
+                    AddRooftopEquipment(position, width, height, depth);
                 }
             }
         }
@@ -178,6 +192,95 @@ namespace WarBattleMobile.World
                 new Vector3(width * 0.92f, 0.35f, 0.45f), ruinMaterial, false);
             CreateCube("Facade ledge", center + new Vector3(0f, bandY, -depth * 0.505f),
                 new Vector3(width * 0.92f, 0.35f, 0.45f), ruinMaterial, false);
+        }
+
+        private void AddBuildingWindows(Vector3 center, float width, float height, float depth)
+        {
+            int rows = Mathf.Clamp(facadeWindowRows, 1, 5);
+            int columns = Mathf.Clamp(facadeWindowsPerRow, 2, 5);
+            float floorSpacing = height / (rows + 1f);
+            float windowWidth = Mathf.Min(1.35f, width / (columns * 2.4f));
+            float windowHeight = Mathf.Min(1.55f, floorSpacing * 0.48f);
+
+            for (int row = 0; row < rows; row++)
+            {
+                float y = center.y - height * 0.5f + floorSpacing * (row + 1);
+                for (int column = 0; column < columns; column++)
+                {
+                    float x = center.x - width * 0.5f + width * (column + 1f) / (columns + 1f);
+                    CreateWindow(x, y, center.z + depth * 0.505f, windowWidth, windowHeight, false);
+                    CreateWindow(x, y, center.z - depth * 0.505f, windowWidth, windowHeight, false);
+                }
+
+                int sideColumns = Mathf.Max(2, columns - 1);
+                for (int column = 0; column < sideColumns; column++)
+                {
+                    float z = center.z - depth * 0.5f + depth * (column + 1f) / (sideColumns + 1f);
+                    CreateWindow(center.x + width * 0.505f, y, z, windowWidth, windowHeight, true);
+                    CreateWindow(center.x - width * 0.505f, y, z, windowWidth, windowHeight, true);
+                }
+            }
+        }
+
+        private void CreateWindow(float x, float y, float z, float width, float height, bool sideWall)
+        {
+            Vector3 size = sideWall
+                ? new Vector3(0.045f, height, width)
+                : new Vector3(width, height, 0.045f);
+            CreateCube("Dark Window", new Vector3(x, y, z), size, glassMaterial, false);
+
+            float frame = 0.09f;
+            if (sideWall)
+            {
+                CreateCube("Window Frame", new Vector3(x, y - height * 0.5f, z),
+                    new Vector3(0.08f, frame, width + frame), trimMaterial, false);
+                CreateCube("Window Frame", new Vector3(x, y + height * 0.5f, z),
+                    new Vector3(0.08f, frame, width + frame), trimMaterial, false);
+            }
+            else
+            {
+                CreateCube("Window Sill", new Vector3(x, y - height * 0.5f, z),
+                    new Vector3(width + frame, frame, 0.08f), trimMaterial, false);
+            }
+        }
+
+        private void AddRooftopEquipment(Vector3 center, float width, float height, float depth)
+        {
+            float roofY = center.y + height * 0.5f + 0.45f;
+            float unitWidth = Mathf.Min(2.2f, width * 0.22f);
+            CreateCube("Rooftop Ventilation Unit",
+                center + new Vector3(width * 0.22f, height * 0.5f + 0.55f, depth * 0.12f),
+                new Vector3(unitWidth, 0.9f, unitWidth), rooftopMaterial, false);
+            CreateCube("Roof Parapet",
+                new Vector3(center.x, roofY, center.z + depth * 0.48f),
+                new Vector3(width, 0.55f, 0.35f), trimMaterial, false);
+        }
+
+        private void BuildRoadMarkings(float size)
+        {
+            float half = size * 0.5f;
+            float dashLength = 3.2f;
+            float dashGap = 3.8f;
+            float step = dashLength + dashGap;
+            int dashCount = Mathf.FloorToInt(size / step);
+
+            for (int i = 0; i < dashCount; i++)
+            {
+                float coordinate = -half + step * i + dashLength * 0.5f;
+                CreateCube("Road Centre Dash", new Vector3(coordinate, 0.075f, 0f),
+                    new Vector3(dashLength, 0.025f, 0.18f), roadMarkingMaterial, false);
+                CreateCube("Road Centre Dash", new Vector3(0f, 0.078f, coordinate),
+                    new Vector3(0.18f, 0.025f, dashLength), roadMarkingMaterial, false);
+            }
+
+            for (int i = 0; i < blocksPerSide; i++)
+            {
+                float coordinate = -half + roadWidth + blockSize * 0.5f + i * (blockSize + roadWidth);
+                CreateCube("Crosswalk Stripe", new Vector3(coordinate, 0.08f, -roadWidth * 0.31f),
+                    new Vector3(0.55f, 0.025f, roadWidth * 0.32f), roadMarkingMaterial, false);
+                CreateCube("Crosswalk Stripe", new Vector3(-roadWidth * 0.31f, 0.08f, coordinate),
+                    new Vector3(roadWidth * 0.32f, 0.025f, 0.55f), roadMarkingMaterial, false);
+            }
         }
 
         private void CreateRubble(Vector3 buildingCenter, float width, float depth)
