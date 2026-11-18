@@ -21,6 +21,9 @@ namespace WarBattleMobile.Combat
         public event Action<int, float> AmmunitionChanged;
         public bool IsReloading { get; private set; }
         public int Ammunition => ammunition;
+        public float ReloadProgress01 => !IsReloading ? 1f :
+            1f - Mathf.Clamp01((reloadEndsAt - Time.time) / Mathf.Max(0.1f, reloadSeconds));
+        private float reloadEndsAt;
 
         private void Awake()
         {
@@ -118,6 +121,7 @@ namespace WarBattleMobile.Combat
         private IEnumerator ReloadRoutine()
         {
             IsReloading = true;
+            reloadEndsAt = Time.time + reloadSeconds;
             yield return new WaitForSeconds(reloadSeconds);
             IsReloading = false;
         }
