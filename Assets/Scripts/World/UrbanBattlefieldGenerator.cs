@@ -23,8 +23,8 @@ namespace WarBattleMobile.World
         [SerializeField, Min(5f)] private float minBuildingHeight = 7f;
         [SerializeField, Min(5f)] private float maxBuildingHeight = 22f;
         [SerializeField, Range(0f, 1f)] private float ruinChance = 0.28f;
-        [SerializeField, Range(1, 5)] private int facadeWindowRows = 3;
-        [SerializeField, Range(2, 5)] private int facadeWindowsPerRow = 3;
+        [SerializeField, Range(1, 5)] private int facadeWindowRows = 2;
+        [SerializeField, Range(2, 5)] private int facadeWindowsPerRow = 2;
         [SerializeField] private bool addRoadMarkings = true;
 
         [Header("Objectives")]
@@ -212,7 +212,7 @@ namespace WarBattleMobile.World
                     CreateWindow(x, y, center.z - depth * 0.505f, windowWidth, windowHeight, false);
                 }
 
-                int sideColumns = Mathf.Max(2, columns - 1);
+                int sideColumns = 1;
                 for (int column = 0; column < sideColumns; column++)
                 {
                     float z = center.z - depth * 0.5f + depth * (column + 1f) / (sideColumns + 1f);
@@ -229,19 +229,7 @@ namespace WarBattleMobile.World
                 : new Vector3(width, height, 0.045f);
             CreateCube("Dark Window", new Vector3(x, y, z), size, glassMaterial, false);
 
-            float frame = 0.09f;
-            if (sideWall)
-            {
-                CreateCube("Window Frame", new Vector3(x, y - height * 0.5f, z),
-                    new Vector3(0.08f, frame, width + frame), trimMaterial, false);
-                CreateCube("Window Frame", new Vector3(x, y + height * 0.5f, z),
-                    new Vector3(0.08f, frame, width + frame), trimMaterial, false);
-            }
-            else
-            {
-                CreateCube("Window Sill", new Vector3(x, y - height * 0.5f, z),
-                    new Vector3(width + frame, frame, 0.08f), trimMaterial, false);
-            }
+
         }
 
         private void AddRooftopEquipment(Vector3 center, float width, float height, float depth)
