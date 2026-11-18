@@ -39,6 +39,7 @@ namespace WarBattleMobile.UI
         private Image hullFill;
         private Image reloadFill;
         private Text reloadText;
+        private Text matchResultText;
         private Font font;
 
         private static readonly WarBattleMobile.Combat.TankModule[] HudModules =
@@ -97,6 +98,7 @@ namespace WarBattleMobile.UI
             {
                 matchRules.ScoreChanged += OnScoreChanged;
                 matchRules.TimeChanged += OnTimeChanged;
+                matchRules.MatchEnded += OnMatchEnded;
             }
         }
 
@@ -110,6 +112,7 @@ namespace WarBattleMobile.UI
             {
                 matchRules.ScoreChanged -= OnScoreChanged;
                 matchRules.TimeChanged -= OnTimeChanged;
+                matchRules.MatchEnded -= OnMatchEnded;
             }
         }
 
@@ -137,6 +140,12 @@ namespace WarBattleMobile.UI
             timerText = CreateText(canvasObject.transform, "Match Timer", 28,
                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                 new Vector2(0f, -76f), new Vector2(220f, 48f), TextAnchor.MiddleCenter);
+            matchResultText = CreateText(canvasObject.transform, "Match Result", 42,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                Vector2.zero, new Vector2(760f, 110f), TextAnchor.MiddleCenter);
+            matchResultText.fontStyle = FontStyle.Bold;
+            matchResultText.color = new Color(1f, 0.82f, 0.35f);
+            matchResultText.gameObject.SetActive(false);
 
             CreatePanel(canvasObject.transform, "Vehicle Status Panel",
                 new Vector2(0f, 0f), new Vector2(0f, 0f),
@@ -270,6 +279,18 @@ namespace WarBattleMobile.UI
             return fill;
         }
 
+        public void BindVehicle(WarBattleMobile.Combat.TankHealth health,
+            WarBattleMobile.Combat.TankWeapon weapon,
+            WarBattleMobile.Combat.TankFaction faction)
+        {
+            Unsubscribe();
+            tankHealth = health;
+            tankWeapon = weapon;
+            tankFaction = faction;
+            Subscribe();
+            RefreshAll();
+        }
+
         private void RefreshAll()
         {
             UpdateHull();
@@ -278,6 +299,25 @@ namespace WarBattleMobile.UI
             UpdateTimer();
             UpdateReload();
             UpdateScore();
+            UpdateMatchResult();
+        }
+
+        private void UpdateMatchResult()
+        {
+            if (matchResultText == null) return;
+            bool finished = matchRules != null && matchRules.IsFinished;
+            matchResultText.gameObject.SetActive(finished);
+            if (!finished) return;
+
+            WarBattleMobile.Combat.TankTeam winner = matchRules.WinningTeam;
+            matchResultText.text = winner == WarBattleMobile.Combat.TankTeam.Neutral
+                ? "DRAW"
+                : winner == tankFaction?.Team ? "VICTORY" : "DEFEAT";
+        }
+
+        private void OnMatchEnded(WarBattleMobile.Combat.TankTeam winner)
+        {
+            UpdateMatchResult();
         }
 
         private void UpdateHull()
