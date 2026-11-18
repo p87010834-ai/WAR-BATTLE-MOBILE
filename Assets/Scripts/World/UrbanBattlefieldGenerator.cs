@@ -26,6 +26,9 @@ namespace WarBattleMobile.World
         [SerializeField, Range(1, 5)] private int facadeWindowRows = 2;
         [SerializeField, Range(2, 5)] private int facadeWindowsPerRow = 2;
         [SerializeField] private bool addRoadMarkings = true;
+        [SerializeField] private bool addRoadSurfaceWear = true;
+        [SerializeField, Range(0, 80)] private int roadDamagePatches = 24;
+        [SerializeField, Range(0, 40)] private int roadPotholes = 10;
 
         [Header("Objectives")]
         [SerializeField] private int capturePointCount = 3;
@@ -46,6 +49,9 @@ namespace WarBattleMobile.World
         private Material trimMaterial;
         private Material roadMarkingMaterial;
         private Material rooftopMaterial;
+        private Material asphaltPatchMaterial;
+        private Material potholeMaterial;
+        private Material curbMaterial;
 
         private float MapSize => blocksPerSide * blockSize + (blocksPerSide + 1) * roadWidth;
 
@@ -74,6 +80,7 @@ namespace WarBattleMobile.World
 
             BuildRoadGrid(size);
             if (addRoadMarkings) BuildRoadMarkings(size);
+            if (addRoadSurfaceWear) BuildRoadSurfaceWear(size);
             BuildCityBlocks();
             if (addStreetCover) BuildStreetCover();
             if (addBoundaryWalls) BuildBoundary(size);
@@ -104,6 +111,9 @@ namespace WarBattleMobile.World
             trimMaterial = MakeMaterial(new Color(0.19f, 0.2f, 0.2f));
             roadMarkingMaterial = MakeMaterial(new Color(0.72f, 0.68f, 0.54f));
             rooftopMaterial = MakeMaterial(new Color(0.25f, 0.25f, 0.23f));
+            asphaltPatchMaterial = MakeMaterial(new Color(0.085f, 0.09f, 0.095f));
+            potholeMaterial = MakeMaterial(new Color(0.045f, 0.05f, 0.055f));
+            curbMaterial = MakeMaterial(new Color(0.31f, 0.31f, 0.29f));
         }
 
         private Material MakeMaterial(Color color)
@@ -268,6 +278,67 @@ namespace WarBattleMobile.World
                     new Vector3(0.55f, 0.025f, roadWidth * 0.32f), roadMarkingMaterial, false);
                 CreateCube("Crosswalk Stripe", new Vector3(-roadWidth * 0.31f, 0.08f, coordinate),
                     new Vector3(roadWidth * 0.32f, 0.025f, 0.55f), roadMarkingMaterial, false);
+            }
+        }
+
+
+        private void BuildRoadSurfaceWear(float size)
+        {
+            // Thin, non-colliding surface details keep the road readable without
+            // adding extra physics bodies to the mobile scene.
+            float half = size * 0.5f;
+            for (int i = 0; i < roadDamagePatches; i++)
+            {
+                bool horizontal = Random.value > 0.5f;
+                float along = Random.Range(-half, half);
+                float across = Random.Range(-roadWidth * 0.38f, roadWidth * 0.38f);
+                Vector3 position = horizontal
+                    ? new Vector3(along, 0.073f, across)
+                    : new Vector3(across, 0.078f, along);
+                float length = Random.Range(0.8f, 3.8f);
+                float width = Random.Range(0.12f, 0.42f);
+                GameObject patch = CreateCube("Worn Asphalt Patch", position,
+                    horizontal ? new Vector3(length, 0.012f, width) : new Vector3(width, 0.012f, length),
+                    asphaltPatchMaterial, false);
+                patch.transform.rotation = Quaternion.Euler(0f, Random.Range(-8f, 8f), 0f);
+            }
+
+            for (int i = 0; i < roadPotholes; i++)
+            {
+                bool horizontal = Random.value > 0.5f;
+                float along = Random.Range(-half, half);
+                float across = Random.Range(-roadWidth * 0.34f, roadWidth * 0.34f);
+                Vector3 position = horizontal
+                    ? new Vector3(along, 0.078f, across)
+                    : new Vector3(across, 0.078f, along);
+                float diameter = Random.Range(0.65f, 1.45f);
+                GameObject hole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                hole.name = "Road Pothole";
+                hole.transform.SetParent(generatedRoot, false);
+                hole.transform.localPosition = position;
+                hole.transform.localScale = new Vector3(diameter, 0.008f, diameter);
+                hole.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, 180f), 0f);
+                Renderer renderer = hole.GetComponent<Renderer>();
+                if (renderer != null) renderer.sharedMaterial = potholeMaterial;
+                Collider collider = hole.GetComponent<Collider>();
+                if (collider != null) Destroy(collider);
+            }
+
+            // Low curb strips frame each street edge; they are visual-only so
+            // they cannot snag tank tracks or block the capture area.
+            float streetStart = -half + roadWidth * 0.5f;
+            for (int i = 0; i <= blocksPerSide; i++)
+            {
+                float coordinate = streetStart + i * (blockSize + roadWidth);
+                float edge = roadWidth * 0.5f - 0.18f;
+                CreateCube("Street Curb", new Vector3(0f, 0.16f, coordinate + edge),
+                    new Vector3(size + roadWidth, 0.28f, 0.32f), curbMaterial, false);
+                CreateCube("Street Curb", new Vector3(0f, 0.16f, coordinate - edge),
+                    new Vector3(size + roadWidth, 0.28f, 0.32f), curbMaterial, false);
+                CreateCube("Street Curb", new Vector3(coordinate + edge, 0.16f, 0f),
+                    new Vector3(0.32f, 0.28f, size + roadWidth), curbMaterial, false);
+                CreateCube("Street Curb", new Vector3(coordinate - edge, 0.16f, 0f),
+                    new Vector3(0.32f, 0.28f, size + roadWidth), curbMaterial, false);
             }
         }
 
