@@ -31,8 +31,9 @@ namespace WarBattleMobile.Combat
 
         private void OnTriggerEnter(Collider other)
         {
+            if (other == null || other.isTrigger) return;
             TankFaction f = other.GetComponentInParent<TankFaction>();
-            if (f == null || !f.IsCombatant) return;
+            if (f == null || !f.IsCombatant || !IsAliveCombatant(f)) return;
             occupants.TryGetValue(f, out int count);
             occupants[f] = count + 1;
         }
@@ -50,7 +51,7 @@ namespace WarBattleMobile.Combat
             List<TankFaction> stale = null;
             foreach (KeyValuePair<TankFaction, int> entry in occupants)
             {
-                if (entry.Key == null || !entry.Key.isActiveAndEnabled)
+                if (!IsAliveCombatant(entry.Key) || entry.Value <= 0)
                 {
                     if (stale == null) stale = new List<TankFaction>();
                     stale.Add(entry.Key);
@@ -59,11 +60,13 @@ namespace WarBattleMobile.Combat
             if (stale != null)
                 foreach (TankFaction faction in stale) occupants.Remove(faction);
 
+            // Count each living vehicle once, regardless of how many of its
+            // colliders overlap the capture trigger.
             int blue = 0, red = 0;
             foreach (KeyValuePair<TankFaction, int> entry in occupants)
             {
                 TankFaction f = entry.Key;
-                if (f == null || !OverlapsTank(f)) continue;
+                if (!IsAliveCombatant(f)) continue;
                 if (f.Team == TankTeam.Blue) blue++;
                 else if (f.Team == TankTeam.Red) red++;
             }
@@ -104,12 +107,14 @@ namespace WarBattleMobile.Combat
             }
         }
 
-        private bool OverlapsTank(TankFaction faction)
+        private static bool IsAliveCombatant(TankFaction faction)
         {
-            Collider area = GetComponent<Collider>();
-            foreach (Collider c in faction.GetComponentsInChildren<Collider>())
-                if (c != null && !c.isTrigger && area.bounds.Intersects(c.bounds)) return true;
-            return false;
+            if (faction == null || !faction.isActiveAndEnabled ||
+                !faction.gameObject.activeInHierarchy || !faction.IsCombatant)
+                return false;
+
+            TankHealth health = faction.GetComponent<TankHealth>();
+            return health != null && !health.IsDestroyed;
         }
     }
 }
