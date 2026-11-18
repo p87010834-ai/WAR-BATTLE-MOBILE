@@ -36,11 +36,23 @@ namespace WarBattleMobile.AI
         [SerializeField, Min(1f)] private float obstacleCheckDistance = 12f;
         [SerializeField, Min(0f)] private float steeringStrength = 1f;
 
+        [Header("Tactical Behaviour")]
+        [SerializeField, Min(0.1f)] private float coverSearchInterval = 1.5f;
+        [SerializeField, Min(0.5f)] private float coverSearchRadius = 12f;
+        [SerializeField, Min(0.5f)] private float coverArrivalDistance = 2.5f;
+        [SerializeField, Min(0.1f)] private float coverDurationAfterHit = 4f;
+        [SerializeField, Min(0.1f)] private float coverCandidateClearance = 1.6f;
+        [SerializeField, Min(0f)] private float alliedTargetFocusBonus = 18f;
+
         private TankHealth target;
         private float nextTargetRefresh;
         private float nextDecision;
         private Vector2 moveCommand;
         private bool isConfigured;
+        private float underFireUntil;
+        private float nextCoverSearch;
+        private Vector3 coverPosition;
+        private bool hasCoverPosition;
 
         private void Awake()
         {
@@ -54,6 +66,18 @@ namespace WarBattleMobile.AI
 
             if (!isConfigured)
                 Debug.LogError("TankBotAI: assign health, movement, faction, weapon, turret, gun and muzzle.", this);
+        }
+
+        private void OnEnable()
+        {
+            if (health != null) health.ModuleHealthChanged += OnModuleHealthChanged;
+        }
+
+        private void OnModuleHealthChanged(TankModule module, float current, float maximum)
+        {
+            if (health == null || health.IsDestroyed) return;
+            underFireUntil = Time.time + coverDurationAfterHit;
+            hasCoverPosition = false;
         }
 
         private void Update()
@@ -97,6 +121,40 @@ namespace WarBattleMobile.AI
                 return;
             }
 
+            if (Time.time < underFireUntil)
+            {
+                if (!hasCoverPosition || Time.time >= nextCoverSearch)
+                {
+                    hasCoverPosition = TryFindCover(target, out coverPosition);
+                    nextCoverSearch = Time.time + coverSearchInterval;
+                }
+
+                if (hasCoverPosition)
+                {
+                    Vector3 toCover = coverPosition - transform.position;
+                    float coverDistance = Vector3.ProjectOnPlane(toCover, Vector3.up).magnitude;
+                    if (coverDistance > coverArrivalDistance)
+                    {
+                        if (Time.time >= nextDecision)
+                        {
+                            UpdateDriving(toCover, coverDistance);
+                            nextDecision = Time.time + 0.15f;
+                        }
+                        movement.SetMoveInput(moveCommand);
+                        AimAt(GetPredictedTargetPoint(target));
+                        return;
+                    }
+
+                    movement.SetMoveInput(Vector2.zero);
+                    AimAt(GetPredictedTargetPoint(target));
+                    return;
+                }
+            }
+            else
+            {
+                hasCoverPosition = false;
+            }
+
             Vector3 targetPoint = GetPredictedTargetPoint(target);
             Vector3 toTarget = targetPoint - transform.position;
             float distance = toTarget.magnitude;
@@ -134,13 +192,95 @@ namespace WarBattleMobile.AI
                 if (candidate == null || !candidate.isActiveAndEnabled || candidate.IsDestroyed) continue;
 
                 float distance = Vector3.Distance(transform.position, candidate.transform.position);
-                if (distance < bestDistance)
+                int alliedFocus = 0;
+                TankBotAI[] alliedBots = FindObjectsByType<TankBotAI>(FindObjectsSortMode.None);
+                foreach (TankBotAI ally in alliedBots)
                 {
-                    bestDistance = distance;
+                    if (ally == null || ally == this || ally.faction == null ||
+                        ally.faction.Team != faction.Team || ally.health == null || ally.health.IsDestroyed)
+                        continue;
+                    if (ally.target == candidate) alliedFocus++;
+                }
+
+                float targetCost = distance - alliedFocus * alliedTargetFocusBonus;
+                if (targetCost < bestDistance)
+                {
+                    bestDistance = targetCost;
                     best = candidate;
                 }
             }
             return best;
+        }
+
+        private bool TryFindCover(TankHealth enemy, out Vector3 bestPosition)
+        {
+            bestPosition = transform.position;
+            if (enemy == null || enemy.IsDestroyed) return false;
+
+            Vector3 enemyPoint = GetTargetPoint(enemy);
+            float bestScore = float.MaxValue;
+            bool found = false;
+            const int directions = 16;
+
+            for (int i = 0; i < directions; i++)
+            {
+                float angle = i * (360f / directions);
+                Vector3 radial = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+                for (int ring = 0; ring < 2; ring++)
+                {
+                    float radius = coverSearchRadius * (ring == 0 ? 0.55f : 1f);
+                    Vector3 sample = transform.position + radial * radius;
+                    Vector3 rayStart = sample + Vector3.up * 8f;
+                    if (!Physics.Raycast(rayStart, Vector3.down, out RaycastHit groundHit,
+                        16f, lineOfSightLayers, QueryTriggerInteraction.Ignore))
+                        continue;
+
+                    Vector3 candidate = groundHit.point;
+                    Vector3 clearancePoint = candidate + Vector3.up * 1.1f;
+                    Collider[] overlaps = Physics.OverlapSphere(clearancePoint,
+                        coverCandidateClearance, lineOfSightLayers, QueryTriggerInteraction.Ignore);
+                    bool blockedByVehicle = false;
+                    foreach (Collider overlap in overlaps)
+                    {
+                        if (overlap == null || overlap.transform.IsChildOf(transform) ||
+                            overlap.GetComponentInParent<TankHealth>() == enemy)
+                            continue;
+                        blockedByVehicle = true;
+                        break;
+                    }
+                    if (blockedByVehicle) continue;
+
+                    Vector3 toCandidate = clearancePoint - enemyPoint;
+                    float sightDistance = toCandidate.magnitude;
+                    if (sightDistance <= 0.1f) continue;
+                    RaycastHit[] sightHits = Physics.RaycastAll(enemyPoint, toCandidate / sightDistance,
+                        sightDistance, lineOfSightLayers, QueryTriggerInteraction.Ignore);
+                    System.Array.Sort(sightHits, (a, b) => a.distance.CompareTo(b.distance));
+
+                    bool blockedSight = false;
+                    foreach (RaycastHit sightHit in sightHits)
+                    {
+                        if (sightHit.collider == null ||
+                            sightHit.collider.transform.IsChildOf(enemy.transform) ||
+                            sightHit.collider.transform.IsChildOf(transform))
+                            continue;
+                        blockedSight = true;
+                        break;
+                    }
+                    if (!blockedSight) continue;
+
+                    float travelCost = Vector3.Distance(transform.position, candidate);
+                    float score = travelCost + Mathf.Abs(Vector3.SignedAngle(
+                        transform.forward, radial, Vector3.up)) * 0.025f;
+                    if (score < bestScore)
+                    {
+                        bestScore = score;
+                        bestPosition = candidate;
+                        found = true;
+                    }
+                }
+            }
+            return found;
         }
 
         private CapturePoint FindObjective()
@@ -279,20 +419,6 @@ namespace WarBattleMobile.AI
             return targetPoint + targetVelocity * travelTime;
         }
 
-        private Vector3 GetPredictedTargetPoint(TankHealth tank)
-        {
-            Vector3 targetPoint = GetTargetPoint(tank);
-            TankMovement targetMovement = tank.GetComponent<TankMovement>();
-            if (targetMovement == null || weapon.MuzzleVelocity <= 1f)
-                return targetPoint;
-
-            float distance = Vector3.Distance(muzzle.position, targetPoint);
-            float travelTime = Mathf.Clamp(distance / weapon.MuzzleVelocity, 0f, 2f);
-            Vector3 targetVelocity = targetMovement.Velocity;
-            targetVelocity.y = 0f;
-            return targetPoint + targetVelocity * travelTime;
-        }
-
         private static Vector3 GetTargetPoint(TankHealth tank)
         {
             Collider[] colliders = tank.GetComponentsInChildren<Collider>();
@@ -309,6 +435,7 @@ namespace WarBattleMobile.AI
 
         private void OnDisable()
         {
+            if (health != null) health.ModuleHealthChanged -= OnModuleHealthChanged;
             if (movement != null) movement.SetMoveInput(Vector2.zero);
         }
     }
