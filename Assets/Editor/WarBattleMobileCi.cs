@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -19,6 +20,10 @@ namespace WarBattleMobile.EditorTools
         {
             Debug.Log("[WAR BATTLE MOBILE CI] Generating the tank vertical slice assets.");
             WarBattleMobileProjectSetup.BuildTankVerticalSlice();
+            WarBattleMobileProjectSetup.ValidateTankVerticalSliceAssetsOrThrow();
+
+            ConfigureAndroidPlayerSettings();
+            Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutput));
 
             EditorBuildSettingsScene[] enabledScenes = EditorBuildSettings.scenes
                 .Where(scene => scene.enabled)
@@ -67,6 +72,20 @@ namespace WarBattleMobile.EditorTools
 
             Debug.Log("[WAR BATTLE MOBILE CI] Android APK build succeeded: " +
                 AndroidOutput + " (" + report.summary.totalSize + " bytes).");
+        }
+
+        private static void ConfigureAndroidPlayerSettings()
+        {
+            PlayerSettings.companyName = "WAR BATTLE MOBILE";
+            PlayerSettings.productName = "WAR BATTLE MOBILE";
+            PlayerSettings.bundleVersion = "0.1.0";
+            PlayerSettings.SetApplicationIdentifier(
+                BuildTargetGroup.Android, "com.warbattlemobile.game");
+            PlayerSettings.Android.bundleVersionCode = 1;
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            PlayerSettings.SetScriptingBackend(
+                BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
         }
     }
 }
