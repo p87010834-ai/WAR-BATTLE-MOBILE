@@ -275,3 +275,10 @@ Important: the editor command has been committed as source code; it has NOT been
 ### Initial spawn retry safeguard
 
 The spawn manager now retries a roster slot every two seconds when its first spawn attempt cannot find a clear team spawn position. This prevents a temporary obstruction during scene startup from permanently leaving the player or a bot unspawned. The retry stops once that slot has a live vehicle or the spawn manager is disabled. This is a code-level safeguard and still requires Play Mode verification.
+
+
+## Armour penetration and shell blast behavior
+
+Tank shell impact damage is resolved against the struck armour zone using impact angle, effective armour thickness and remaining penetration. The default shell blast is visual/environmental and does not apply vehicle splash damage, so a shell that fails to penetrate cannot still damage tank hulls through the blast-radius path. The projectile exposes an explicit `blastDamagesVehicles` option for future explosive ammunition types; it is disabled by default. Verify penetration and ricochet behavior in Unity Play Mode before tuning final ammunition values.
+
+The follow camera now identifies its own vehicle through the owning `TankHealth` component, rather than checking only the camera-target transform. This prevents sibling hull/armour hitboxes from pushing the camera forward while still allowing collision avoidance against terrain and other vehicles.
