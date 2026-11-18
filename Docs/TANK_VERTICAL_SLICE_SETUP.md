@@ -147,3 +147,14 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - Generate the map before scene Start methods execute. The generator now builds the map in Awake so match rules and the spawn manager can discover capture points and team spawn markers during Start.
 - This is a local prototype spawn flow. It does not yet include multiplayer authority, spawn-wave synchronization, team balancing, spawn protection, selectable vehicle loadouts, spawn menu UI, tickets, or match-end respawn lockout. The generated city currently has one spawn marker per team, so safe alternatives are limited until more spawn points are authored.
 - Prefabs, spawn manager references, collision layers, and the actual respawn loop still require Unity Editor setup and play-mode testing.
+
+
+## 13. Third-person camera, orbit, zoom, and aiming view
+
+- Add `TankCameraController` to the scene's Main Camera. Set its Target to the player's tank `CameraTarget` child (recommended) or tank root. The spawn manager automatically assigns the camera target when it creates or respawns the player vehicle.
+- Tune Target Offset, normal/minimum/maximum distance, pitch, and collision layers in the Inspector. The camera follows smoothly and sphere-casts against level geometry to avoid clipping through walls.
+- On touch devices, drag in the upper camera strip (above 76% of screen height) to orbit around the tank. Pinch with two fingers in that strip to zoom. The lower-right drag surface remains reserved for turret aiming and the lower-left remains reserved for movement.
+- The generated mobile controls now include an AIM toggle. It switches to a closer camera distance and back to the normal third-person view. Turret aiming remains controlled by dragging in the lower-right aim area.
+- In the Unity Editor/standalone, hold the right mouse button and move to orbit; use the mouse wheel to zoom.
+- Keep the camera's collision layer mask configured for buildings and terrain. Exclude the player's own vehicle layer if possible to avoid camera collision against its own colliders.
+- This camera is a functional prototype. Shoulder swapping, camera shake, aim reticle, lock-on, accessibility settings, cinematic transitions, and physical-device tuning remain future work. The camera and controls have not yet been compiled or tested in Unity.
