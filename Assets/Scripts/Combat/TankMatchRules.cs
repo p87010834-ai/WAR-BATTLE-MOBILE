@@ -31,7 +31,9 @@ namespace WarBattleMobile.Combat
 
         public void StartMatch()
         {
-            if (IsFinished) return;
+            // Prevent a second caller (for example a scene bootstrapper) from
+            // silently resetting scores and the timer during an active round.
+            if (IsFinished || IsRunning) return;
             points = FindObjectsByType<CapturePoint>(FindObjectsSortMode.None);
             BlueScore = 0;
             RedScore = 0;
