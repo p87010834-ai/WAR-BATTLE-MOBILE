@@ -317,3 +317,11 @@ The follow camera now identifies its own vehicle through the owning `TankHealth`
 - Bot gunners estimate shell travel time from range and muzzle velocity, then lead a moving enemy by its horizontal velocity (prediction capped at two seconds). The bot uses the same predicted aim point for turret alignment, line-of-sight validation, and its firing direction.
 - When no enemy is selected, bots evaluate capture points using distance plus a crowding penalty for nearby living allied bots. This encourages the squad to spread across available neutral or enemy-held objectives instead of all choosing the same nearest point.
 - This remains lightweight local AI: it does not provide ballistic drop, target acceleration prediction, persistent squad orders, formation movement, cover planning, or network-authoritative coordination. Verify aim convergence, moving-target hits, and objective distribution in Unity Play Mode and tune muzzle velocity against the actual projectile prefab.
+
+
+## Team bot tactical cover and focus fire
+
+- Bots now react to confirmed incoming module damage by entering a short tactical reposition window. They periodically sample nearby ground positions and select a point only when world geometry blocks the enemy's line of sight to that position; the bot then drives toward it and holds there while continuing to aim at its target.
+- Cover sampling uses two rings of 16 directions, ground raycasts, and a clearance overlap check. It is a local heuristic rather than NavMesh pathfinding: it can choose a position that is difficult or impossible to reach around complex geometry, and it does not model incoming shell trajectories or predicted enemy aim.
+- Target selection gives a configurable preference to enemies already selected by allied bots, encouraging coordinated focus fire while retaining distance as the main selection factor.
+- The bot unsubscribes from damage events when disabled. Configure cover radius, search interval, arrival distance, and duration on each bot prefab. Unity compilation, Play Mode, navigation reliability, and Android performance have not yet been tested.
