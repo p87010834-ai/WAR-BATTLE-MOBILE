@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using WarBattleMobile.Combat;
+using WarBattleMobile.Vehicle;
 
 namespace WarBattleMobile.World
 {
