@@ -93,6 +93,21 @@ namespace WarBattleMobile.Combat
             TankHealth target = collision.collider.GetComponentInParent<TankHealth>();
             if (target != null && target == owner) return;
 
+            // Friendly vehicles are solid gameplay objects, but this prototype
+            // does not allow direct shell damage to the firing team's tanks.
+            TankFaction ownerFaction = owner != null
+                ? owner.GetComponent<TankFaction>() : null;
+            TankFaction targetFaction = target != null
+                ? target.GetComponent<TankFaction>() : null;
+            if (ownerFaction != null && targetFaction != null &&
+                ownerFaction.IsCombatant && targetFaction.Team == ownerFaction.Team)
+            {
+                Collider projectileCollider = GetComponent<Collider>();
+                if (projectileCollider != null)
+                    Physics.IgnoreCollision(projectileCollider, collision.collider, true);
+                return;
+            }
+
             impacted = true;
             DestructibleEnvironment destructible = collision.collider.GetComponentInParent<DestructibleEnvironment>();
             Vector3 velocity = body.linearVelocity;
