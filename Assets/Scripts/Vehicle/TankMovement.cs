@@ -18,6 +18,9 @@ namespace WarBattleMobile.Vehicle
         private Vector2 movementInput;
         private float verticalVelocity;
 
+        public Vector2 MovementInput => movementInput;
+        public float CurrentSpeed => controller != null ? controller.velocity.magnitude : 0f;
+
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
