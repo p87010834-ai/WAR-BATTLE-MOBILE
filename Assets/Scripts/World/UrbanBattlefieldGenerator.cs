@@ -42,8 +42,10 @@ namespace WarBattleMobile.World
 
         private float MapSize => blocksPerSide * blockSize + (blocksPerSide + 1) * roadWidth;
 
-        private void Start()
+        private void Awake()
         {
+            // Generate before other scene components run Start(), so match and spawn
+            // managers can discover objectives and spawn points deterministically.
             if (generateOnStart) Generate();
         }
 
@@ -259,17 +261,20 @@ namespace WarBattleMobile.World
         private void BuildSpawnMarkers(float size)
         {
             float x = size * 0.5f - roadWidth * 0.5f;
-            CreateSpawn("Blue Team Spawn", new Vector3(-x, 0.15f, -x), new Color(0.15f, 0.45f, 1f));
-            CreateSpawn("Red Team Spawn", new Vector3(x, 0.15f, x), new Color(1f, 0.2f, 0.15f));
+            CreateSpawn("Blue Team Spawn", new Vector3(-x, 0.15f, -x),
+                new Color(0.15f, 0.45f, 1f), TankTeam.Blue);
+            CreateSpawn("Red Team Spawn", new Vector3(x, 0.15f, x),
+                new Color(1f, 0.2f, 0.15f), TankTeam.Red);
         }
 
-        private void CreateSpawn(string label, Vector3 position, Color color)
+        private void CreateSpawn(string label, Vector3 position, Color color, TankTeam team)
         {
             GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             marker.name = label + " Marker";
             marker.transform.SetParent(generatedRoot, false);
             marker.transform.localPosition = position;
             marker.transform.localScale = new Vector3(5f, 0.15f, 5f);
+            marker.AddComponent<TankSpawnPoint>().Configure(team);
             Collider collider = marker.GetComponent<Collider>();
             if (collider != null) Destroy(collider);
             Material markerMaterial = MakeMaterial(color);
