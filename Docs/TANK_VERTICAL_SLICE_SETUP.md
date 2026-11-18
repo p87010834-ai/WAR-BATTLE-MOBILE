@@ -135,3 +135,15 @@ Prototype limitations: no spawn system, respawn flow, team balancing, round rese
 - This generator is a greybox/prototype layout, not a finished city asset. It uses Unity primitive meshes and placeholder materials; it does not yet contain authored architecture, windows/interiors, road markings, lighting setup, navigation mesh, destructible buildings, debris simulation, audio, or optimized LODs.
 - Generated capture points are placed along the central east-west road. The generator creates all points at runtime before the first frame's match logic update; ensure `TankMatchRules` collects scene objectives after generation. If automatic scene-start ordering causes missed points, generate the map in the editor and disable runtime generation before adding/starting match rules.
 - The script creates placeholder materials at runtime. For production, replace them with shared URP materials and combine/instance repeated geometry to reduce draw calls.
+
+
+## 12. Team spawns, player/bot deployment, and respawning
+
+- The procedural battlefield generator creates two team spawn markers. Each marker now carries a `TankSpawnPoint` component configured for Blue or Red.
+- Add `TankSpawnManager` to a scene manager GameObject. Assign a player tank prefab and a bot tank prefab. The player prefab should include `TankHealth`, `TankMovement`, `TankTurretAim`, `TankWeapon`, a camera setup, and `MobileTankControls`. The bot prefab should include `TankHealth`, `TankMovement`, `TankFaction`, `TankWeapon`, `TankBotAI`, turret/gun transforms, and a projectile prefab assignment.
+- Choose the player's team and the number of bots per team. The manager spawns the player and the configured number of bots for each side.
+- Every spawned vehicle receives its team assignment at runtime. When its hull is destroyed, the vehicle is removed after a short delay and respawns after the configured respawn delay.
+- Spawn selection checks physical clearance and distance to enemy vehicles. If no point meets the enemy safety distance, it falls back to an unblocked spawn point belonging to the correct team.
+- Generate the map before scene Start methods execute. The generator now builds the map in Awake so match rules and the spawn manager can discover capture points and team spawn markers during Start.
+- This is a local prototype spawn flow. It does not yet include multiplayer authority, spawn-wave synchronization, team balancing, spawn protection, selectable vehicle loadouts, spawn menu UI, tickets, or match-end respawn lockout. The generated city currently has one spawn marker per team, so safe alternatives are limited until more spawn points are authored.
+- Prefabs, spawn manager references, collision layers, and the actual respawn loop still require Unity Editor setup and play-mode testing.
