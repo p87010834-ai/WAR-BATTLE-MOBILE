@@ -8,7 +8,7 @@ This is an implementation scaffold for the tank-combat vertical slice, not a fin
 - Create an Android project and install the Input System package if using its UI components.
 - Create folders matching the paths under `Assets/Scripts`.
 
-## 2. Build a tank prefab
+## 2. Tank prefab
 
 Suggested hierarchy:
 
@@ -30,27 +30,34 @@ TankRoot
 - Add TankWeapon to TankRoot; assign Muzzle, projectile prefab, and aiming camera.
 - Keep the CharacterController on the root. Do not add a non-kinematic Rigidbody to the same root.
 
-## 3. Projectile prefab
+## 3. Projectile prefab and armour zones
 
-Create a small 3D object (for example, a capsule aligned along its local +Z axis) and make it a prefab.
+- Create a small shell object with a Rigidbody, non-trigger Collider, and TankProjectile component.
+- Assign the prefab to TankWeapon.projectilePrefab.
+- Add separate armour colliders to hull, turret, engine, transmission, breech, optics, ammunition rack, and track hit areas.
+- Add TankArmorZone to each armour collider. Set its thickness in millimetres and its damagedModule field.
+- The projectile currently stops at the first collision. This starter model does not yet simulate penetration through multiple physical layers.
+- Oblique impacts increase effective armour thickness; shallow impacts can ricochet. Penetration decreases with distance using a simple linear approximation.
 
-- Add a Rigidbody and a non-trigger Collider.
-- Add TankProjectile to the same object.
-- Use a small collider and a mass appropriate to the shell; enable continuous dynamic collision detection (the script also configures this).
-- Assign this prefab to TankWeapon.projectilePrefab.
-- The projectile uses Unity gravity and physical travel time. It currently stops at the first collision; it does not penetrate through multiple objects.
+## 4. Internal module damage and gameplay consequences
 
-## 4. Armour hitboxes
+Configure module health in TankHealth. Suggested hitbox mapping:
 
-- Add separate colliders to the hull, turret, engine area, and track areas.
-- Add TankArmorZone to each armour collider.
-- Set the zone's thickness in millimetres and select the module it protects.
-- If a collider has no TankArmorZone, the projectile uses a simplified 80 mm fallback.
-- The impact angle is measured from the surface normal. Oblique hits have greater effective armour thickness; very shallow hits can ricochet.
-- Penetration decreases with distance using a configurable linear approximation.
-- A successful penetration damages the module associated with that armour zone. A non-penetrating hit does not apply module damage.
+| Hitbox area | TankModule | Consequence at zero health |
+|---|---|---|
+| Hull | Hull | Vehicle destroyed |
+| Engine | Engine | Maximum movement speed is reduced |
+| Transmission | Transmission | Steering response is heavily reduced |
+| Turret ring | Turret | Turret aiming is disabled |
+| Gun breech | GunBreech | Cannon cannot fire |
+| Sights / optics | Optics | Aiming input no longer controls the turret |
+| Ammunition rack | AmmunitionRack | Remaining ammunition is set to zero |
+| Left track | LeftTrack | Mobility and turning are reduced |
+| Right track | RightTrack | Mobility and turning are reduced |
 
-This is a starter approximation, not a certified real-world ballistics model. It does not yet model shell deformation, layered/composite armour, spall liners, fragments, fuse behavior, internal component geometry, or penetration through multiple layers.
+A module reaching zero health raises the ModuleDisabled event once. ModuleHealthChanged reports current and maximum health for HUD bars and damage indicators. Hull destruction raises TankDestroyed.
+
+The ammunition rack is disabled without an automatic explosion in this prototype. Crew injury/loss, fire propagation, ammo cook-off, repair, and recovery systems are not implemented.
 
 ## 5. Mobile controls
 
@@ -58,22 +65,11 @@ This is a starter approximation, not a certified real-world ballistics model. It
 - Right aiming touch area: call `TankTurretAim.SetAimScreenPosition(Vector2)` with screen pixel coordinates.
 - Fire button: call `TankWeapon.Fire()` on button press.
 - Subscribe to `TankWeapon.AmmunitionChanged` for ammunition/reload UI.
+- Subscribe to `TankHealth.ModuleHealthChanged` and `ModuleDisabled` to display module damage.
 
-## 6. Damage behavior
+## 6. Current limitations and next tasks
 
-- Configure module health values on TankHealth.
-- If not using TankArmorZone, collider names containing `engine`, `turret`, `lefttrack`, or `righttrack` select the damaged module.
-- Hull destruction raises TankDestroyed.
-- Track damage reduces movement performance; engine damage stops propulsion; turret damage disables aiming and firing.
-
-## 7. Next implementation tasks
-
-1. Add penetration-through-multiple-layers and fragment/spall damage.
-2. Add server-authoritative hit validation before online multiplayer.
-3. Add AI tank navigation and combat behavior.
-4. Build the ruined-city capture map, match rules, HUD, minimap, and touch-control prefab.
-5. Add edit-mode tests, compile in Unity, verify Play Mode, then build and test on Android.
-
-## Status
-
-These C# files are initial integration scaffolding. They have not been compiled in Unity or tested on a device.
+- Ballistics use Unity Rigidbody gravity and first-contact collision; no multi-layer penetration, fragments, spall, fuse, or server authority yet.
+- Armour and penetration calculations are gameplay approximations, not a validated real-world simulation.
+- AI navigation, match rules, capture map, HUD, minimap, touch-control prefab, automated tests, and Android device testing remain to be built.
+- These scripts have not been compiled in Unity or tested on a device.
