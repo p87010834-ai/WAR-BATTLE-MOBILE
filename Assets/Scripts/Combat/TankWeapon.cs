@@ -21,6 +21,7 @@ namespace WarBattleMobile.Combat
         public event Action<int, float> AmmunitionChanged;
         public event Action ShotFired;
         public bool IsReloading { get; private set; }
+        public float MuzzleVelocity => muzzleVelocity;
         public int Ammunition => ammunition;
         public float ReloadProgress01 => !IsReloading ? 1f :
             1f - Mathf.Clamp01((reloadEndsAt - Time.time) / Mathf.Max(0.1f, reloadSeconds));
