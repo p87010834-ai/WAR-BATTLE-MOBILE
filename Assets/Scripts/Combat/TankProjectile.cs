@@ -1,4 +1,5 @@
 using UnityEngine;
+using WarBattleMobile.World;
 
 namespace WarBattleMobile.Combat
 {
@@ -86,6 +87,7 @@ namespace WarBattleMobile.Combat
             if (target != null && target == owner) return;
 
             impacted = true;
+            DestructibleEnvironment destructible = collision.collider.GetComponentInParent<DestructibleEnvironment>();
             Vector3 velocity = body.linearVelocity;
             Vector3 incoming = velocity.sqrMagnitude > 0.01f ? velocity.normalized : transform.forward;
             ContactPoint contact = collision.GetContact(0);
@@ -107,6 +109,12 @@ namespace WarBattleMobile.Combat
             float travelled = Vector3.Distance(launchPosition, transform.position);
             float remainingPenetration = initialPenetration -
                 travelled * penetrationDistanceLossPerMetre;
+
+            if (destructible != null)
+            {
+                float environmentDamage = damage * Mathf.Clamp(remainingPenetration / Mathf.Max(1f, effectiveThickness), 0.2f, 1.5f);
+                destructible.ApplyDamage(environmentDamage, contact.point, incoming, impactImpulse);
+            }
 
             if (target != null && remainingPenetration >= effectiveThickness)
             {
