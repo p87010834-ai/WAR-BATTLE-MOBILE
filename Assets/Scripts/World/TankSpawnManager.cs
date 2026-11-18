@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using WarBattleMobile.Combat;
 using WarBattleMobile.Vehicle;
+using WarBattleMobile.UI;
 
 namespace WarBattleMobile.World
 {
@@ -32,6 +33,8 @@ namespace WarBattleMobile.World
         private readonly List<VehicleSlot> slots = new List<VehicleSlot>();
         private TankSpawnPoint[] spawnPoints;
         private Transform spawnedVehiclesRoot;
+        private int blueSpawnSlots;
+        private int redSpawnSlots;
 
         private sealed class VehicleSlot
         {
@@ -40,6 +43,7 @@ namespace WarBattleMobile.World
             public bool IsPlayer;
             public GameObject Instance;
             public bool RespawnQueued;
+            public int SpawnIndex;
         }
 
         private void Start()
@@ -87,21 +91,28 @@ namespace WarBattleMobile.World
         private void AddSlot(GameObject prefab, TankTeam team, bool isPlayer)
         {
             if (prefab == null || team == TankTeam.Neutral) return;
-            slots.Add(new VehicleSlot { Prefab = prefab, Team = team, IsPlayer = isPlayer });
+            int spawnIndex = team == TankTeam.Blue ? blueSpawnSlots++ : redSpawnSlots++;
+            slots.Add(new VehicleSlot
+            {
+                Prefab = prefab,
+                Team = team,
+                IsPlayer = isPlayer,
+                SpawnIndex = spawnIndex
+            });
         }
 
         private void SpawnSlot(VehicleSlot slot)
         {
             if (slot == null || slot.Prefab == null || slot.Instance != null) return;
 
-            TankSpawnPoint point = ChooseSpawnPoint(slot.Team);
+            TankSpawnPoint point = ChooseSpawnPoint(slot);
             if (point == null)
             {
                 Debug.LogWarning($"TankSpawnManager: no safe spawn point found for {slot.Team}.", this);
                 return;
             }
 
-            Vector3 position = point.transform.position + spawnOffset;
+            Vector3 position = GetSlotSpawnPosition(point, slot);
             Quaternion rotation = point.transform.rotation;
             GameObject vehicle = Instantiate(slot.Prefab, position, rotation, spawnedVehiclesRoot);
             vehicle.name = (slot.IsPlayer ? "Player " : "Bot ") + slot.Team + " Tank";
@@ -127,24 +138,28 @@ namespace WarBattleMobile.World
                     Transform cameraTarget = vehicle.transform.Find("CameraTarget");
                     cameraController.SetTarget(cameraTarget != null ? cameraTarget : vehicle.transform);
                 }
+
+                TankCombatHUD hud = FindFirstObjectByType<TankCombatHUD>();
+                if (hud != null)
+                    hud.BindVehicle(health, vehicle.GetComponent<TankWeapon>(), faction);
             }
             health.TankDestroyed += () => OnVehicleDestroyed(slot, vehicle);
         }
 
-        private TankSpawnPoint ChooseSpawnPoint(TankTeam team)
+        private TankSpawnPoint ChooseSpawnPoint(VehicleSlot slot)
         {
             TankSpawnPoint best = null;
             float bestThreatDistance = float.MinValue;
+            TankFaction[] factions = FindObjectsByType<TankFaction>(FindObjectsSortMode.None);
 
             foreach (TankSpawnPoint point in spawnPoints)
             {
-                if (point == null || point.Team != team) continue;
-                Vector3 candidatePosition = point.transform.position + spawnOffset;
+                if (point == null || point.Team != slot.Team) continue;
+                Vector3 candidatePosition = GetSlotSpawnPosition(point, slot);
                 if (IsSpawnBlocked(candidatePosition))
                     continue;
 
                 float nearestEnemy = float.MaxValue;
-                TankFaction[] factions = FindObjectsByType<TankFaction>(FindObjectsSortMode.None);
                 foreach (TankFaction faction in factions)
                 {
                     if (faction == null || faction.Team == TankTeam.Neutral || faction.Team == team)
@@ -167,13 +182,34 @@ namespace WarBattleMobile.World
             {
                 foreach (TankSpawnPoint point in spawnPoints)
                 {
-                    if (point == null || point.Team != team) continue;
-                    Vector3 candidatePosition = point.transform.position + spawnOffset;
+                    if (point == null || point.Team != slot.Team) continue;
+                    Vector3 candidatePosition = GetSlotSpawnPosition(point, slot);
                     if (!IsSpawnBlocked(candidatePosition))
                         return point;
                 }
             }
             return best;
+        }
+
+        private Vector3 GetSlotSpawnPosition(TankSpawnPoint point, VehicleSlot slot)
+        {
+            // The generated map has one marker per team. Spread each team roster
+            // around that marker so player and bots do not stack into one collider.
+            Vector3 localOffset = Vector3.zero;
+            if (slot.SpawnIndex > 0)
+            {
+                int ring = (slot.SpawnIndex + 3) / 4;
+                int positionInRing = (slot.SpawnIndex - 1) % 4;
+                float distance = 9f * ring;
+                switch (positionInRing)
+                {
+                    case 0: localOffset = Vector3.right * distance; break;
+                    case 1: localOffset = Vector3.left * distance; break;
+                    case 2: localOffset = Vector3.forward * distance; break;
+                    default: localOffset = Vector3.back * distance; break;
+                }
+            }
+            return point.transform.position + point.transform.TransformDirection(localOffset) + spawnOffset;
         }
 
         private bool IsSpawnBlocked(Vector3 position)
