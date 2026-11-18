@@ -88,3 +88,16 @@ The first AI implementation is a simple combat opponent, not a full tactical com
 - Use different team values for opposing sides. A bot will not target its own team or neutral objects.
 
 AI limitations: target selection is nearest-enemy only; driving uses simple forward/reverse steering and a single obstacle ray, not NavMesh pathfinding. Bots do not yet use cover intelligently, capture objectives, coordinate squads, lead moving targets, or use server-authoritative decisions. Configure `lineOfSightLayers` to include terrain, obstacles, and vehicle hitboxes while excluding decorative triggers where appropriate.
+
+
+## 8. Capture points and match rules
+
+- Create a GameObject for each objective, add a BoxCollider or SphereCollider with Is Trigger enabled, and add CapturePoint.
+- Give each point a unique Point Id, set its capture duration, and size its trigger volume for the intended capture zone. The script enforces trigger mode at runtime.
+- Add TankFaction to every participating tank root and set its team to Blue or Red. The tank's non-trigger colliders must overlap the capture volume.
+- Add one TankMatchRules component to a scene manager object. Configure match duration, score limit, and points earned per owned objective per second.
+- A point captures when only one team is present for the configured duration. If both teams are inside, progress pauses. If no team is present, progress pauses. The owning team earns score while holding points.
+- Subscribe to CapturePoint.OwnershipChanged and ProgressChanged for objective markers and capture bars. Subscribe to TankMatchRules.ScoreChanged, TimeChanged, and MatchEnded for the scoreboard, timer, and result screen.
+- Bots seek the nearest neutral or enemy-owned capture point when they have no active enemy target. They stop inside the objective radius and contest it through team presence.
+
+Prototype limitations: no spawn system, respawn flow, team balancing, round reset, overtime, network authority, NavMesh routing, or sophisticated multi-bot roles. Simple AI may get stuck on complex geometry. Match rules collect capture points once when the scene starts, so create all points before the match begins.
