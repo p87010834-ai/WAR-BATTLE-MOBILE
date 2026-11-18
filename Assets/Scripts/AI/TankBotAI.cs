@@ -28,6 +28,10 @@ namespace WarBattleMobile.AI
         [SerializeField] private float maxGunPitch = 18f;
         [SerializeField] private LayerMask lineOfSightLayers = ~0;
 
+        [Header("Objectives")]
+        [SerializeField] private bool prioritizeCapturePoints = true;
+        [SerializeField, Min(1f)] private float objectiveArrivalDistance = 7f;
+
         [Header("Driving")]
         [SerializeField, Min(1f)] private float obstacleCheckDistance = 12f;
         [SerializeField, Min(0f)] private float steeringStrength = 1f;
@@ -69,6 +73,26 @@ namespace WarBattleMobile.AI
 
             if (target == null || target.IsDestroyed)
             {
+                if (prioritizeCapturePoints)
+                {
+                    CapturePoint objective = FindObjective();
+                    if (objective != null)
+                    {
+                        Vector3 toObjective = objective.transform.position - transform.position;
+                        float objectiveDistance = toObjective.magnitude;
+                        if (objectiveDistance > objectiveArrivalDistance)
+                        {
+                            if (Time.time >= nextDecision)
+                            {
+                                UpdateDriving(toObjective, objectiveDistance);
+                                nextDecision = Time.time + 0.15f;
+                            }
+                            movement.SetMoveInput(moveCommand);
+                        }
+                        else movement.SetMoveInput(Vector2.zero);
+                        return;
+                    }
+                }
                 movement.SetMoveInput(Vector2.zero);
                 return;
             }
@@ -113,6 +137,24 @@ namespace WarBattleMobile.AI
                 {
                     bestDistance = distance;
                     best = candidate;
+                }
+            }
+            return best;
+        }
+
+        private CapturePoint FindObjective()
+        {
+            CapturePoint[] points = FindObjectsByType<CapturePoint>(FindObjectsSortMode.None);
+            CapturePoint best = null;
+            float bestDistance = float.MaxValue;
+            foreach (CapturePoint point in points)
+            {
+                if (point == null || point.Owner == faction.Team) continue;
+                float distance = Vector3.Distance(transform.position, point.transform.position);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = point;
                 }
             }
             return best;
