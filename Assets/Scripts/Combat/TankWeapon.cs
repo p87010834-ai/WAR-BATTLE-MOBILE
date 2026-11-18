@@ -18,7 +18,6 @@ namespace WarBattleMobile.Combat
         [SerializeField, Min(1f)] private float maxRange = 1500f;
         [SerializeField] private int ammunition = 20;
         [SerializeField] private TankHealth tankHealth;
-        [SerializeField] private TankTurretAim turretAim;
 
         public event Action<int, float> AmmunitionChanged;
         public bool IsReloading { get; private set; }
@@ -28,14 +27,50 @@ namespace WarBattleMobile.Combat
         {
             if (aimCamera == null) aimCamera = Camera.main;
             if (tankHealth == null) tankHealth = GetComponentInParent<TankHealth>();
-            if (turretAim == null) turretAim = GetComponentInParent<TankTurretAim>();
+        }
+
+        private void OnEnable()
+        {
+            if (tankHealth != null)
+                tankHealth.ModuleDisabled += HandleModuleDisabled;
+        }
+
+        private void Start()
+        {
+            if (tankHealth != null)
+            {
+                tankHealth.ModuleDisabled -= HandleModuleDisabled;
+                tankHealth.ModuleDisabled += HandleModuleDisabled;
+                if (tankHealth.AmmunitionRackDisabled)
+                    SetAmmunitionToZero();
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (tankHealth != null)
+                tankHealth.ModuleDisabled -= HandleModuleDisabled;
+        }
+
+        private void HandleModuleDisabled(TankModule module)
+        {
+            if (module == TankModule.AmmunitionRack)
+                SetAmmunitionToZero();
+        }
+
+        private void SetAmmunitionToZero()
+        {
+            ammunition = 0;
+            AmmunitionChanged?.Invoke(ammunition, reloadSeconds);
         }
 
         public void Fire()
         {
             if (IsReloading || ammunition <= 0 || muzzle == null || projectilePrefab == null)
                 return;
-            if (tankHealth != null && (tankHealth.IsDestroyed || tankHealth.TurretDisabled))
+            if (tankHealth != null &&
+                (tankHealth.IsDestroyed || tankHealth.TurretDisabled ||
+                 tankHealth.GunBreechDisabled || tankHealth.AmmunitionRackDisabled))
                 return;
 
             Vector3 direction = muzzle.forward;
@@ -45,7 +80,8 @@ namespace WarBattleMobile.Combat
                 if (Physics.Raycast(aimRay, out RaycastHit aimHit, maxRange, aimLayers,
                     QueryTriggerInteraction.Ignore))
                 {
-                    if (tankHealth == null || aimHit.collider.GetComponentInParent<TankHealth>() != tankHealth)
+                    if (tankHealth == null ||
+                        aimHit.collider.GetComponentInParent<TankHealth>() != tankHealth)
                         direction = (aimHit.point - muzzle.position).normalized;
                 }
             }
@@ -62,7 +98,6 @@ namespace WarBattleMobile.Combat
 
             projectile.Launch(direction, muzzleVelocity, penetrationMillimetres,
                 projectileDamage, maxRange, tankHealth);
-
             ammunition--;
             AmmunitionChanged?.Invoke(ammunition, reloadSeconds);
             StartCoroutine(ReloadRoutine());
