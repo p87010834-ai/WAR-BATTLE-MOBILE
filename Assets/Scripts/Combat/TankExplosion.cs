@@ -14,7 +14,8 @@ namespace WarBattleMobile.Combat
         private static readonly HashSet<int> ProcessedBodies = new HashSet<int>();
 
         public static void Detonate(Vector3 position, TankHealth owner, float radius,
-            float maximumDamage, float force, float visualScale, AudioClip sound)
+            float maximumDamage, float force, float visualScale, AudioClip sound,
+            bool damageVehicles = false)
         {
             radius = Mathf.Max(0.1f, radius);
             int count = Physics.OverlapSphereNonAlloc(position, radius, OverlapBuffer,
@@ -29,7 +30,7 @@ namespace WarBattleMobile.Combat
                 if (hit == null) continue;
 
                 TankHealth tank = hit.GetComponentInParent<TankHealth>();
-                if (tank != null && tank != owner && !tank.IsDestroyed)
+                if (damageVehicles && tank != null && tank != owner && !tank.IsDestroyed)
                 {
                     int id = tank.GetInstanceID();
                     if (ProcessedTargets.Add(id))
