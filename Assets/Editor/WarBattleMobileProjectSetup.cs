@@ -120,14 +120,20 @@ namespace WarBattleMobile.EditorTools
                 new Vector3(0f, 0.85f, 0f), new Vector3(2.8f, 1.15f, 4.2f),
                 TankModule.Hull, 90f);
             AddArmorHitbox(tank.transform, "Engine Armour Hitbox",
-                new Vector3(0f, 0.88f, -1.28f), new Vector3(1.05f, 0.82f, 1.05f),
+                new Vector3(0f, 0.88f, -2.22f), new Vector3(1.05f, 0.82f, 0.78f),
                 TankModule.Engine, 65f);
             AddArmorHitbox(tank.transform, "Turret Armour Hitbox",
                 new Vector3(0f, 1.58f, 0f), new Vector3(2.85f, 0.72f, 2.75f),
                 TankModule.Turret, 160f);
             AddArmorHitbox(tank.transform, "Gun Breech Armour Hitbox",
-                new Vector3(0f, 1.62f, 1.05f), new Vector3(0.62f, 0.48f, 0.72f),
+                new Vector3(0f, 1.62f, 1.52f), new Vector3(0.62f, 0.48f, 0.82f),
                 TankModule.GunBreech, 110f);
+            AddArmorHitbox(tank.transform, "Transmission Armour Hitbox",
+                new Vector3(0f, 0.48f, 2.22f), new Vector3(1.05f, 0.62f, 0.78f),
+                TankModule.Transmission, 55f);
+            AddArmorHitbox(tank.transform, "Ammunition Rack Armour Hitbox",
+                new Vector3(0f, 1.58f, -0.82f), new Vector3(0.92f, 0.38f, 0.9f),
+                TankModule.AmmunitionRack, 45f);
             AddArmorHitbox(tank.transform, "Optics Armour Hitbox",
                 new Vector3(0f, 2.02f, -0.28f), new Vector3(0.38f, 0.22f, 0.38f),
                 TankModule.Optics, 35f);
