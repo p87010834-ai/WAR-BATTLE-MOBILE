@@ -168,3 +168,13 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - On the projectile prefab's `TankProjectile`, optionally assign `Flight Loop Clip` for a moving spatial shell whistle, `Impact Clip` for a normal impact, and `Ricochet Clip` for a ricochet. The flight loop is attached to the projectile so it moves through the world; impact audio is played at the collision position.
 - Use short, clean, seamless loop clips for engines/tracks and mono clips for positional one-shots where possible. Import distant ambience as stereo only when it is intended to be non-positional. Tune AudioSource min/max distance and volume in the Inspector for mobile speakers/headphones.
 - This system provides audio hooks and runtime sources, not bundled sound assets. The project still needs properly licensed/created audio clips assigned in prefabs, plus mixer groups, snapshots, audio pooling, performance profiling, and Android device mix testing. No sound assets are included automatically.
+
+
+## 15. Destructible city environment
+
+- The procedural city now marks building blocks, concrete road barriers, and abandoned-vehicle cover as destructible.
+- Add DestructibleEnvironment to an environment mesh with a Renderer and Collider. Configure hit points, debris count (2–6), debris impulse, and debris lifetime in the Inspector.
+- Tank shells apply damage on collision. When health reaches zero, the original mesh and collider are removed and replaced by a capped set of temporary physics debris pieces pushed by the impact.
+- Regular buildings receive more health than already-ruined structures; barriers and abandoned cover use lower prototype health values.
+- Debris is capped per object and self-destructs after a short lifetime for mobile performance. This is a simple break-apart effect, not structural fracture: no interiors, collapse propagation, persistent rubble, dust/smoke particles, blast-radius damage, or server synchronization yet.
+- Play Mode profiling and Android device tuning remain required. These scripts have not been compiled or tested in Unity.
