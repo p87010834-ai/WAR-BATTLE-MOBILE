@@ -21,21 +21,23 @@ namespace WarBattleMobile.Combat
         public TankTeam WinningTeam { get; private set; } = TankTeam.Neutral;
 
         private CapturePoint[] points;
-        private float scoreFraction;
+        private float blueScoreFraction;
+        private float redScoreFraction;
 
         private void Start()
         {
-            points = FindObjectsByType<CapturePoint>(FindObjectsSortMode.None);
             if (startOnSceneLoad) StartMatch();
         }
 
         public void StartMatch()
         {
             if (IsFinished) return;
+            points = FindObjectsByType<CapturePoint>(FindObjectsSortMode.None);
             BlueScore = 0;
             RedScore = 0;
             TimeRemaining = matchDurationSeconds;
-            scoreFraction = 0f;
+            blueScoreFraction = 0f;
+            redScoreFraction = 0f;
             IsRunning = true;
             ScoreChanged?.Invoke(TankTeam.Blue, BlueScore, RedScore);
             TimeChanged?.Invoke(TimeRemaining);
@@ -55,13 +57,16 @@ namespace WarBattleMobile.Combat
                 else if (p.Owner == TankTeam.Red) redOwned++;
             }
 
-            scoreFraction += Time.deltaTime * pointsPerOwnedPointPerSecond;
-            int whole = Mathf.FloorToInt(scoreFraction);
-            if (whole > 0)
+            blueScoreFraction += Time.deltaTime * pointsPerOwnedPointPerSecond * blueOwned;
+            redScoreFraction += Time.deltaTime * pointsPerOwnedPointPerSecond * redOwned;
+            int blueWhole = Mathf.FloorToInt(blueScoreFraction);
+            int redWhole = Mathf.FloorToInt(redScoreFraction);
+            if (blueWhole > 0 || redWhole > 0)
             {
-                scoreFraction -= whole;
-                BlueScore += whole * blueOwned;
-                RedScore += whole * redOwned;
+                blueScoreFraction -= blueWhole;
+                redScoreFraction -= redWhole;
+                BlueScore += blueWhole;
+                RedScore += redWhole;
                 ScoreChanged?.Invoke(TankTeam.Blue, BlueScore, RedScore);
             }
 
