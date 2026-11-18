@@ -261,3 +261,12 @@ The repository now includes the initial Unity project shell:
 - Follow `Assets/WarBattleMobile/SETUP.md` for opening the project and validating the generated scene.
 
 Important: the editor command has been committed as source code; it has NOT been executed by a Unity Editor in this workflow. Therefore the generated scene and prefab assets do not yet exist in the repository, and C# compilation, Play Mode, Android build, and device tests remain unverified. This is the next external validation gate.
+
+
+## 24. Greybox prefab hitboxes and camera collision integration
+
+- The generated tank prefab now includes separate primitive armour hitboxes for hull, engine, transmission, turret, gun breech, optics, ammunition rack, and left/right tracks. Each hitbox carries a `TankArmorZone` module and thickness value so the projectile's existing armour resolution can apply damage to more than the hull.
+- The generated movement capsule is narrower than the visual hull. The outer edges of the module hitboxes are exposed beyond the capsule where possible, allowing incoming projectiles to resolve module-specific colliders.
+- Third-person camera collision now ignores the complete target vehicle hierarchy, including a collider on the vehicle root when the camera target is a child transform. This prevents the camera from treating the player's own CharacterController as an obstacle.
+- Procedural battlefield materials now choose URP/Lit only when a URP pipeline asset is active, and otherwise fall back to Standard while the project is being bootstrapped.
+- These changes improve the generated greybox scaffold, but they do not prove correct hitbox priority, projectile collision ordering, camera behaviour, or gameplay feel. Those require Play Mode tests and tuning in Unity.
