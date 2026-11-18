@@ -71,8 +71,6 @@ namespace WarBattleMobile.UI
 
         private void Start()
         {
-            // Awake may have resolved scene references after OnEnable.
-            Subscribe();
             RefreshAll();
         }
 
