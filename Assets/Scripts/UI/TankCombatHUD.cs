@@ -312,7 +312,7 @@ namespace WarBattleMobile.UI
             WarBattleMobile.Combat.TankTeam winner = matchRules.WinningTeam;
             matchResultText.text = winner == WarBattleMobile.Combat.TankTeam.Neutral
                 ? "DRAW"
-                : winner == tankFaction?.Team ? "VICTORY" : "DEFEAT";
+                : tankFaction != null && winner == tankFaction.Team ? "VICTORY" : "DEFEAT";
         }
 
         private void OnMatchEnded(WarBattleMobile.Combat.TankTeam winner)
