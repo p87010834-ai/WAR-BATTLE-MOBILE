@@ -325,3 +325,16 @@ The follow camera now identifies its own vehicle through the owning `TankHealth`
 - Cover sampling uses two rings of 16 directions, ground raycasts, and a clearance overlap check. It is a local heuristic rather than NavMesh pathfinding: it can choose a position that is difficult or impossible to reach around complex geometry, and it does not model incoming shell trajectories or predicted enemy aim.
 - Target selection gives a configurable preference to enemies already selected by allied bots, encouraging coordinated focus fire while retaining distance as the main selection factor.
 - The bot unsubscribes from damage events when disabled. Configure cover radius, search interval, arrival distance, and duration on each bot prefab. Unity compilation, Play Mode, navigation reliability, and Android performance have not yet been tested.
+
+
+## Five-part integration hardening pass
+
+This pass groups five code-level improvements intended to reduce avoidable failures before the first Unity Play Mode validation:
+
+1. **Bot target selection:** disabled or inactive allied bots and destroyed/disabled health components are excluded from focus-fire scoring.
+2. **Objective assignment:** inactive or non-combatant allies no longer count toward capture-point crowding.
+3. **Spawn threat evaluation:** only active, living enemy combatants influence the enemy-safe-distance check.
+4. **Spawn clearance:** solid overlaps are inspected individually; trigger volumes and shallow ground surfaces are ignored so a floor collider does not automatically reject an otherwise clear spawn location.
+5. **Match configuration and scene diagnostics:** match duration, score limit, and score rate are sanitized before the round starts; the scene validator reports a disabled spawn manager and checks for contradictory match lifecycle state.
+
+These are source-level safeguards, not proof of a working build. They still require Unity 6 compilation, Play Mode checks with the generated scene, and Android device validation. In particular, spawn clearance must be tuned against the actual battlefield floor and collider layers; this change intentionally does not silently ignore walls, vehicles, or solid props.
