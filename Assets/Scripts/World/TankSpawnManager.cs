@@ -37,6 +37,19 @@ namespace WarBattleMobile.World
         private int blueSpawnSlots;
         private int redSpawnSlots;
 
+        public int ConfiguredSlotCount => slots.Count;
+        public int ActiveVehicleCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (VehicleSlot slot in slots)
+                    if (slot != null && slot.Instance != null && slot.Instance.activeInHierarchy)
+                        count++;
+                return count;
+            }
+        }
+
         private sealed class VehicleSlot
         {
             public GameObject Prefab;
