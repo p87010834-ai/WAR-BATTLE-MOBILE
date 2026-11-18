@@ -236,9 +236,9 @@ namespace WarBattleMobile.AI
                         continue;
 
                     Vector3 candidate = groundHit.point;
-                    Vector3 clearancePoint = candidate + Vector3.up * 1.1f;
+                    Vector3 clearancePoint = candidate + Vector3.up * 1.25f;
                     Collider[] overlaps = Physics.OverlapSphere(clearancePoint,
-                        coverCandidateClearance, lineOfSightLayers, QueryTriggerInteraction.Ignore);
+                        Mathf.Min(coverCandidateClearance, 0.9f), lineOfSightLayers, QueryTriggerInteraction.Ignore);
                     bool blockedByVehicle = false;
                     foreach (Collider overlap in overlaps)
                     {
