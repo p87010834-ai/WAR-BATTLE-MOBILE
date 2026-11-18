@@ -1,4 +1,5 @@
 using UnityEngine;
+using WarBattleMobile.Combat;
 
 namespace WarBattleMobile.Vehicle
 {
@@ -95,8 +96,16 @@ namespace WarBattleMobile.Vehicle
                 out RaycastHit hit, currentDistance, collisionLayers,
                 QueryTriggerInteraction.Ignore))
             {
+                // The camera target is a child marker, while the tank's
+                // colliders live on sibling objects (hull/armour hitboxes).
+                // Compare owning TankHealth components to ignore this vehicle
+                // without ignoring enemy vehicles.
+                TankHealth targetHealth = target.GetComponentInParent<TankHealth>();
+                TankHealth hitHealth = hit.collider != null
+                    ? hit.collider.GetComponentInParent<TankHealth>() : null;
                 bool hitBelongsToTarget = hit.transform == target ||
-                    hit.transform.IsChildOf(target) || target.IsChildOf(hit.transform);
+                    hit.transform.IsChildOf(target) ||
+                    (targetHealth != null && hitHealth == targetHealth);
                 if (!hitBelongsToTarget)
                     safeDistance = Mathf.Max(0.6f, hit.distance - collisionPadding);
             }
