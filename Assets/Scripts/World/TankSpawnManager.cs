@@ -32,6 +32,7 @@ namespace WarBattleMobile.World
 
         private readonly List<VehicleSlot> slots = new List<VehicleSlot>();
         private TankSpawnPoint[] spawnPoints;
+        [SerializeField] private TankMatchRules matchRules;
         private Transform spawnedVehiclesRoot;
         private int blueSpawnSlots;
         private int redSpawnSlots;
@@ -48,6 +49,7 @@ namespace WarBattleMobile.World
 
         private void Start()
         {
+            if (matchRules == null) matchRules = FindFirstObjectByType<TankMatchRules>();
             spawnPoints = FindObjectsByType<TankSpawnPoint>(FindObjectsSortMode.None);
             if (spawnPoints.Length == 0)
             {
@@ -93,7 +95,7 @@ namespace WarBattleMobile.World
         private IEnumerator RetryInitialSpawn(VehicleSlot slot)
         {
             while (slot != null && slot.Instance == null &&
-                this != null && isActiveAndEnabled)
+                this != null && isActiveAndEnabled && !HasMatchEnded())
             {
                 yield return new WaitForSeconds(2f);
                 if (slot.Instance == null)
@@ -122,7 +124,7 @@ namespace WarBattleMobile.World
 
         private void SpawnSlot(VehicleSlot slot)
         {
-            if (slot == null || slot.Prefab == null || slot.Instance != null) return;
+            if (slot == null || slot.Prefab == null || slot.Instance != null || HasMatchEnded()) return;
 
             TankSpawnPoint point = ChooseSpawnPoint(slot);
             if (point == null)
@@ -231,6 +233,11 @@ namespace WarBattleMobile.World
             return point.transform.position + point.transform.TransformDirection(localOffset) + spawnOffset;
         }
 
+        private bool HasMatchEnded()
+        {
+            return matchRules != null && matchRules.IsFinished;
+        }
+
         private bool IsSpawnBlocked(Vector3 position)
         {
             // Lift the clearance sphere so the ground plane beneath the vehicle
@@ -242,7 +249,7 @@ namespace WarBattleMobile.World
 
         private void OnVehicleDestroyed(VehicleSlot slot, GameObject destroyedVehicle)
         {
-            if (slot.Instance != destroyedVehicle || slot.RespawnQueued) return;
+            if (slot.Instance != destroyedVehicle || slot.RespawnQueued || HasMatchEnded()) return;
             slot.RespawnQueued = true;
             slot.Instance = null;
             StartCoroutine(RespawnAfterDelay(slot));
@@ -252,8 +259,8 @@ namespace WarBattleMobile.World
         private IEnumerator RespawnAfterDelay(VehicleSlot slot)
         {
             yield return new WaitForSeconds(respawnDelay);
-            if (this == null || !isActiveAndEnabled) yield break;
-            while (slot.Instance == null && this != null && isActiveAndEnabled)
+            if (this == null || !isActiveAndEnabled || HasMatchEnded()) yield break;
+            while (slot.Instance == null && this != null && isActiveAndEnabled && !HasMatchEnded())
             {
                 slot.RespawnQueued = false;
                 SpawnSlot(slot);
