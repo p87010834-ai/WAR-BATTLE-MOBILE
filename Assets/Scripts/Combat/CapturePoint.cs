@@ -12,6 +12,7 @@ namespace WarBattleMobile.Combat
         [SerializeField] private TankTeam owner = TankTeam.Neutral;
         private readonly Dictionary<TankFaction, int> occupants = new Dictionary<TankFaction, int>();
         private float progress;
+        private TankTeam capturingTeam = TankTeam.Neutral;
         public string PointId => pointId;
         public TankTeam Owner => owner;
         public float CaptureProgress01 => Mathf.Clamp01(progress / captureSeconds);
@@ -76,9 +77,19 @@ namespace WarBattleMobile.Combat
                 if (progress > 0f)
                 {
                     progress = Mathf.Max(0f, progress - Time.deltaTime * 0.5f);
-                    ProgressChanged?.Invoke(this, capturing, CaptureProgress01);
+                    if (progress <= 0f) capturingTeam = TankTeam.Neutral;
+                    ProgressChanged?.Invoke(this, capturingTeam, CaptureProgress01);
                 }
                 return;
+            }
+
+            // Progress belongs to one attacking team only. If control changes,
+            // the new side must start its own capture rather than inheriting
+            // the previous team's nearly completed progress.
+            if (capturingTeam != capturing)
+            {
+                progress = 0f;
+                capturingTeam = capturing;
             }
 
             progress = Mathf.Min(captureSeconds, progress + Time.deltaTime);
@@ -87,6 +98,7 @@ namespace WarBattleMobile.Combat
             {
                 owner = capturing;
                 progress = 0f;
+                capturingTeam = TankTeam.Neutral;
                 OwnershipChanged?.Invoke(this, owner);
                 ProgressChanged?.Invoke(this, capturing, 0f);
             }
