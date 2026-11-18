@@ -19,6 +19,7 @@ namespace WarBattleMobile.Combat
         [SerializeField] private TankHealth tankHealth;
 
         public event Action<int, float> AmmunitionChanged;
+        public event Action ShotFired;
         public bool IsReloading { get; private set; }
         public int Ammunition => ammunition;
         public float ReloadProgress01 => !IsReloading ? 1f :
@@ -124,6 +125,7 @@ namespace WarBattleMobile.Combat
             projectile.Launch(direction, muzzleVelocity, penetrationMillimetres,
                 projectileDamage, maxRange, tankHealth);
             ammunition--;
+            ShotFired?.Invoke();
             AmmunitionChanged?.Invoke(ammunition, reloadSeconds);
             StartCoroutine(ReloadRoutine());
         }
