@@ -81,7 +81,8 @@ namespace WarBattleMobile.UI
 
             float fireSize = Screen.width * fireButtonSizeNormalized;
             Image fireImage = CreateImage(canvasObject.transform, "FIRE Button",
-                Vector2.one, Vector2.one, new Vector2(-fireSize * 0.85f, fireSize * 0.85f),
+                new Vector2(1f, 0f), new Vector2(1f, 0f),
+                new Vector2(-fireSize * 0.85f, fireSize * 0.85f),
                 new Vector2(fireSize, fireSize), new Color(0.65f, 0.12f, 0.08f, 0.82f));
             fireImage.gameObject.AddComponent<MobileControlSurface>()
                 .Initialize(this, MobileControlSurface.SurfaceType.Fire);
@@ -188,7 +189,7 @@ namespace WarBattleMobile.UI
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 joystickBase, screenPosition, eventCamera, out Vector2 localPoint);
             float radius = joystickBase.rect.width * 0.5f;
-            Vector2 offset = localPoint;
+            Vector2 offset = localPoint - joystickBase.rect.center;
             if (offset.magnitude > radius) offset = offset.normalized * radius;
             if (joystickHandle != null) joystickHandle.anchoredPosition = offset;
             if (movement != null)
