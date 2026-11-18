@@ -7,7 +7,11 @@ namespace WarBattleMobile.Combat
     {
         Hull,
         Engine,
+        Transmission,
         Turret,
+        GunBreech,
+        Optics,
+        AmmunitionRack,
         LeftTrack,
         RightTrack
     }
