@@ -209,3 +209,12 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - These details are visual only and do not add collision to windows, rooftop equipment, or road paint. Test draw calls and frame time on the target Android device; reduce building density/detail settings if needed.
 - No production 3D tank models, UV textures, material maps, or art packs have been added by this code-only pass. The existing city remains procedural prototype geometry.
 - Unity compilation, Play Mode, and Android visual/performance tests have not yet been performed.
+
+
+## 19. Road surface and street-edge detail pass
+
+- The urban generator can now add scattered worn-asphalt patches, shallow dark pothole decals, and low curb strips along the generated street grid.
+- Configure `Add Road Surface Wear`, `Road Damage Patches`, and `Road Potholes` on the generator. Set the counts to zero or disable the feature for a cleaner or cheaper map.
+- Road wear and curbs are visual-only primitive meshes with colliders removed; they do not physically deform the road or interfere with tank movement. They use shared placeholder materials created by the generator.
+- This is a procedural surface-detail pass, not a texture-based road shader. Road normals, decals, puddles, snow/mud layers, tire tracks, and terrain deformation remain future art tasks.
+- Keep detail counts conservative and profile draw calls on target Android hardware. Unity compilation, Play Mode, and device performance tests have not yet been performed.
