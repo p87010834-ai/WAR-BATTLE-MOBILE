@@ -95,7 +95,9 @@ namespace WarBattleMobile.Vehicle
                 out RaycastHit hit, currentDistance, collisionLayers,
                 QueryTriggerInteraction.Ignore))
             {
-                if (!hit.transform.IsChildOf(target))
+                bool hitBelongsToTarget = hit.transform == target ||
+                    hit.transform.IsChildOf(target) || target.IsChildOf(hit.transform);
+                if (!hitBelongsToTarget)
                     safeDistance = Mathf.Max(0.6f, hit.distance - collisionPadding);
             }
 
