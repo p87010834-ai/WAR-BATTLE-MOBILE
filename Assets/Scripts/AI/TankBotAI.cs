@@ -97,7 +97,7 @@ namespace WarBattleMobile.AI
                 return;
             }
 
-            Vector3 targetPoint = GetTargetPoint(target);
+            Vector3 targetPoint = GetPredictedTargetPoint(target);
             Vector3 toTarget = targetPoint - transform.position;
             float distance = toTarget.magnitude;
 
@@ -109,7 +109,7 @@ namespace WarBattleMobile.AI
             }
             movement.SetMoveInput(moveCommand);
 
-            if (distance <= detectionRange && HasLineOfSight(target) &&
+            if (distance <= detectionRange && HasLineOfSight(target, targetPoint) &&
                 Vector3.Angle(muzzle.forward, (targetPoint - muzzle.position).normalized)
                     <= fireAngleTolerance)
             {
@@ -148,13 +148,26 @@ namespace WarBattleMobile.AI
             CapturePoint[] points = FindObjectsByType<CapturePoint>(FindObjectsSortMode.None);
             CapturePoint best = null;
             float bestDistance = float.MaxValue;
+            TankBotAI[] alliedBots = FindObjectsByType<TankBotAI>(FindObjectsSortMode.None);
             foreach (CapturePoint point in points)
             {
-                if (point == null || point.Owner == faction.Team) continue;
+                if (point == null || !point.isActiveAndEnabled || point.Owner == faction.Team) continue;
                 float distance = Vector3.Distance(transform.position, point.transform.position);
-                if (distance < bestDistance)
+                int nearbyAllies = 0;
+                foreach (TankBotAI ally in alliedBots)
                 {
-                    bestDistance = distance;
+                    if (ally == null || ally == this || ally.faction == null ||
+                        ally.faction.Team != faction.Team || ally.health == null || ally.health.IsDestroyed)
+                        continue;
+                    if (Vector3.Distance(ally.transform.position, point.transform.position) < 24f)
+                        nearbyAllies++;
+                }
+
+                // Prefer an objective that is not already crowded by this bot's team.
+                float assignmentCost = distance + nearbyAllies * 35f;
+                if (assignmentCost < bestDistance)
+                {
+                    bestDistance = assignmentCost;
                     best = point;
                 }
             }
@@ -233,10 +246,9 @@ namespace WarBattleMobile.AI
             return false;
         }
 
-        private bool HasLineOfSight(TankHealth enemy)
+        private bool HasLineOfSight(TankHealth enemy, Vector3 destination)
         {
             Vector3 origin = muzzle.position;
-            Vector3 destination = GetTargetPoint(enemy);
             Vector3 direction = destination - origin;
             float distance = direction.magnitude;
             if (distance <= 0.01f) return true;
@@ -251,6 +263,20 @@ namespace WarBattleMobile.AI
                 return hit.collider.GetComponentInParent<TankHealth>() == enemy;
             }
             return false;
+        }
+
+        private Vector3 GetPredictedTargetPoint(TankHealth tank)
+        {
+            Vector3 targetPoint = GetTargetPoint(tank);
+            TankMovement targetMovement = tank.GetComponent<TankMovement>();
+            if (targetMovement == null || weapon.MuzzleVelocity <= 1f)
+                return targetPoint;
+
+            float distance = Vector3.Distance(muzzle.position, targetPoint);
+            float travelTime = Mathf.Clamp(distance / weapon.MuzzleVelocity, 0f, 2f);
+            Vector3 targetVelocity = targetMovement.Velocity;
+            targetVelocity.y = 0f;
+            return targetPoint + targetVelocity * travelTime;
         }
 
         private static Vector3 GetTargetPoint(TankHealth tank)
