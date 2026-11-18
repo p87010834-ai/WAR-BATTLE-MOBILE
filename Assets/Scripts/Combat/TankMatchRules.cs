@@ -35,6 +35,18 @@ namespace WarBattleMobile.Combat
             // silently resetting scores and the timer during an active round.
             if (IsFinished || IsRunning) return;
             points = FindObjectsByType<CapturePoint>(FindObjectsSortMode.None);
+            // Inspector attributes do not protect against corrupted serialized
+            // values. Sanitize the round configuration before starting timers
+            // or accumulating score fractions.
+            if (float.IsNaN(matchDurationSeconds) || float.IsInfinity(matchDurationSeconds))
+                matchDurationSeconds = 600f;
+            if (float.IsNaN(pointsPerOwnedPointPerSecond) ||
+                float.IsInfinity(pointsPerOwnedPointPerSecond) ||
+                pointsPerOwnedPointPerSecond < 0f)
+                pointsPerOwnedPointPerSecond = 0f;
+            scoreLimit = Mathf.Max(1, scoreLimit);
+            matchDurationSeconds = Mathf.Max(60f, matchDurationSeconds);
+
             BlueScore = 0;
             RedScore = 0;
             TimeRemaining = matchDurationSeconds;
