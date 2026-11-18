@@ -279,6 +279,20 @@ namespace WarBattleMobile.AI
             return targetPoint + targetVelocity * travelTime;
         }
 
+        private Vector3 GetPredictedTargetPoint(TankHealth tank)
+        {
+            Vector3 targetPoint = GetTargetPoint(tank);
+            TankMovement targetMovement = tank.GetComponent<TankMovement>();
+            if (targetMovement == null || weapon.MuzzleVelocity <= 1f)
+                return targetPoint;
+
+            float distance = Vector3.Distance(muzzle.position, targetPoint);
+            float travelTime = Mathf.Clamp(distance / weapon.MuzzleVelocity, 0f, 2f);
+            Vector3 targetVelocity = targetMovement.Velocity;
+            targetVelocity.y = 0f;
+            return targetPoint + targetVelocity * travelTime;
+        }
+
         private static Vector3 GetTargetPoint(TankHealth tank)
         {
             Collider[] colliders = tank.GetComponentsInChildren<Collider>();
