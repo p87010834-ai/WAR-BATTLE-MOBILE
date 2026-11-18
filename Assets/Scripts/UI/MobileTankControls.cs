@@ -24,12 +24,15 @@ namespace WarBattleMobile.UI
         private RectTransform joystickHandle;
         private int joystickPointerId = int.MinValue;
         private int aimPointerId = int.MinValue;
+        private WarBattleMobile.Vehicle.TankCameraController cameraController;
 
         private void Awake()
         {
             if (movement == null) movement = GetComponent<WarBattleMobile.Vehicle.TankMovement>();
             if (turretAim == null) turretAim = GetComponent<WarBattleMobile.Vehicle.TankTurretAim>();
             if (weapon == null) weapon = GetComponent<WarBattleMobile.Combat.TankWeapon>();
+            cameraController = Camera.main != null
+                ? Camera.main.GetComponent<WarBattleMobile.Vehicle.TankCameraController>() : null;
             if (createControls) BuildControls();
         }
 
@@ -93,6 +96,20 @@ namespace WarBattleMobile.UI
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
+
+            Image aimModeImage = CreateImage(canvasObject.transform, "AIM Mode Button",
+                new Vector2(1f, 0f), new Vector2(1f, 0f),
+                new Vector2(-fireSize * 0.85f, fireSize * 2.05f),
+                new Vector2(fireSize * 0.82f, fireSize * 0.52f),
+                new Color(0.12f, 0.32f, 0.48f, 0.86f));
+            aimModeImage.gameObject.AddComponent<MobileControlSurface>()
+                .Initialize(this, MobileControlSurface.SurfaceType.AimToggle);
+            Text aimLabel = CreateText(aimModeImage.transform, "AIM Label", "AIM", 22);
+            RectTransform aimLabelRect = aimLabel.rectTransform;
+            aimLabelRect.anchorMin = Vector2.zero;
+            aimLabelRect.anchorMax = Vector2.one;
+            aimLabelRect.offsetMin = Vector2.zero;
+            aimLabelRect.offsetMax = Vector2.zero;
         }
 
         private void EnsureEventSystem()
@@ -155,6 +172,12 @@ namespace WarBattleMobile.UI
             {
                 weapon.Fire();
             }
+            else if (type == MobileControlSurface.SurfaceType.AimToggle)
+            {
+                if (cameraController == null && Camera.main != null)
+                    cameraController = Camera.main.GetComponent<WarBattleMobile.Vehicle.TankCameraController>();
+                if (cameraController != null) cameraController.ToggleAimingMode();
+            }
         }
 
         internal void SurfaceDrag(MobileControlSurface.SurfaceType type, PointerEventData eventData)
@@ -206,7 +229,7 @@ namespace WarBattleMobile.UI
     public sealed class MobileControlSurface : MonoBehaviour,
         IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
-        public enum SurfaceType { Joystick, Aim, Fire }
+        public enum SurfaceType { Joystick, Aim, Fire, AimToggle }
         private MobileTankControls owner;
         private SurfaceType surfaceType;
 
