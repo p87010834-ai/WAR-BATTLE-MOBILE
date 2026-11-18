@@ -248,3 +248,16 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - Capture progress is now owned by the attacking team. If the opposing team takes over an empty or uncontested zone, it starts from zero rather than inheriting the previous side's partial capture.
 - Capture zones count overlapping colliders per tank. A vehicle with multiple colliders remains present until its final collider leaves the trigger.
 - These logic fixes are source-reviewed and stored in GitHub; they still require Unity compilation and Play Mode tests with real tank colliders and scene timing.
+
+
+## 23. Unity project bootstrap and greybox scene generator
+
+The repository now includes the initial Unity project shell:
+- `Packages/manifest.json` declares URP 17.0.3 and UGUI 2.0.0.
+- `ProjectSettings/ProjectVersion.txt` targets Unity 6.0.35f1.
+- `Assets/Editor/WarBattleMobileProjectSetup.cs` adds the menu command **Tools > WAR BATTLE MOBILE > Build Tank Vertical Slice**.
+- The editor command generates a basic player tank prefab, bot tank prefab, projectile prefab, and `TankVerticalSlice.unity` scene, then adds the scene to Build Settings.
+- The generated placeholder tank uses a CharacterController, primitive hull/turret/gun visuals, TankHealth, TankMovement, TankTurretAim, TankWeapon, and player touch controls or bot AI. References are assigned by the editor tool.
+- Follow `Assets/WarBattleMobile/SETUP.md` for opening the project and validating the generated scene.
+
+Important: the editor command has been committed as source code; it has NOT been executed by a Unity Editor in this workflow. Therefore the generated scene and prefab assets do not yet exist in the repository, and C# compilation, Play Mode, Android build, and device tests remain unverified. This is the next external validation gate.
