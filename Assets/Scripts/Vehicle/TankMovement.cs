@@ -20,6 +20,7 @@ namespace WarBattleMobile.Vehicle
 
         public Vector2 MovementInput => movementInput;
         public float CurrentSpeed => controller != null ? controller.velocity.magnitude : 0f;
+        public Vector3 Velocity => controller != null ? controller.velocity : Vector3.zero;
 
         private void Awake()
         {
