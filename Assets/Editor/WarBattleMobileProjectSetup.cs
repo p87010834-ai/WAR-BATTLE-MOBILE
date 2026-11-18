@@ -67,7 +67,7 @@ namespace WarBattleMobile.EditorTools
 
             ValidatePrefab(PlayerPrefabPath, false, ref errors, ref warnings);
             ValidatePrefab(BotPrefabPath, true, ref errors, ref warnings);
-            ValidatePrefab(ProjectilePrefabPath, false, ref errors, ref warnings);
+            ValidateProjectilePrefab(ProjectilePrefabPath, ref errors);
 
             bool sceneInBuild = false;
             foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
@@ -136,6 +136,29 @@ namespace WarBattleMobile.EditorTools
                 {
                     Debug.LogError("[WAR BATTLE MOBILE] TankWeapon has no projectile prefab assigned: " + path);
                     errors++;
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void ValidateProjectilePrefab(string path, ref int errors)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null) return;
+
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                RequireComponent<TankProjectile>(root, path, ref errors);
+                RequireComponent<Rigidbody>(root, path, ref errors);
+                RequireComponent<SphereCollider>(root, path, ref errors);
+                Rigidbody body = root.GetComponent<Rigidbody>();
+                if (body != null && body.collisionDetectionMode != CollisionDetectionMode.ContinuousDynamic)
+                {
+                    Debug.LogWarning("[WAR BATTLE MOBILE] Projectile Rigidbody should use Continuous Dynamic collision detection: " + path);
                 }
             }
             finally
