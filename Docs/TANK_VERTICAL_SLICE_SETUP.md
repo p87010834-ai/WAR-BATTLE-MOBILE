@@ -277,6 +277,10 @@ Important: the editor command has been committed as source code; it has NOT been
 The spawn manager now retries a roster slot every two seconds when its first spawn attempt cannot find a clear team spawn position. This prevents a temporary obstruction during scene startup from permanently leaving the player or a bot unspawned. The retry stops once that slot has a live vehicle or the spawn manager is disabled. This is a code-level safeguard and still requires Play Mode verification.
 
 
+## Friendly-fire collision handling
+
+Direct shell impacts on vehicles assigned to the firing tank's team are ignored by the projectile. The projectile disables collision with the specific allied hitbox it touched and continues, so allied vehicles do not consume the shell or receive direct module damage in this prototype. Enemy and neutral vehicle collision behavior is unchanged. This is a local gameplay rule, not a server-authoritative multiplayer safeguard; verify repeated allied hitbox contacts and mixed collider setups in Unity Play Mode.
+
 ## Armour penetration and shell blast behavior
 
 Tank shell impact damage is resolved against the struck armour zone using impact angle, effective armour thickness and remaining penetration. The default shell blast is visual/environmental and does not apply vehicle splash damage, so a shell that fails to penetrate cannot still damage tank hulls through the blast-radius path. The projectile exposes an explicit `blastDamagesVehicles` option for future explosive ammunition types; it is disabled by default. Verify penetration and ricochet behavior in Unity Play Mode before tuning final ammunition values.
