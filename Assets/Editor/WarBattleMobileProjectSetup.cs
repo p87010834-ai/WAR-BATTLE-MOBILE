@@ -38,6 +38,120 @@ namespace WarBattleMobile.EditorTools
             Debug.Log("WAR BATTLE MOBILE: generated the greybox tank scene and placeholder prefabs. Enter Play Mode and inspect the Console validator before treating it as tested.");
         }
 
+        [MenuItem("Tools/WAR BATTLE MOBILE/Validate Tank Vertical Slice Assets")]
+        public static void ValidateTankVerticalSliceAssets()
+        {
+            int errors = 0;
+            int warnings = 0;
+
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
+            {
+                Debug.LogError("[WAR BATTLE MOBILE] Generated tank scene is missing. Run Build Tank Vertical Slice first.");
+                errors++;
+            }
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath) == null)
+            {
+                Debug.LogError("[WAR BATTLE MOBILE] Player tank prefab is missing.");
+                errors++;
+            }
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(BotPrefabPath) == null)
+            {
+                Debug.LogError("[WAR BATTLE MOBILE] Bot tank prefab is missing.");
+                errors++;
+            }
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(ProjectilePrefabPath) == null)
+            {
+                Debug.LogError("[WAR BATTLE MOBILE] Projectile prefab is missing.");
+                errors++;
+            }
+
+            ValidatePrefab(PlayerPrefabPath, false, ref errors, ref warnings);
+            ValidatePrefab(BotPrefabPath, true, ref errors, ref warnings);
+            ValidatePrefab(ProjectilePrefabPath, false, ref errors, ref warnings);
+
+            bool sceneInBuild = false;
+            foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
+            {
+                if (scene.path == ScenePath && scene.enabled)
+                {
+                    sceneInBuild = true;
+                    break;
+                }
+            }
+            if (!sceneInBuild)
+            {
+                Debug.LogError("[WAR BATTLE MOBILE] TankVerticalSlice scene is not enabled in Build Settings.");
+                errors++;
+            }
+
+            string summary = "[WAR BATTLE MOBILE] Asset validation finished: " +
+                errors + " error(s), " + warnings + " warning(s).";
+            if (errors > 0) Debug.LogError(summary);
+            else if (warnings > 0) Debug.LogWarning(summary);
+            else Debug.Log(summary);
+        }
+
+        private static void ValidatePrefab(string path, bool expectBot,
+            ref int errors, ref int warnings)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null) return;
+
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                RequireComponent<TankFaction>(root, path, ref errors);
+                RequireComponent<TankHealth>(root, path, ref errors);
+                RequireComponent<TankMovement>(root, path, ref errors);
+                RequireComponent<TankTurretAim>(root, path, ref errors);
+                RequireComponent<TankWeapon>(root, path, ref errors);
+
+                if (expectBot)
+                    RequireComponent<TankBotAI>(root, path, ref errors);
+                else
+                    RequireComponent<MobileTankControls>(root, path, ref errors);
+
+                if (root.transform.Find("CameraTarget") == null && !expectBot)
+                {
+                    Debug.LogError("[WAR BATTLE MOBILE] Player prefab has no CameraTarget child: " + path);
+                    errors++;
+                }
+
+                if (root.GetComponent<CharacterController>() == null)
+                {
+                    Debug.LogError("[WAR BATTLE MOBILE] Vehicle prefab has no CharacterController: " + path);
+                    errors++;
+                }
+
+                if (root.GetComponentsInChildren<TankArmorZone>(true).Length < 5)
+                {
+                    Debug.LogError("[WAR BATTLE MOBILE] Vehicle prefab has too few armour hitboxes: " + path);
+                    errors++;
+                }
+
+                TankWeapon weapon = root.GetComponent<TankWeapon>();
+                SerializedObject serializedWeapon = new SerializedObject(weapon);
+                SerializedProperty projectile = serializedWeapon.FindProperty("projectilePrefab");
+                if (projectile == null || projectile.objectReferenceValue == null)
+                {
+                    Debug.LogError("[WAR BATTLE MOBILE] TankWeapon has no projectile prefab assigned: " + path);
+                    errors++;
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void RequireComponent<T>(GameObject root, string path,
+            ref int errors) where T : Component
+        {
+            if (root.GetComponent<T>() != null) return;
+            Debug.LogError("[WAR BATTLE MOBILE] Missing " + typeof(T).Name + " on prefab root: " + path);
+            errors++;
+        }
+
         private static void EnsureFolders()
         {
             CreateFolder("Assets", "WarBattleMobile");
