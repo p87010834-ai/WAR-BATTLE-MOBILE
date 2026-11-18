@@ -240,6 +240,7 @@ namespace WarBattleMobile.World
                 trigger.isTrigger = true;
                 trigger.radius = captureRadius;
                 CapturePoint capture = objective.AddComponent<CapturePoint>();
+                capture.Configure(((char)('A' + i)).ToString(), 12f);
 
                 GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 ring.name = "Objective Zone Visual";
