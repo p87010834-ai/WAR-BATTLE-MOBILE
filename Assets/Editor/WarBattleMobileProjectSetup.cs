@@ -1,0 +1,218 @@
+using System.IO;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using WarBattleMobile.AI;
+using WarBattleMobile.Combat;
+using WarBattleMobile.UI;
+using WarBattleMobile.Vehicle;
+using WarBattleMobile.World;
+
+namespace WarBattleMobile.EditorTools
+{
+    /// <summary>
+    /// Generates a first runnable greybox scene and configured placeholder tank prefabs.
+    /// Run via Tools > WAR BATTLE MOBILE > Build Tank Vertical Slice.
+    /// </summary>
+    public static class WarBattleMobileProjectSetup
+    {
+        private const string Root = "Assets/WarBattleMobile";
+        private const string PrefabFolder = Root + "/Prefabs";
+        private const string SceneFolder = Root + "/Scenes";
+        private const string ScenePath = SceneFolder + "/TankVerticalSlice.unity";
+        private const string PlayerPrefabPath = PrefabFolder + "/PlayerTank.prefab";
+        private const string BotPrefabPath = PrefabFolder + "/BotTank.prefab";
+        private const string ProjectilePrefabPath = PrefabFolder + "/TankProjectile.prefab";
+
+        [MenuItem("Tools/WAR BATTLE MOBILE/Build Tank Vertical Slice")]
+        public static void BuildTankVerticalSlice()
+        {
+            EnsureFolders();
+            GameObject projectile = BuildProjectilePrefab();
+            GameObject player = BuildTankPrefab(false, projectile);
+            GameObject bot = BuildTankPrefab(true, projectile);
+            BuildScene(player, bot);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            EditorSceneManager.OpenScene(ScenePath);
+            Debug.Log("WAR BATTLE MOBILE: generated the greybox tank scene and placeholder prefabs. Enter Play Mode and inspect the Console validator before treating it as tested.");
+        }
+
+        private static void EnsureFolders()
+        {
+            CreateFolder("Assets", "WarBattleMobile");
+            CreateFolder(Root, "Prefabs");
+            CreateFolder(Root, "Scenes");
+        }
+
+        private static void CreateFolder(string parent, string name)
+        {
+            string path = parent + "/" + name;
+            if (!AssetDatabase.IsValidFolder(path))
+                AssetDatabase.CreateFolder(parent, name);
+        }
+
+        private static GameObject BuildProjectilePrefab()
+        {
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(ProjectilePrefabPath);
+            if (existing != null) AssetDatabase.DeleteAsset(ProjectilePrefabPath);
+
+            GameObject projectile = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectile.name = "TankProjectile";
+            projectile.transform.localScale = Vector3.one * 0.24f;
+            Rigidbody body = projectile.AddComponent<Rigidbody>();
+            body.mass = 0.08f;
+            body.useGravity = true;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            projectile.AddComponent<TankProjectile>();
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(projectile, ProjectilePrefabPath);
+            Object.DestroyImmediate(projectile);
+            return prefab;
+        }
+
+        private static GameObject BuildTankPrefab(bool withBotAI, GameObject projectilePrefab)
+        {
+            string path = withBotAI ? BotPrefabPath : PlayerPrefabPath;
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(path) != null)
+                AssetDatabase.DeleteAsset(path);
+
+            GameObject tank = new GameObject(withBotAI ? "BotTank" : "PlayerTank");
+            CharacterController controller = tank.AddComponent<CharacterController>();
+            controller.height = 2.1f;
+            controller.radius = 1.55f;
+            controller.center = new Vector3(0f, 1.05f, 0f);
+            controller.stepOffset = 0.35f;
+            controller.slopeLimit = 35f;
+
+            tank.AddComponent<TankFaction>();
+            TankHealth health = tank.AddComponent<TankHealth>();
+            TankMovement movement = tank.AddComponent<TankMovement>();
+
+            GameObject hull = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            hull.name = "Hull Visual";
+            hull.transform.SetParent(tank.transform, false);
+            hull.transform.localPosition = new Vector3(0f, 0.85f, 0f);
+            hull.transform.localScale = new Vector3(2.8f, 1.15f, 4.2f);
+            RemoveCollider(hull);
+
+            GameObject turret = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            turret.name = "TurretYaw";
+            turret.transform.SetParent(tank.transform, false);
+            turret.transform.localPosition = new Vector3(0f, 1.55f, 0f);
+            turret.transform.localScale = new Vector3(1.55f, 0.32f, 1.75f);
+            RemoveCollider(turret);
+
+            GameObject gun = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gun.name = "GunPitch";
+            gun.transform.SetParent(turret.transform, false);
+            gun.transform.localPosition = new Vector3(0f, 0.05f, 0.95f);
+            gun.transform.localScale = new Vector3(0.28f, 0.28f, 1.9f);
+            RemoveCollider(gun);
+
+            GameObject muzzle = new GameObject("Muzzle");
+            muzzle.transform.SetParent(gun.transform, false);
+            muzzle.transform.localPosition = new Vector3(0f, 0f, 0.58f);
+
+            GameObject cameraTarget = new GameObject("CameraTarget");
+            cameraTarget.transform.SetParent(tank.transform, false);
+            cameraTarget.transform.localPosition = new Vector3(0f, 1.7f, 0f);
+
+            TankTurretAim aim = tank.AddComponent<TankTurretAim>();
+            SetObject(aim, "turretYaw", turret.transform);
+            SetObject(aim, "gunPitch", gun.transform);
+            SetObject(aim, "tankHealth", health);
+
+            TankWeapon weapon = tank.AddComponent<TankWeapon>();
+            SetObject(weapon, "muzzle", muzzle.transform);
+            SetObject(weapon, "projectilePrefab", projectilePrefab);
+            SetObject(weapon, "tankHealth", health);
+
+            if (withBotAI)
+            {
+                TankBotAI ai = tank.AddComponent<TankBotAI>();
+                SetObject(ai, "health", health);
+                SetObject(ai, "movement", movement);
+                SetObject(ai, "faction", tank.GetComponent<TankFaction>());
+                SetObject(ai, "weapon", weapon);
+                SetObject(ai, "turretYaw", turret.transform);
+                SetObject(ai, "gunPitch", gun.transform);
+                SetObject(ai, "muzzle", muzzle.transform);
+            }
+            else
+            {
+                MobileTankControls controls = tank.AddComponent<MobileTankControls>();
+                SetObject(controls, "movement", movement);
+                SetObject(controls, "turretAim", aim);
+                SetObject(controls, "weapon", weapon);
+            }
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(tank, path);
+            Object.DestroyImmediate(tank);
+            return prefab;
+        }
+
+        private static void RemoveCollider(GameObject target)
+        {
+            Collider collider = target.GetComponent<Collider>();
+            if (collider != null) Object.DestroyImmediate(collider);
+        }
+
+        private static void SetObject(Object target, string propertyName, Object value)
+        {
+            SerializedObject serialized = new SerializedObject(target);
+            SerializedProperty property = serialized.FindProperty(propertyName);
+            if (property == null)
+            {
+                Debug.LogWarning("Could not configure serialized field '" + propertyName + "' on " + target.name);
+                return;
+            }
+            property.objectReferenceValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void BuildScene(GameObject playerPrefab, GameObject botPrefab)
+        {
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            scene.name = "TankVerticalSlice";
+
+            GameObject battlefield = new GameObject("Urban Battlefield");
+            battlefield.AddComponent<UrbanBattlefieldGenerator>();
+
+            GameObject rulesObject = new GameObject("Match Rules");
+            rulesObject.AddComponent<TankMatchRules>();
+
+            GameObject cameraObject = GameObject.FindWithTag("MainCamera");
+            if (cameraObject == null)
+            {
+                cameraObject = new GameObject("Main Camera");
+                cameraObject.tag = "MainCamera";
+                cameraObject.AddComponent<Camera>();
+                cameraObject.AddComponent<AudioListener>();
+            }
+            TankCameraController cameraController = cameraObject.GetComponent<TankCameraController>();
+            if (cameraController == null) cameraController = cameraObject.AddComponent<TankCameraController>();
+            cameraObject.transform.position = new Vector3(0f, 12f, -18f);
+            cameraObject.transform.rotation = Quaternion.Euler(25f, 0f, 0f);
+
+            GameObject spawnObject = new GameObject("Tank Spawn Manager");
+            TankSpawnManager spawnManager = spawnObject.AddComponent<TankSpawnManager>();
+            SetObject(spawnManager, "playerTankPrefab", playerPrefab);
+            SetObject(spawnManager, "botTankPrefab", botPrefab);
+
+            GameObject hudObject = new GameObject("Tank Combat HUD");
+            TankCombatHUD hud = hudObject.AddComponent<TankCombatHUD>();
+            SetObject(hud, "matchRules", rulesObject.GetComponent<TankMatchRules>());
+
+            GameObject validatorObject = new GameObject("Tank Vertical Slice Validator");
+            validatorObject.AddComponent<TankVerticalSliceValidator>();
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            EditorBuildSettings.scenes = new[]
+            {
+                new EditorBuildSettingsScene(ScenePath, true)
+            };
+        }
+    }
+}
