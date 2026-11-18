@@ -62,8 +62,8 @@ The ammunition rack is disabled without an automatic explosion in this prototype
 ## 5. Mobile controls
 
 - Left virtual joystick: call `TankMovement.SetMoveInput(Vector2)` continuously; send zero when released.
-- Right aiming touch area: call `TankTurretAim.SetAimScreenPosition(Vector2)` with screen pixel coordinates.
-- Fire button: call `TankWeapon.Fire()` on button press.
+- Add `MobileTankControls` to the local player's TankRoot. It creates a left movement joystick, a right-side drag-to-aim surface, and a FIRE button. Assign the TankMovement, TankTurretAim, and TankWeapon references, or leave them empty for same-object auto-detection.
+- The aim touch position is sent to both the turret controller and weapon, so the shell camera ray follows the point the player is aiming at. The fire button fires once per press; it does not auto-repeat.
 - Subscribe to `TankWeapon.AmmunitionChanged` for ammunition/reload UI. The weapon also exposes `ReloadProgress01` (0 to 1) and `IsReloading` for a live reload bar.
 - Subscribe to `TankHealth.ModuleHealthChanged` and `ModuleDisabled` to display module damage.
 
@@ -112,3 +112,14 @@ Prototype limitations: no spawn system, respawn flow, team balancing, round rese
 - For a live minimap, create a second orthographic camera looking down at the battlefield, set its target texture to a RenderTexture asset, and assign that same RenderTexture to `TankCombatHUD.minimapTexture`. Set the minimap camera's culling mask to the map/vehicle layers you want visible. If no texture is assigned, the HUD displays a setup placeholder rather than a blank map.
 - The minimap camera, RenderTexture asset, scene references, safe-area positioning, final visual styling, and device-specific scaling still require Unity Editor setup and testing.
 - This HUD uses Unity's built-in `UnityEngine.UI` legacy Text/Image components; ensure the Unity UI package is available in the project.
+
+
+## 10. Runtime mobile touch controls
+
+- Add `MobileTankControls` to the local player tank root. Enable `Create Controls`.
+- The script creates a Screen Space Overlay canvas with a movement joystick in the lower-left, drag-to-aim area on the lower-right, and a fire button in the lower-right corner.
+- Assign `TankMovement`, `TankTurretAim`, and `TankWeapon`; if they are on the same GameObject, the script finds them automatically.
+- Joystick input is normalized and resets to zero when the controlling finger is released. Aim and movement use separate pointer IDs, allowing two-finger driving and aiming. The fire control fires once on touch-down.
+- The aim touch position is sent to both `TankTurretAim` and `TankWeapon`, keeping turret aim and shell direction aligned.
+- The component creates an EventSystem with the legacy `StandaloneInputModule` only if the scene has no EventSystem. If using the new Input System exclusively, add an EventSystem with `InputSystemUIInputModule` before play.
+- This is a functional starter layout, not final art. Safe-area positioning, configurable button placement, left-handed layout, sensitivity settings, haptics, desktop keyboard/gamepad controls, and Android device testing remain future tasks.
