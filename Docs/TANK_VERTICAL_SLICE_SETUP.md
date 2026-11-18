@@ -338,3 +338,10 @@ This pass groups five code-level improvements intended to reduce avoidable failu
 5. **Match configuration and scene diagnostics:** match duration, score limit, and score rate are sanitized before the round starts; the scene validator reports a disabled spawn manager and checks for contradictory match lifecycle state.
 
 These are source-level safeguards, not proof of a working build. They still require Unity 6 compilation, Play Mode checks with the generated scene, and Android device validation. In particular, spawn clearance must be tuned against the actual battlefield floor and collider layers; this change intentionally does not silently ignore walls, vehicles, or solid props.
+
+
+## Runtime roster and player-control diagnostics
+
+The scene validator counts living Blue and Red combat vehicles, verifies that at least one spawned vehicle carries MobileTankControls, and reports configured spawn slots that have not yet produced an active vehicle. TankSpawnManager exposes read-only configured/active slot counts for this check. Bot target evaluation caches the allied-bot list once per target refresh instead of re-querying the scene for every enemy candidate.
+
+The validator runs after scene startup (late execution order), so it can inspect the roster produced by the spawn manager. A missing team or missing player-control component is an error; temporarily unfilled spawn slots are a warning because the manager retries blocked spawns.
