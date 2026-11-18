@@ -10,7 +10,7 @@ namespace WarBattleMobile.Combat
         [SerializeField] private string pointId = "A";
         [SerializeField, Min(1f)] private float captureSeconds = 12f;
         [SerializeField] private TankTeam owner = TankTeam.Neutral;
-        private readonly HashSet<TankFaction> occupants = new HashSet<TankFaction>();
+        private readonly Dictionary<TankFaction, int> occupants = new Dictionary<TankFaction, int>();
         private float progress;
         public string PointId => pointId;
         public TankTeam Owner => owner;
@@ -31,21 +31,37 @@ namespace WarBattleMobile.Combat
         private void OnTriggerEnter(Collider other)
         {
             TankFaction f = other.GetComponentInParent<TankFaction>();
-            if (f != null && f.IsCombatant) occupants.Add(f);
+            if (f == null || !f.IsCombatant) return;
+            occupants.TryGetValue(f, out int count);
+            occupants[f] = count + 1;
         }
 
         private void OnTriggerExit(Collider other)
         {
             TankFaction f = other.GetComponentInParent<TankFaction>();
-            if (f != null) occupants.Remove(f);
+            if (f == null || !occupants.TryGetValue(f, out int count)) return;
+            if (count <= 1) occupants.Remove(f);
+            else occupants[f] = count - 1;
         }
 
         private void Update()
         {
-            occupants.RemoveWhere(f => f == null || !f.isActiveAndEnabled);
-            int blue = 0, red = 0;
-            foreach (TankFaction f in occupants)
+            List<TankFaction> stale = null;
+            foreach (KeyValuePair<TankFaction, int> entry in occupants)
             {
+                if (entry.Key == null || !entry.Key.isActiveAndEnabled)
+                {
+                    if (stale == null) stale = new List<TankFaction>();
+                    stale.Add(entry.Key);
+                }
+            }
+            if (stale != null)
+                foreach (TankFaction faction in stale) occupants.Remove(faction);
+
+            int blue = 0, red = 0;
+            foreach (KeyValuePair<TankFaction, int> entry in occupants)
+            {
+                TankFaction f = entry.Key;
                 if (f == null || !OverlapsTank(f)) continue;
                 if (f.Team == TankTeam.Blue) blue++;
                 else if (f.Team == TankTeam.Red) red++;
