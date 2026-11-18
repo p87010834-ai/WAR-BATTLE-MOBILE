@@ -28,4 +28,6 @@ A mobile combined-arms combat game planned for Unity 6 and URP, targeting Androi
 
 ## Project status
 
-This repository currently contains project documentation and a development roadmap. The features above are planned requirements, not a claim that the game has been implemented, built, or tested. Unity scenes, prefabs, assets, code, integration, and device testing still need to be created and verified.
+The repository contains an early Unity C# prototype for tank movement, turret aiming, projectile ballistics, modular damage, bots, capture points, match rules, spawning/respawning, camera, runtime HUD/touch controls, procedural greybox city generation, destructible environment, and placeholder combat effects/audio.
+
+This is not yet a complete playable game build. The repository currently lacks a configured Unity project/scene, authored tank and projectile prefabs, production art/audio assets, a configured minimap RenderTexture, final input setup, and verified Android build settings. Unity compilation, Play Mode integration, and device testing have not been confirmed. See `Docs/TANK_VERTICAL_SLICE_SETUP.md` for setup requirements and limitations.
