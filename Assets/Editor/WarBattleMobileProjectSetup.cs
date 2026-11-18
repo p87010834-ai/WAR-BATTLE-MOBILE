@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -80,7 +79,7 @@ namespace WarBattleMobile.EditorTools
             GameObject tank = new GameObject(withBotAI ? "BotTank" : "PlayerTank");
             CharacterController controller = tank.AddComponent<CharacterController>();
             controller.height = 2.1f;
-            controller.radius = 1.55f;
+            controller.radius = 1.12f;
             controller.center = new Vector3(0f, 1.05f, 0f);
             controller.stepOffset = 0.35f;
             controller.slopeLimit = 35f;
@@ -113,6 +112,31 @@ namespace WarBattleMobile.EditorTools
             GameObject muzzle = new GameObject("Muzzle");
             muzzle.transform.SetParent(gun.transform, false);
             muzzle.transform.localPosition = new Vector3(0f, 0f, 0.58f);
+
+            // Separate armour hitboxes make the modular damage model reachable.
+            // Their outer edges extend beyond the movement capsule so impacts can
+            // resolve to tracks, turret, engine and gun breech instead of only Hull.
+            AddArmorHitbox(tank.transform, "Hull Armour Hitbox",
+                new Vector3(0f, 0.85f, 0f), new Vector3(2.8f, 1.15f, 4.2f),
+                TankModule.Hull, 90f);
+            AddArmorHitbox(tank.transform, "Engine Armour Hitbox",
+                new Vector3(0f, 0.88f, -1.28f), new Vector3(1.05f, 0.82f, 1.05f),
+                TankModule.Engine, 65f);
+            AddArmorHitbox(tank.transform, "Turret Armour Hitbox",
+                new Vector3(0f, 1.58f, 0f), new Vector3(2.85f, 0.72f, 2.75f),
+                TankModule.Turret, 160f);
+            AddArmorHitbox(tank.transform, "Gun Breech Armour Hitbox",
+                new Vector3(0f, 1.62f, 1.05f), new Vector3(0.62f, 0.48f, 0.72f),
+                TankModule.GunBreech, 110f);
+            AddArmorHitbox(tank.transform, "Optics Armour Hitbox",
+                new Vector3(0f, 2.02f, -0.28f), new Vector3(0.38f, 0.22f, 0.38f),
+                TankModule.Optics, 35f);
+            AddArmorHitbox(tank.transform, "Left Track Armour Hitbox",
+                new Vector3(-1.34f, 0.34f, 0f), new Vector3(0.48f, 0.68f, 3.6f),
+                TankModule.LeftTrack, 55f);
+            AddArmorHitbox(tank.transform, "Right Track Armour Hitbox",
+                new Vector3(1.34f, 0.34f, 0f), new Vector3(0.48f, 0.68f, 3.6f),
+                TankModule.RightTrack, 55f);
 
             GameObject cameraTarget = new GameObject("CameraTarget");
             cameraTarget.transform.SetParent(tank.transform, false);
@@ -150,6 +174,21 @@ namespace WarBattleMobile.EditorTools
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(tank, path);
             Object.DestroyImmediate(tank);
             return prefab;
+        }
+
+        private static void AddArmorHitbox(Transform tankRoot, string objectName,
+            Vector3 localPosition, Vector3 size, TankModule module, float thickness)
+        {
+            GameObject hitbox = new GameObject(objectName);
+            hitbox.transform.SetParent(tankRoot, false);
+            hitbox.transform.localPosition = localPosition;
+            BoxCollider collider = hitbox.AddComponent<BoxCollider>();
+            collider.size = size;
+            TankArmorZone armor = hitbox.AddComponent<TankArmorZone>();
+            SerializedObject serialized = new SerializedObject(armor);
+            serialized.FindProperty("thicknessMillimetres").floatValue = thickness;
+            serialized.FindProperty("damagedModule").enumValueIndex = (int)module;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void RemoveCollider(GameObject target)
