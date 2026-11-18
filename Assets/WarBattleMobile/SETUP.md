@@ -4,7 +4,7 @@
 
 - Unity 6.0 (the project version file targets 6000.0.35f1)
 - Android Build Support, Android SDK & NDK Tools, and OpenJDK for Android builds
-- URP 17 and UGUI 2 are declared in Packages/manifest.json
+- URP 17 and UGUI 2 are declared in Packages/manifest.json. The URP package is installed, but a Universal Render Pipeline Asset and Renderer Asset are not yet generated/assigned in Project Graphics and Quality settings. Until that pipeline asset is configured, the battlefield generator selects the built-in Standard shader as a safe greybox fallback.
 
 ## Generate the first tank scene
 
@@ -28,6 +28,7 @@ This is a greybox integration scaffold, not finished art or a production-ready g
 ## Known limitations before calling this a playable build
 
 - The setup tool and gameplay scripts still need Unity compilation and Play Mode testing.
+- The URP package is present, but the active URP pipeline asset/renderer and quality-level assignments still need to be created in Unity before claiming the project is fully configured for URP.
 - The current placeholder tank prefab uses a CharacterController and primitive visual geometry; it is not a final physically simulated tracked vehicle.
 - The minimap panel is a placeholder until a minimap camera and RenderTexture are configured.
 - Production vehicle models, animations, materials, effects, sound banks, menus, networking, accounts and matchmaking are not included in this scaffold.
