@@ -15,5 +15,10 @@ namespace WarBattleMobile.Combat
         [SerializeField] private TankTeam team = TankTeam.Neutral;
         public TankTeam Team => team;
         public bool IsCombatant => team != TankTeam.Neutral;
+
+        public void SetTeam(TankTeam newTeam)
+        {
+            team = newTeam;
+        }
     }
 }
