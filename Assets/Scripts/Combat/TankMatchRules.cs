@@ -67,7 +67,10 @@ namespace WarBattleMobile.Combat
                 redScoreFraction -= redWhole;
                 BlueScore += blueWhole;
                 RedScore += redWhole;
-                ScoreChanged?.Invoke(TankTeam.Blue, BlueScore, RedScore);
+                if (blueWhole > 0)
+                    ScoreChanged?.Invoke(TankTeam.Blue, BlueScore, RedScore);
+                if (redWhole > 0)
+                    ScoreChanged?.Invoke(TankTeam.Red, BlueScore, RedScore);
             }
 
             if (BlueScore >= scoreLimit || RedScore >= scoreLimit || TimeRemaining <= 0f)
