@@ -79,7 +79,26 @@ namespace WarBattleMobile.World
             }
 
             foreach (VehicleSlot slot in slots)
+            {
                 SpawnSlot(slot);
+                // Initial spawn can be temporarily blocked while the generated
+                // map finishes creating colliders or another vehicle occupies
+                // the preferred clearance area. Retry instead of leaving an
+                // empty roster slot until the next destruction event.
+                if (slot.Instance == null)
+                    StartCoroutine(RetryInitialSpawn(slot));
+            }
+        }
+
+        private IEnumerator RetryInitialSpawn(VehicleSlot slot)
+        {
+            while (slot != null && slot.Instance == null &&
+                this != null && isActiveAndEnabled)
+            {
+                yield return new WaitForSeconds(2f);
+                if (slot.Instance == null)
+                    SpawnSlot(slot);
+            }
         }
 
         private void AddBotSlots(TankTeam team)
