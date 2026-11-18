@@ -309,3 +309,11 @@ The follow camera now identifies its own vehicle through the owning `TankHealth`
 - Match scores are capped at the configured score limit even when a long frame or several owned capture points produce multiple whole points at once. Both teams' score updates are applied before the winner is evaluated, preserving a draw if both reach the limit in the same update.
 - The spawn manager discovers the scene's match rules when no reference is assigned. Initial-spawn retries, new spawns, and delayed respawns stop once the match has ended. If no match-rules component exists, the prototype spawn behavior remains unchanged.
 - These are source-level lifecycle safeguards. Verify bot obstacle behavior, simultaneous score-limit cases, and end-of-match respawn lockout in Unity Play Mode; no Unity compilation or gameplay test is claimed by this change.
+
+
+## Team bot tactics and moving-target fire control
+
+- Tank movement exposes its current CharacterController velocity, and the weapon exposes configured muzzle velocity for AI calculations.
+- Bot gunners estimate shell travel time from range and muzzle velocity, then lead a moving enemy by its horizontal velocity (prediction capped at two seconds). The bot uses the same predicted aim point for turret alignment, line-of-sight validation, and its firing direction.
+- When no enemy is selected, bots evaluate capture points using distance plus a crowding penalty for nearby living allied bots. This encourages the squad to spread across available neutral or enemy-held objectives instead of all choosing the same nearest point.
+- This remains lightweight local AI: it does not provide ballistic drop, target acceleration prediction, persistent squad orders, formation movement, cover planning, or network-authoritative coordination. Verify aim convergence, moving-target hits, and objective distribution in Unity Play Mode and tune muzzle velocity against the actual projectile prefab.
