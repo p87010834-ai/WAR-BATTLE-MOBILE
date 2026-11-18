@@ -284,6 +284,13 @@ Important: the editor command has been committed as source code; it has NOT been
 The spawn manager now retries a roster slot every two seconds when its first spawn attempt cannot find a clear team spawn position. This prevents a temporary obstruction during scene startup from permanently leaving the player or a bot unspawned. The retry stops once that slot has a live vehicle or the spawn manager is disabled. This is a code-level safeguard and still requires Play Mode verification.
 
 
+## Capture-point occupant and match-start safeguards
+
+- Capture zones ignore trigger colliders on vehicles and count each living combatant tank once, even when several non-trigger hitboxes overlap the zone.
+- Destroyed, disabled, inactive, or invalid tank occupants are removed from the zone's active roster so a wreck cannot continue capturing or contesting while its GameObject awaits cleanup.
+- The match controller ignores duplicate StartMatch calls while a round is already running, preventing an external scene/bootstrap call from resetting the live score and timer.
+- These are source-level safeguards. Verify trigger enter/exit behavior, respawns, and match startup ordering with the generated tank prefabs in Unity Play Mode.
+
 ## Friendly-fire collision handling
 
 Direct shell impacts on vehicles assigned to the firing tank's team are ignored by the projectile. The projectile disables collision with the specific allied hitbox it touched and continues, so allied vehicles do not consume the shell or receive direct module damage in this prototype. Enemy and neutral vehicle collision behavior is unchanged. This is a local gameplay rule, not a server-authoritative multiplayer safeguard; verify repeated allied hitbox contacts and mixed collider setups in Unity Play Mode.
