@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using WarBattleMobile.Vehicle;
 
 namespace WarBattleMobile.Combat
 {
@@ -64,16 +63,10 @@ namespace WarBattleMobile.Combat
             AmmunitionChanged?.Invoke(ammunition, reloadSeconds);
         }
 
+        // Player firing uses the centre of the assigned camera when available.
         public void Fire()
         {
-            if (IsReloading || ammunition <= 0 || muzzle == null || projectilePrefab == null)
-                return;
-            if (tankHealth != null &&
-                (tankHealth.IsDestroyed || tankHealth.TurretDisabled ||
-                 tankHealth.GunBreechDisabled || tankHealth.AmmunitionRackDisabled))
-                return;
-
-            Vector3 direction = muzzle.forward;
+            Vector3 direction = muzzle != null ? muzzle.forward : transform.forward;
             if (aimCamera != null)
             {
                 Ray aimRay = aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
@@ -82,10 +75,29 @@ namespace WarBattleMobile.Combat
                 {
                     if (tankHealth == null ||
                         aimHit.collider.GetComponentInParent<TankHealth>() != tankHealth)
-                        direction = (aimHit.point - muzzle.position).normalized;
+                        direction = aimHit.point - (muzzle != null ? muzzle.position : transform.position);
                 }
             }
+            TryFire(direction);
+        }
 
+        // AI and scripted turrets provide their own world-space firing direction.
+        public void FireInDirection(Vector3 worldDirection)
+        {
+            TryFire(worldDirection);
+        }
+
+        private void TryFire(Vector3 direction)
+        {
+            if (IsReloading || ammunition <= 0 || muzzle == null || projectilePrefab == null)
+                return;
+            if (tankHealth != null &&
+                (tankHealth.IsDestroyed || tankHealth.TurretDisabled ||
+                 tankHealth.GunBreechDisabled || tankHealth.AmmunitionRackDisabled))
+                return;
+            if (direction.sqrMagnitude < 0.0001f) return;
+
+            direction.Normalize();
             GameObject projectileObject = Instantiate(
                 projectilePrefab, muzzle.position, Quaternion.LookRotation(direction));
             TankProjectile projectile = projectileObject.GetComponent<TankProjectile>();
