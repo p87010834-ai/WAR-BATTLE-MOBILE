@@ -41,6 +41,14 @@ namespace WarBattleMobile.EditorTools
         [MenuItem("Tools/WAR BATTLE MOBILE/Validate Tank Vertical Slice Assets")]
         public static void ValidateTankVerticalSliceAssets()
         {
+            ValidateTankVerticalSliceAssetsOrThrow();
+        }
+
+        /// <summary>
+        /// Runs the same asset checks in CI and fails the build if required assets are invalid.
+        /// </summary>
+        public static void ValidateTankVerticalSliceAssetsOrThrow()
+        {
             int errors = 0;
             int warnings = 0;
 
@@ -86,8 +94,13 @@ namespace WarBattleMobile.EditorTools
 
             string summary = "[WAR BATTLE MOBILE] Asset validation finished: " +
                 errors + " error(s), " + warnings + " warning(s).";
-            if (errors > 0) Debug.LogError(summary);
-            else if (warnings > 0) Debug.LogWarning(summary);
+            if (errors > 0)
+            {
+                Debug.LogError(summary);
+                throw new System.InvalidOperationException(
+                    "WAR BATTLE MOBILE asset validation failed with " + errors + " error(s).");
+            }
+            if (warnings > 0) Debug.LogWarning(summary);
             else Debug.Log(summary);
         }
 
