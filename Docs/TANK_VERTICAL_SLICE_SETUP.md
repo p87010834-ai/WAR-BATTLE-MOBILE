@@ -218,3 +218,12 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - Road wear and curbs are visual-only primitive meshes with colliders removed; they do not physically deform the road or interfere with tank movement. They use shared placeholder materials created by the generator.
 - This is a procedural surface-detail pass, not a texture-based road shader. Road normals, decals, puddles, snow/mud layers, tire tracks, and terrain deformation remain future art tasks.
 - Keep detail counts conservative and profile draw calls on target Android hardware. Unity compilation, Play Mode, and device performance tests have not yet been performed.
+
+
+## 20. Procedural street lamps and warning signs
+
+- The urban generator can place simple street lamps and damaged warning-sign silhouettes along road edges.
+- Configure `Add Street Props`, `Street Lamp Count`, and `Warning Sign Count`. Counts are capped in the Inspector to keep the primitive count predictable.
+- Poles, lamp arms, lamp heads, and sign panels are built from primitive meshes using shared placeholder materials. Their colliders are removed so decorative props do not snag tanks or block movement.
+- These props are visual placeholders only: lamps do not emit real-time light, signs have no readable artwork, and there are no cables, electrical damage effects, or destruction states.
+- For production, replace them with optimized modular meshes, texture atlases, baked/emissive lighting, and LODs. Profile draw calls on Android. Unity compilation, Play Mode, and device testing have not yet been performed.
