@@ -73,3 +73,18 @@ The ammunition rack is disabled without an automatic explosion in this prototype
 - Armour and penetration calculations are gameplay approximations, not a validated real-world simulation.
 - AI navigation, match rules, capture map, HUD, minimap, touch-control prefab, automated tests, and Android device testing remain to be built.
 - These scripts have not been compiled in Unity or tested on a device.
+
+
+## 7. Basic tank bots
+
+The first AI implementation is a simple combat opponent, not a full tactical commander.
+
+- Add `TankFaction` to every player-controlled and AI tank root. Assign `Blue` or `Red`; leave `Neutral` for non-combatant vehicles.
+- Add `TankBotAI` to the bot root. It requires `TankMovement` and `TankFaction`.
+- Assign the bot's `TankHealth`, `TankMovement`, `TankFaction`, `TankWeapon`, `TurretYaw`, `GunPitch`, and `Muzzle` references in the Inspector.
+- For an AI tank, leave `TankWeapon.aimCamera` empty so it does not use the player's camera aiming ray.
+- Ensure the projectile prefab and muzzle are configured exactly as for a player tank.
+- Bots periodically select the nearest living enemy team member in detection range, rotate the turret and gun toward it, keep a preferred engagement distance, reverse or steer around a detected obstacle, check line of sight, and fire when aligned.
+- Use different team values for opposing sides. A bot will not target its own team or neutral objects.
+
+AI limitations: target selection is nearest-enemy only; driving uses simple forward/reverse steering and a single obstacle ray, not NavMesh pathfinding. Bots do not yet use cover intelligently, capture objectives, coordinate squads, lead moving targets, or use server-authoritative decisions. Configure `lineOfSightLayers` to include terrain, obstacles, and vehicle hitboxes while excluding decorative triggers where appropriate.
