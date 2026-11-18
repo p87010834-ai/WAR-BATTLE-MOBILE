@@ -193,11 +193,16 @@ namespace WarBattleMobile.AI
 
                 float distance = Vector3.Distance(transform.position, candidate.transform.position);
                 int alliedFocus = 0;
+                // Cache the scene's bot list once for this candidate evaluation.
+                // Ignore disabled/inactive bots so stale target references do not
+                // distort team focus after destruction or scene transitions.
                 TankBotAI[] alliedBots = FindObjectsByType<TankBotAI>(FindObjectsSortMode.None);
                 foreach (TankBotAI ally in alliedBots)
                 {
-                    if (ally == null || ally == this || ally.faction == null ||
-                        ally.faction.Team != faction.Team || ally.health == null || ally.health.IsDestroyed)
+                    if (ally == null || ally == this || !ally.isActiveAndEnabled ||
+                        ally.faction == null || !ally.faction.IsCombatant ||
+                        ally.faction.Team != faction.Team || ally.health == null ||
+                        !ally.health.isActiveAndEnabled || ally.health.IsDestroyed)
                         continue;
                     if (ally.target == candidate) alliedFocus++;
                 }
@@ -296,8 +301,10 @@ namespace WarBattleMobile.AI
                 int nearbyAllies = 0;
                 foreach (TankBotAI ally in alliedBots)
                 {
-                    if (ally == null || ally == this || ally.faction == null ||
-                        ally.faction.Team != faction.Team || ally.health == null || ally.health.IsDestroyed)
+                    if (ally == null || ally == this || !ally.isActiveAndEnabled ||
+                        ally.faction == null || !ally.faction.IsCombatant ||
+                        ally.faction.Team != faction.Team || ally.health == null ||
+                        !ally.health.isActiveAndEnabled || ally.health.IsDestroyed)
                         continue;
                     if (Vector3.Distance(ally.transform.position, point.transform.position) < 24f)
                         nearbyAllies++;
