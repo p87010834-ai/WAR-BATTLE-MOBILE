@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using WarBattleMobile.World;
 
 namespace WarBattleMobile.Combat
 {
@@ -10,6 +11,7 @@ namespace WarBattleMobile.Combat
     {
         private static readonly Collider[] OverlapBuffer = new Collider[64];
         private static readonly HashSet<int> ProcessedTargets = new HashSet<int>();
+        private static readonly HashSet<int> ProcessedBodies = new HashSet<int>();
 
         public static void Detonate(Vector3 position, TankHealth owner, float radius,
             float maximumDamage, float force, float visualScale, AudioClip sound)
@@ -18,6 +20,7 @@ namespace WarBattleMobile.Combat
             int count = Physics.OverlapSphereNonAlloc(position, radius, OverlapBuffer,
                 Physics.AllLayers, QueryTriggerInteraction.Ignore);
             ProcessedTargets.Clear();
+            ProcessedBodies.Clear();
 
             for (int i = 0; i < count; i++)
             {
@@ -37,8 +40,8 @@ namespace WarBattleMobile.Combat
                     }
                 }
 
-                World.DestructibleEnvironment destructible =
-                    hit.GetComponentInParent<World.DestructibleEnvironment>();
+                DestructibleEnvironment destructible =
+                    hit.GetComponentInParent<DestructibleEnvironment>();
                 if (destructible != null)
                 {
                     int id = destructible.GetInstanceID();
@@ -53,8 +56,10 @@ namespace WarBattleMobile.Combat
                 }
 
                 Rigidbody rigidbody = hit.attachedRigidbody;
-                if (rigidbody != null && !rigidbody.isKinematic)
-                        rigidbody.AddExplosionForce(force, position, radius, 0.6f, ForceMode.Impulse);
+                if (rigidbody != null && !rigidbody.isKinematic &&
+                    (owner == null || !rigidbody.transform.IsChildOf(owner.transform)) &&
+                    ProcessedBodies.Add(rigidbody.GetInstanceID()))
+                    rigidbody.AddExplosionForce(force, position, radius, 0.6f, ForceMode.Impulse);
             }
 
             SpawnVisual(position, radius, visualScale);
