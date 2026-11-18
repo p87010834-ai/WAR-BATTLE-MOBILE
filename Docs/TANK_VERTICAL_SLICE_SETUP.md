@@ -188,3 +188,14 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - The overlap query is capped at 64 colliders and uses a non-allocating physics query. Multiple colliders belonging to the same tank or destructible are deduplicated per blast.
 - The generated particle effect is a lightweight placeholder burst, not a production fireball, smoke column, dust cloud, shockwave distortion, or shrapnel simulation. No persistent burning, chain reaction, line-of-sight occlusion, multiplayer replication, or pooled effects are implemented yet.
 - Assign a licensed explosion clip on the projectile prefab. Tune blast values and particle count on target Android devices; Unity compilation and Play Mode/device testing have not yet been performed.
+
+
+## 17. Tank damage smoke, fire, and burning visuals
+
+- Add `TankDamageVfx` to the same root GameObject as `TankHealth` on both player and bot tank prefabs.
+- The component creates three lightweight runtime particle emitters: engine smoke, hull smoke, and damage fire. It listens to module-health and destruction events; no per-frame particle objects are created.
+- Engine smoke begins as engine health falls below its configured threshold. Hull smoke increases as hull health becomes critical. Flames appear when hull health reaches the configured fire threshold.
+- Optional `Engine Smoke Point`, `Hull Smoke Point`, and `Fire Point` transforms let you place effects at the engine deck, damaged hull area, and rear/engine compartment. If left empty, each emitter is placed at the tank root.
+- When the hull is destroyed, emitters detach from the vehicle, emit a final burst, stop emitting, and clean themselves up after a short fade period. This allows the visual tail to remain briefly if the spawn manager removes the tank object.
+- These are deliberately simple placeholder particles, not authored production smoke/fire assets. Real VFX materials, heat distortion, sparks, spreading fire, persistent burning damage, extinguish mechanics, and Android performance tuning remain future work.
+- Unity compilation, Play Mode, and device testing have not yet been performed.
