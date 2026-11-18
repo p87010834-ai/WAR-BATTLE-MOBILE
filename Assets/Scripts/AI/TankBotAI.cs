@@ -178,6 +178,7 @@ namespace WarBattleMobile.AI
         private TankHealth FindBestTarget()
         {
             TankFaction[] factions = FindObjectsByType<TankFaction>(FindObjectsSortMode.None);
+            TankBotAI[] alliedBots = FindObjectsByType<TankBotAI>(FindObjectsSortMode.None);
             TankHealth best = null;
             float bestDistance = detectionRange;
 
@@ -196,7 +197,6 @@ namespace WarBattleMobile.AI
                 // Cache the scene's bot list once for this candidate evaluation.
                 // Ignore disabled/inactive bots so stale target references do not
                 // distort team focus after destruction or scene transitions.
-                TankBotAI[] alliedBots = FindObjectsByType<TankBotAI>(FindObjectsSortMode.None);
                 foreach (TankBotAI ally in alliedBots)
                 {
                     if (ally == null || ally == this || !ally.isActiveAndEnabled ||
