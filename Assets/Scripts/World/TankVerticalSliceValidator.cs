@@ -70,8 +70,37 @@ namespace WarBattleMobile.World
                 Warn("No EventSystem found. Runtime mobile UI may create one, but verify the active Input Module.", ref warnings);
 
             TankFaction[] vehicles = FindObjectsByType<TankFaction>(FindObjectsSortMode.None);
+            int activeBlue = 0;
+            int activeRed = 0;
+            int playerControls = 0;
+            foreach (TankFaction faction in vehicles)
+            {
+                if (faction == null || !faction.isActiveAndEnabled || !faction.IsCombatant)
+                    continue;
+
+                TankHealth liveHealth = faction.GetComponent<TankHealth>();
+                if (liveHealth == null || !liveHealth.isActiveAndEnabled || liveHealth.IsDestroyed)
+                    continue;
+
+                if (faction.Team == TankTeam.Blue) activeBlue++;
+                else if (faction.Team == TankTeam.Red) activeRed++;
+                if (faction.GetComponent<MobileTankControls>() != null)
+                    playerControls++;
+            }
+
             if (vehicles.Length == 0)
-                Warn("No active tank vehicles found. Check TankSpawnManager prefab assignments and spawn points.", ref warnings);
+                Warn("No tank vehicles found. Check TankSpawnManager prefab assignments and spawn points.", ref warnings);
+            if (activeBlue == 0)
+                Error("No living Blue combat vehicle is active.", ref errors);
+            if (activeRed == 0)
+                Error("No living Red combat vehicle is active.", ref errors);
+            if (playerControls == 0)
+                Error("No active vehicle has MobileTankControls; the local player cannot drive.", ref errors);
+
+            if (spawnManager != null && spawnManager.ConfiguredSlotCount > 0 &&
+                spawnManager.ActiveVehicleCount < spawnManager.ConfiguredSlotCount)
+                Warn("Some configured vehicle slots are still waiting for a safe spawn. Active " +
+                    spawnManager.ActiveVehicleCount + " of " + spawnManager.ConfiguredSlotCount + ".", ref warnings);
 
             foreach (TankFaction faction in vehicles)
             {
