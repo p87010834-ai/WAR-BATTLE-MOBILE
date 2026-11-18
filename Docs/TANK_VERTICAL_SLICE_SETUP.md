@@ -227,3 +227,14 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - Poles, lamp arms, lamp heads, and sign panels are built from primitive meshes using shared placeholder materials. Their colliders are removed so decorative props do not snag tanks or block movement.
 - These props are visual placeholders only: lamps do not emit real-time light, signs have no readable artwork, and there are no cables, electrical damage effects, or destruction states.
 - For production, replace them with optimized modular meshes, texture atlases, baked/emissive lighting, and LODs. Profile draw calls on Android. Unity compilation, Play Mode, and device testing have not yet been performed.
+
+
+## 21. Vertical-slice scene validation and integration fixes
+
+- Add `TankVerticalSliceValidator` to a scene manager object. It runs a scene-level wiring check at startup by default; use its context-menu command `Validate Tank Vertical Slice` to run it manually.
+- The validator checks for a battlefield generator, capture points, Blue/Red spawn points, match rules, spawn manager, HUD, MainCamera camera controller, EventSystem, and active tank component basics. It reports errors and warnings to the Unity Console.
+- The validator is diagnostic only. It does not create scenes, prefabs, projectile assets, RenderTextures, Input System modules, or repair Inspector references.
+- `TankSpawnManager` now assigns a distinct offset around each team's generated spawn marker so the player and bots do not all instantiate at exactly the same position. The configured obstruction and enemy-distance checks still apply to each candidate position.
+- When the player tank spawns or respawns, the manager now binds its TankHealth, TankWeapon, and TankFaction to `TankCombatHUD`. The HUD also displays VICTORY, DEFEAT, or DRAW when `TankMatchRules.MatchEnded` fires.
+- `CapturePoint` tracks the number of colliders belonging to each tank inside its trigger. A tank with multiple non-trigger colliders no longer leaves the capture zone's occupant list when only one collider exits.
+- The repository still does not contain a configured Unity scene, tank prefabs, a projectile prefab, production art/audio assets, a minimap camera/RenderTexture, or Android build settings. These must be created/assigned in Unity and validated in Play Mode. A successful GitHub write is not evidence of Unity compilation or gameplay testing.
