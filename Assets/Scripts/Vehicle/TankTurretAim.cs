@@ -20,13 +20,10 @@ namespace WarBattleMobile.Vehicle
 
         private void Awake()
         {
-            if (aimCamera == null)
-                aimCamera = Camera.main;
-            if (tankHealth == null)
-                tankHealth = GetComponentInParent<TankHealth>();
+            if (aimCamera == null) aimCamera = Camera.main;
+            if (tankHealth == null) tankHealth = GetComponentInParent<TankHealth>();
         }
 
-        // Connect this to the right-side touch area or aiming stick.
         public void SetAimScreenPosition(Vector2 screenPosition)
         {
             aimScreenPosition = screenPosition;
@@ -37,11 +34,13 @@ namespace WarBattleMobile.Vehicle
         {
             if (!hasAimPosition || aimCamera == null || turretYaw == null || gunPitch == null)
                 return;
-            if (tankHealth != null && (tankHealth.IsDestroyed || tankHealth.TurretDisabled))
+            if (tankHealth != null &&
+                (tankHealth.IsDestroyed || tankHealth.TurretDisabled || tankHealth.OpticsDisabled))
                 return;
 
             Ray ray = aimCamera.ScreenPointToRay(aimScreenPosition);
-            if (!Physics.Raycast(ray, out RaycastHit hit, 1000f, aimLayers, QueryTriggerInteraction.Ignore))
+            if (!Physics.Raycast(ray, out RaycastHit hit, 1000f, aimLayers,
+                QueryTriggerInteraction.Ignore))
                 return;
 
             Vector3 flatDirection = hit.point - turretYaw.position;
