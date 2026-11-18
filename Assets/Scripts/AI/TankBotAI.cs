@@ -125,12 +125,13 @@ namespace WarBattleMobile.AI
 
             foreach (TankFaction candidateFaction in factions)
             {
-                if (candidateFaction == null || candidateFaction == faction ||
-                    !candidateFaction.IsCombatant || candidateFaction.Team == faction.Team)
+                if (candidateFaction == null || !candidateFaction.isActiveAndEnabled ||
+                    candidateFaction == faction || !candidateFaction.IsCombatant ||
+                    candidateFaction.Team == TankTeam.Neutral || candidateFaction.Team == faction.Team)
                     continue;
 
                 TankHealth candidate = candidateFaction.GetComponent<TankHealth>();
-                if (candidate == null || candidate.IsDestroyed) continue;
+                if (candidate == null || !candidate.isActiveAndEnabled || candidate.IsDestroyed) continue;
 
                 float distance = Vector3.Distance(transform.position, candidate.transform.position);
                 if (distance < bestDistance)
@@ -191,8 +192,7 @@ namespace WarBattleMobile.AI
             float steering = Mathf.Clamp(signedAngle / 55f, -1f, 1f);
 
             Vector3 origin = transform.position + Vector3.up * 0.8f;
-            bool obstacleAhead = Physics.Raycast(origin, transform.forward,
-                obstacleCheckDistance, lineOfSightLayers, QueryTriggerInteraction.Ignore);
+            bool obstacleAhead = HasObstacleAhead(origin);
 
             float throttle;
             if (obstacleAhead && Mathf.Abs(signedAngle) < 35f)
@@ -216,6 +216,21 @@ namespace WarBattleMobile.AI
             if (Mathf.Abs(steering) < 0.12f) steering = 0f;
             moveCommand = Vector2.ClampMagnitude(
                 new Vector2(steering * steeringStrength, throttle), 1f);
+        }
+
+        private bool HasObstacleAhead(Vector3 origin)
+        {
+            RaycastHit[] hits = Physics.RaycastAll(origin, transform.forward,
+                obstacleCheckDistance, lineOfSightLayers, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.collider == null || hit.collider.transform.IsChildOf(transform))
+                    continue;
+                return true;
+            }
+            return false;
         }
 
         private bool HasLineOfSight(TankHealth enemy)
