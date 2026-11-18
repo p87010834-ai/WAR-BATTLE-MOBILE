@@ -355,12 +355,12 @@ This is an Editor-side asset/reference check only. It does not compile or execut
 
 ## 12. Automated Android build (GitHub Actions)
 
-The repository includes a manual GitHub Actions workflow at `.github/workflows/unity-android.yml`. It uses the exact Unity Editor version recorded in `ProjectSettings/ProjectVersion.txt` (currently `6000.0.35f1`), generates the greybox tank scene and placeholder prefabs through the Editor setup script, then attempts an Android APK build and uploads the APK as a workflow artifact.
+The repository includes a manual GitHub Actions workflow at `.github/workflows/unity-android.yml`. It uses the exact Unity Editor version recorded in `ProjectSettings/ProjectVersion.txt` (currently `6000.0.35f1`), generates the greybox tank scene and placeholder prefabs through the Editor setup script, runs the Editor-side asset validator (and stops on validation errors), configures the Android package as `com.warbattlemobile.game` with ARM64/IL2CPP and Android API 26 minimum, then attempts an Android APK build and uploads the APK as a workflow artifact. The workflow checks out Git LFS content and caches Unity's `Library` folder to reduce repeat import time.
 
 ### One-time repository setup
 
 1. In the GitHub repository, open **Settings → Secrets and variables → Actions**.
-2. Add a repository secret named `UNITY_LICENSE` containing the contents of a valid Unity license file suitable for Unity batch-mode activation. Do not commit the license file or paste it into chat.
+2. Add a repository secret named `UNITY_LICENSE` containing the contents of a valid Unity license file suitable for Unity batch-mode activation. Do not commit the license file or paste it into chat. GameCI also supports account email/password secrets for activation flows, but this workflow currently expects the license-file secret.
 3. Confirm the Unity 6 installation/activation is permitted by the applicable Unity Personal terms and account eligibility.
 4. Open **Actions → Unity Android build → Run workflow** to start a build.
 
@@ -368,7 +368,7 @@ The workflow is manual-only so it does not consume GitHub Actions minutes on eve
 
 ### What the workflow does and does not prove
 
-- It generates the initial tank greybox scene and placeholder prefabs, then calls Unity's Android build pipeline.
+- It generates the initial tank greybox scene and placeholder prefabs, validates required generated assets, configures Android identifiers/architecture/backend, then calls Unity's Android build pipeline.
 - A successful run proves that this generated project state compiled and produced an APK in the CI environment.
 - It does **not** prove that gameplay is fun, touch controls work correctly on a physical device, multiplayer is implemented, performance is acceptable, or the APK is store-ready.
 - No Unity build has been run from this repository by this documentation change. A successful GitHub Actions run and subsequent device testing are still required.
