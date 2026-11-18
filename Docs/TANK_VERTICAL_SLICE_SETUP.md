@@ -270,3 +270,8 @@ Important: the editor command has been committed as source code; it has NOT been
 - Third-person camera collision now ignores the complete target vehicle hierarchy, including a collider on the vehicle root when the camera target is a child transform. This prevents the camera from treating the player's own CharacterController as an obstacle.
 - Procedural battlefield materials now choose URP/Lit only when a URP pipeline asset is active, and otherwise fall back to Standard while the project is being bootstrapped.
 - These changes improve the generated greybox scaffold, but they do not prove correct hitbox priority, projectile collision ordering, camera behaviour, or gameplay feel. Those require Play Mode tests and tuning in Unity.
+
+
+### Initial spawn retry safeguard
+
+The spawn manager now retries a roster slot every two seconds when its first spawn attempt cannot find a clear team spawn position. This prevents a temporary obstruction during scene startup from permanently leaving the player or a bot unspawned. The retry stops once that slot has a live vehicle or the spawn manager is disabled. This is a code-level safeguard and still requires Play Mode verification.
