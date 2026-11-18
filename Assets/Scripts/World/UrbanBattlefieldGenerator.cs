@@ -151,6 +151,9 @@ namespace WarBattleMobile.World
                     $"Building_{blockX}_{blockZ}_{i}" + (ruined ? "_Ruin" : ""),
                     position, new Vector3(width, height, depth), material, true);
 
+                DestructibleEnvironment destructible = building.AddComponent<DestructibleEnvironment>();
+                destructible.Configure(ruined ? 110f : 260f, ruined ? 3 : 5, ruined ? 3.5f : 6f);
+
                 if (ruined)
                 {
                     // Broken roofline and rubble are visual blockout details only.
@@ -199,14 +202,17 @@ namespace WarBattleMobile.World
             for (int i = 0; i < blocksPerSide; i++)
             {
                 float lane = -half + roadWidth + blockSize * 0.5f + i * (blockSize + roadWidth);
-                CreateCube("Concrete road barrier", new Vector3(lane, 0.7f, -roadWidth * 0.32f),
-                    new Vector3(7f, 1.4f, 2.2f), coverMaterial, true);
-                CreateCube("Concrete road barrier", new Vector3(-roadWidth * 0.32f, 0.7f, lane),
-                    new Vector3(2.2f, 1.4f, 7f), coverMaterial, true);
+                CreateDestructibleCube("Concrete road barrier",
+                    new Vector3(lane, 0.7f, -roadWidth * 0.32f),
+                    new Vector3(7f, 1.4f, 2.2f), coverMaterial, 95f);
+                CreateDestructibleCube("Concrete road barrier",
+                    new Vector3(-roadWidth * 0.32f, 0.7f, lane),
+                    new Vector3(2.2f, 1.4f, 7f), coverMaterial, 95f);
                 if (i % 2 == 0)
                 {
-                    CreateCube("Abandoned vehicle cover", new Vector3(lane, 0.9f, roadWidth * 0.32f),
-                        new Vector3(5.5f, 1.8f, 2.5f), ruinMaterial, true);
+                    CreateDestructibleCube("Abandoned vehicle cover",
+                        new Vector3(lane, 0.9f, roadWidth * 0.32f),
+                        new Vector3(5.5f, 1.8f, 2.5f), ruinMaterial, 130f);
                 }
             }
         }
@@ -279,6 +285,14 @@ namespace WarBattleMobile.World
             if (collider != null) Destroy(collider);
             Material markerMaterial = MakeMaterial(color);
             marker.GetComponent<Renderer>().sharedMaterial = markerMaterial;
+        }
+
+        private GameObject CreateDestructibleCube(string objectName, Vector3 position,
+            Vector3 scale, Material material, float health)
+        {
+            GameObject piece = CreateCube(objectName, position, scale, material, true);
+            piece.AddComponent<DestructibleEnvironment>().Configure(health, 3, 4f);
+            return piece;
         }
 
         private GameObject CreateCube(string objectName, Vector3 position, Vector3 scale,
