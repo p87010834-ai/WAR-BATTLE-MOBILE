@@ -34,6 +34,8 @@ The generator is source code only and has not been executed in Unity in this wor
 
 ## Project status
 
+The spawn manager also retries temporarily blocked initial player/bot spawns instead of leaving those roster slots empty. This behavior is implemented in code but has not yet been verified in Unity Play Mode.
+
 The repository contains an early Unity C# prototype for tank movement, turret aiming, projectile ballistics, modular damage, bots, capture points, match rules, spawning/respawning, camera, runtime HUD/touch controls, procedural greybox city generation, destructible environment, and placeholder combat effects/audio.
 
 This is not yet a complete playable game build. The repository currently lacks a configured Unity project/scene, authored tank and projectile prefabs, production art/audio assets, a configured minimap RenderTexture, final input setup, and verified Android build settings. Unity compilation, Play Mode integration, and device testing have not been confirmed. See `Docs/TANK_VERTICAL_SLICE_SETUP.md` for setup requirements and limitations.
