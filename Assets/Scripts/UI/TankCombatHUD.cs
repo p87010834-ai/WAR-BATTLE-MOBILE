@@ -42,7 +42,8 @@ namespace WarBattleMobile.UI
         private Image reloadFill;
         private Text reloadText;
         private Text matchResultText;
-        private Text performanceNetworkText;
+        private Text fpsText;
+        private Text pingText;
         private Font font;
         private float performanceRefreshTimer;
         private float fpsSmoothed;
@@ -109,7 +110,7 @@ namespace WarBattleMobile.UI
 
         private void UpdatePerformanceNetworkStats()
         {
-            if (!showPerformanceNetworkStats || performanceNetworkText == null) return;
+            if (!showPerformanceNetworkStats || fpsText == null || pingText == null) return;
             float instantFps = Time.unscaledDeltaTime > 0.0001f
                 ? 1f / Time.unscaledDeltaTime : 0f;
             fpsSmoothed = fpsSmoothed <= 0f ? instantFps :
@@ -123,19 +124,17 @@ namespace WarBattleMobile.UI
 
         private void RefreshPerformanceNetworkText()
         {
-            if (performanceNetworkText == null) return;
-            string ping = networkPingMilliseconds < 0f
-                ? "-- ms" : Mathf.RoundToInt(networkPingMilliseconds) + " ms";
-            performanceNetworkText.text = "FPS  " + Mathf.RoundToInt(fpsSmoothed) +
-                "     PING  " + ping;
+            if (fpsText == null || pingText == null) return;
+            fpsText.text = "FPS  " + Mathf.RoundToInt(fpsSmoothed);
+            pingText.text = networkPingMilliseconds < 0f
+                ? "PING  -- ms"
+                : "PING  " + Mathf.RoundToInt(networkPingMilliseconds) + " ms";
 
-            Color fpsColor = fpsSmoothed >= 50f ? healthyColor :
+            fpsText.color = fpsSmoothed >= 50f ? healthyColor :
                 fpsSmoothed >= 30f ? damagedColor : disabledColor;
-            Color pingColor = networkPingMilliseconds < 0f
+            pingText.color = networkPingMilliseconds < 0f
                 ? Color.gray : networkPingMilliseconds <= 80f ? healthyColor :
                 networkPingMilliseconds <= 150f ? damagedColor : disabledColor;
-            performanceNetworkText.color = networkPingMilliseconds < 0f
-                ? fpsColor : (fpsColor + pingColor) * 0.5f;
         }
 
         private void Subscribe()
@@ -199,13 +198,19 @@ namespace WarBattleMobile.UI
 
             if (showPerformanceNetworkStats)
             {
-                performanceNetworkText = CreateText(canvasObject.transform,
-                    "Performance and Network Stats", 18,
+                fpsText = CreateText(canvasObject.transform,
+                    "FPS Indicator", 18,
                     new Vector2(0f, 1f), new Vector2(0f, 1f),
-                    new Vector2(24f, -24f), new Vector2(360f, 34f),
+                    new Vector2(24f, -24f), new Vector2(120f, 34f),
                     TextAnchor.MiddleLeft);
-                performanceNetworkText.color = healthyColor;
-                performanceNetworkText.text = "FPS  --     PING  -- ms";
+                pingText = CreateText(canvasObject.transform,
+                    "Ping Indicator", 18,
+                    new Vector2(0f, 1f), new Vector2(0f, 1f),
+                    new Vector2(145f, -24f), new Vector2(160f, 34f),
+                    TextAnchor.MiddleLeft);
+                fpsText.text = "FPS  --";
+                pingText.text = "PING  -- ms";
+                pingText.color = Color.gray;
             }
 
             CreatePanel(canvasObject.transform, "Vehicle Status Panel",
