@@ -85,12 +85,21 @@ namespace WarBattleMobile.Combat
                 Ray aimRay = hasAimScreenPosition
                     ? aimCamera.ScreenPointToRay(aimScreenPosition)
                     : aimCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-                if (Physics.Raycast(aimRay, out RaycastHit aimHit, maxRange, aimLayers,
-                    QueryTriggerInteraction.Ignore))
+                RaycastHit[] aimHits = Physics.RaycastAll(aimRay, maxRange, aimLayers,
+                    QueryTriggerInteraction.Ignore);
+                Array.Sort(aimHits, (a, b) => a.distance.CompareTo(b.distance));
+
+                Transform vehicleRoot = tankHealth != null ? tankHealth.transform : transform;
+                foreach (RaycastHit aimHit in aimHits)
                 {
-                    if (tankHealth == null ||
-                        aimHit.collider.GetComponentInParent<TankHealth>() != tankHealth)
-                        direction = aimHit.point - (muzzle != null ? muzzle.position : transform.position);
+                    if (aimHit.collider == null ||
+                        aimHit.collider.transform == vehicleRoot ||
+                        aimHit.collider.transform.IsChildOf(vehicleRoot))
+                        continue;
+
+                    direction = aimHit.point -
+                        (muzzle != null ? muzzle.position : transform.position);
+                    break;
                 }
             }
             TryFire(direction);
