@@ -17,6 +17,7 @@ namespace WarBattleMobile.Vehicle
 
         private Vector2 aimScreenPosition;
         private bool hasAimPosition;
+        private readonly RaycastHit[] aimHitBuffer = new RaycastHit[24];
 
         private void Awake()
         {
@@ -39,23 +40,25 @@ namespace WarBattleMobile.Vehicle
                 return;
 
             Ray ray = aimCamera.ScreenPointToRay(aimScreenPosition);
-            RaycastHit[] hits = Physics.RaycastAll(ray, 1000f, aimLayers,
-                QueryTriggerInteraction.Ignore);
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            int hitCount = Physics.RaycastNonAlloc(ray, aimHitBuffer, 1000f,
+                aimLayers, QueryTriggerInteraction.Ignore);
 
             RaycastHit hit = default;
             bool hasHit = false;
+            float nearestDistance = float.MaxValue;
             Transform vehicleRoot = tankHealth != null ? tankHealth.transform : transform;
-            foreach (RaycastHit candidate in hits)
+            for (int i = 0; i < hitCount; i++)
             {
+                RaycastHit candidate = aimHitBuffer[i];
                 if (candidate.collider == null ||
                     candidate.collider.transform == vehicleRoot ||
-                    candidate.collider.transform.IsChildOf(vehicleRoot))
+                    candidate.collider.transform.IsChildOf(vehicleRoot) ||
+                    candidate.distance >= nearestDistance)
                     continue;
 
                 hit = candidate;
+                nearestDistance = candidate.distance;
                 hasHit = true;
-                break;
             }
 
             if (!hasHit) return;
