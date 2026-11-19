@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -22,6 +23,7 @@ namespace WarBattleMobile.EditorTools
             WarBattleMobileProjectSetup.BuildTankVerticalSlice();
             WarBattleMobileProjectSetup.ValidateTankVerticalSliceAssetsOrThrow();
 
+            ConfigureLegacyInputHandling();
             ConfigureAndroidPlayerSettings();
             Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutput));
 
@@ -72,6 +74,71 @@ namespace WarBattleMobile.EditorTools
 
             Debug.Log("[WAR BATTLE MOBILE CI] Android APK build succeeded: " +
                 AndroidOutput + " (" + report.summary.totalSize + " bytes).");
+        }
+
+        /// <summary>
+        /// The current mobile controls and camera use UnityEngine.Input and
+        /// StandaloneInputModule. Keep the legacy input backend enabled so
+        /// touch UI and camera input work in the Android player.
+        /// </summary>
+        private static void ConfigureLegacyInputHandling()
+        {
+            PlayerSettings settings = null;
+
+            // Unity 6 stores global Player Settings on BuildProfile. Resolve it
+            // reflectively so this project remains compatible with Unity 6.0
+            // without taking a compile-time dependency on Build Profile APIs.
+            Type buildProfileType = Type.GetType(
+                "UnityEditor.Build.Profile.BuildProfile, UnityEditor.CoreModule");
+            if (buildProfileType != null)
+            {
+                FieldInfo globalSettingsField = buildProfileType.GetField(
+                    "s_GlobalPlayerSettings",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                if (globalSettingsField != null)
+                    settings = globalSettingsField.GetValue(null) as PlayerSettings;
+
+                MethodInfo getActiveProfile = buildProfileType.GetMethod(
+                    "GetActiveBuildProfile",
+                    BindingFlags.Public | BindingFlags.Static);
+                object activeProfile = getActiveProfile != null
+                    ? getActiveProfile.Invoke(null, null) : null;
+                if (activeProfile != null)
+                {
+                    FieldInfo overrideField = buildProfileType.GetField(
+                        "m_PlayerSettings",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+                    if (overrideField != null)
+                    {
+                        PlayerSettings overrideSettings =
+                            overrideField.GetValue(activeProfile) as PlayerSettings;
+                        if (overrideSettings != null) settings = overrideSettings;
+                    }
+                }
+            }
+
+            if (settings == null)
+                settings = Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault();
+
+            if (settings == null)
+                throw new InvalidOperationException(
+                    "Could not locate Unity Player Settings to configure Active Input Handling.");
+
+            SerializedObject serializedSettings = new SerializedObject(settings);
+            SerializedProperty activeInputHandler =
+                serializedSettings.FindProperty("activeInputHandler");
+            if (activeInputHandler == null)
+                throw new InvalidOperationException(
+                    "Unity Player Settings has no activeInputHandler property. " +
+                    "Configure Active Input Handling to Input Manager (Old) or Both.");
+
+            // 0 = Input Manager (Old). The project currently uses the legacy
+            // Input API and StandaloneInputModule, and does not require the new
+            // Input System package for this first playable build.
+            activeInputHandler.intValue = 0;
+            serializedSettings.ApplyModifiedProperties();
+
+            Debug.Log("[WAR BATTLE MOBILE CI] Active Input Handling set to Input Manager (Old).");
         }
 
         private static void ConfigureAndroidPlayerSettings()
