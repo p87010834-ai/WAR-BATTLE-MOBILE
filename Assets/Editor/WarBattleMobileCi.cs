@@ -79,6 +79,12 @@ namespace WarBattleMobile.EditorTools
             PlayerSettings.companyName = "WAR BATTLE MOBILE";
             PlayerSettings.productName = "WAR BATTLE MOBILE";
             PlayerSettings.bundleVersion = "0.1.0";
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+            PlayerSettings.allowedAutorotateToPortrait = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+            PlayerSettings.runInBackground = false;
             PlayerSettings.SetApplicationIdentifier(
                 BuildTargetGroup.Android, "com.warbattlemobile.game");
             PlayerSettings.Android.bundleVersionCode = 1;
