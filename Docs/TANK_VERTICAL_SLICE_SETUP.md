@@ -353,6 +353,13 @@ After opening the project in Unity, run **Tools > WAR BATTLE MOBILE > Build Tank
 
 This is an Editor-side asset/reference check only. It does not compile or execute gameplay, prove that spawn positions are clear, or replace Play Mode and Android device tests. After the asset check passes, open **Assets/WarBattleMobile/Scenes/TankVerticalSlice.unity**, enter Play Mode, and inspect both the Console and the runtime **Tank Vertical Slice Validator** output.
 
+
+## FPS and network latency indicator
+
+The runtime combat HUD now includes a compact top-left performance/network line. FPS is smoothed and refreshed at a configurable interval; its text color reflects healthy, unstable, and poor frame-rate ranges. The ping field displays `-- ms` until a real measurement is supplied, rather than inventing an offline value.
+
+When a networking transport is integrated, its measured round-trip time can be passed to `TankCombatHUD.SetNetworkPingMilliseconds(float milliseconds)`. Pass a negative, NaN, or infinite value when the measurement is unavailable. Ping color thresholds are green up to 80 ms, amber up to 150 ms, and red above 150 ms. The current vertical slice has no multiplayer transport, so ping is intentionally unavailable in local prototype matches.
+
 ## 12. Automated Android build (GitHub Actions)
 
 The repository includes a manual GitHub Actions workflow at `.github/workflows/unity-android.yml`. It uses the exact Unity Editor version recorded in `ProjectSettings/ProjectVersion.txt` (currently `6000.0.35f1`), generates the greybox tank scene and placeholder prefabs through the Editor setup script, runs the Editor-side asset validator (and stops on validation errors), configures the Android package as `com.warbattlemobile.game` with ARM64/IL2CPP and Android API 26 minimum, then attempts an Android APK build and uploads the APK as a workflow artifact. The workflow checks out Git LFS content and caches Unity's `Library` folder to reduce repeat import time.
