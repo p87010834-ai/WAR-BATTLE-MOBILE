@@ -39,9 +39,26 @@ namespace WarBattleMobile.Vehicle
                 return;
 
             Ray ray = aimCamera.ScreenPointToRay(aimScreenPosition);
-            if (!Physics.Raycast(ray, out RaycastHit hit, 1000f, aimLayers,
-                QueryTriggerInteraction.Ignore))
-                return;
+            RaycastHit[] hits = Physics.RaycastAll(ray, 1000f, aimLayers,
+                QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            RaycastHit hit = default;
+            bool hasHit = false;
+            Transform vehicleRoot = tankHealth != null ? tankHealth.transform : transform;
+            foreach (RaycastHit candidate in hits)
+            {
+                if (candidate.collider == null ||
+                    candidate.collider.transform == vehicleRoot ||
+                    candidate.collider.transform.IsChildOf(vehicleRoot))
+                    continue;
+
+                hit = candidate;
+                hasHit = true;
+                break;
+            }
+
+            if (!hasHit) return;
 
             Vector3 flatDirection = hit.point - turretYaw.position;
             flatDirection.y = 0f;
