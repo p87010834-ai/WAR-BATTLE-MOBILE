@@ -5,7 +5,7 @@ This is an implementation scaffold for the tank-combat vertical slice, not a fin
 ## 1. Create the project
 
 - Use Unity 6 with the Universal Render Pipeline (URP).
-- Create an Android project and install the Input System package if using its UI components.
+- Use Unity's built-in UI/EventSystem components. The current mobile controls use `UnityEngine.Input` and the legacy `StandaloneInputModule`; the CI build explicitly selects **Input Manager (Old)**. Do not switch to Input System-only unless the controls and EventSystem module are migrated together.
 - Create folders matching the paths under `Assets/Scripts`.
 
 ## 2. Tank prefab
@@ -128,7 +128,7 @@ Prototype limitations: team spawning and basic respawn are implemented by TankSp
 - Assign `TankMovement`, `TankTurretAim`, and `TankWeapon`; if they are on the same GameObject, the script finds them automatically.
 - Joystick input is normalized and resets to zero when the controlling finger is released. Aim and movement use separate pointer IDs, allowing two-finger driving and aiming. The fire control fires once on touch-down.
 - The aim touch position is sent to both `TankTurretAim` and `TankWeapon`, keeping turret aim and shell direction aligned.
-- The component creates an EventSystem with the legacy `StandaloneInputModule` only if the scene has no EventSystem. If using the new Input System exclusively, add an EventSystem with `InputSystemUIInputModule` before play.
+- The component creates an EventSystem with the legacy `StandaloneInputModule` only if the scene has no EventSystem. Keep **Active Input Handling** set to **Input Manager (Old)** or **Both**; Input System-only will break this legacy UI input path.
 - This is a functional starter layout, not final art. Safe-area positioning, configurable button placement, left-handed layout, sensitivity settings, haptics, desktop keyboard/gamepad controls, and Android device testing remain future tasks.
 
 
@@ -375,7 +375,7 @@ The workflow is manual-only so it does not consume GitHub Actions minutes on eve
 
 ### What the workflow does and does not prove
 
-- It generates the initial tank greybox scene and placeholder prefabs, validates required generated assets, configures Android identifiers/architecture/backend, then calls Unity's Android build pipeline.
+- It generates the initial tank greybox scene and placeholder prefabs, validates required generated assets, selects the legacy Input Manager backend required by the current touch controls, configures Android identifiers/architecture/backend, then calls Unity's Android build pipeline.
 - A successful run proves that this generated project state compiled and produced an APK in the CI environment.
 - It does **not** prove that gameplay is fun, touch controls work correctly on a physical device, multiplayer is implemented, performance is acceptable, or the APK is store-ready.
 - No Unity build has been run from this repository by this documentation change. A successful GitHub Actions run and subsequent device testing are still required.
