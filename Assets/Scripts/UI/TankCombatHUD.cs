@@ -23,6 +23,8 @@ namespace WarBattleMobile.UI
 
         [Header("HUD")]
         [SerializeField] private bool showModuleStatus = true;
+        [SerializeField] private bool showPerformanceNetworkStats = true;
+        [SerializeField, Min(0.1f)] private float performanceRefreshInterval = 0.5f;
         [SerializeField] private Color healthyColor = new Color(0.2f, 0.8f, 0.35f);
         [SerializeField] private Color damagedColor = new Color(1f, 0.65f, 0.1f);
         [SerializeField] private Color disabledColor = new Color(0.85f, 0.2f, 0.15f);
@@ -40,7 +42,11 @@ namespace WarBattleMobile.UI
         private Image reloadFill;
         private Text reloadText;
         private Text matchResultText;
+        private Text performanceNetworkText;
         private Font font;
+        private float performanceRefreshTimer;
+        private float fpsSmoothed;
+        private float networkPingMilliseconds = -1f;
 
         private static readonly WarBattleMobile.Combat.TankModule[] HudModules =
         {
@@ -86,6 +92,50 @@ namespace WarBattleMobile.UI
             UpdateReload();
             UpdateHull();
             UpdateModuleBars();
+            UpdatePerformanceNetworkStats();
+        }
+
+        /// <summary>
+        /// Supplies measured round-trip latency from the active networking layer.
+        /// Pass a negative, NaN, or infinite value when no measurement is available.
+        /// </summary>
+        public void SetNetworkPingMilliseconds(float milliseconds)
+        {
+            networkPingMilliseconds = float.IsNaN(milliseconds) ||
+                float.IsInfinity(milliseconds) || milliseconds < 0f
+                ? -1f : milliseconds;
+            RefreshPerformanceNetworkText();
+        }
+
+        private void UpdatePerformanceNetworkStats()
+        {
+            if (!showPerformanceNetworkStats || performanceNetworkText == null) return;
+            float instantFps = Time.unscaledDeltaTime > 0.0001f
+                ? 1f / Time.unscaledDeltaTime : 0f;
+            fpsSmoothed = fpsSmoothed <= 0f ? instantFps :
+                Mathf.Lerp(fpsSmoothed, instantFps, 1f - Mathf.Exp(-4f * Time.unscaledDeltaTime));
+
+            performanceRefreshTimer += Time.unscaledDeltaTime;
+            if (performanceRefreshTimer < Mathf.Max(0.1f, performanceRefreshInterval)) return;
+            performanceRefreshTimer = 0f;
+            RefreshPerformanceNetworkText();
+        }
+
+        private void RefreshPerformanceNetworkText()
+        {
+            if (performanceNetworkText == null) return;
+            string ping = networkPingMilliseconds < 0f
+                ? "-- ms" : Mathf.RoundToInt(networkPingMilliseconds) + " ms";
+            performanceNetworkText.text = "FPS  " + Mathf.RoundToInt(fpsSmoothed) +
+                "     PING  " + ping;
+
+            Color fpsColor = fpsSmoothed >= 50f ? healthyColor :
+                fpsSmoothed >= 30f ? damagedColor : disabledColor;
+            Color pingColor = networkPingMilliseconds < 0f
+                ? Color.gray : networkPingMilliseconds <= 80f ? healthyColor :
+                networkPingMilliseconds <= 150f ? damagedColor : disabledColor;
+            performanceNetworkText.color = networkPingMilliseconds < 0f
+                ? fpsColor : (fpsColor + pingColor) * 0.5f;
         }
 
         private void Subscribe()
@@ -146,6 +196,17 @@ namespace WarBattleMobile.UI
             matchResultText.fontStyle = FontStyle.Bold;
             matchResultText.color = new Color(1f, 0.82f, 0.35f);
             matchResultText.gameObject.SetActive(false);
+
+            if (showPerformanceNetworkStats)
+            {
+                performanceNetworkText = CreateText(canvasObject.transform,
+                    "Performance and Network Stats", 18,
+                    new Vector2(0f, 1f), new Vector2(0f, 1f),
+                    new Vector2(24f, -24f), new Vector2(360f, 34f),
+                    TextAnchor.MiddleLeft);
+                performanceNetworkText.color = healthyColor;
+                performanceNetworkText.text = "FPS  --     PING  -- ms";
+            }
 
             CreatePanel(canvasObject.transform, "Vehicle Status Panel",
                 new Vector2(0f, 0f), new Vector2(0f, 0f),
