@@ -5,6 +5,7 @@ var profile := WbmPlayerProfile.new()
 var weather_manager: WbmWeatherManager
 var settings := WbmSettingsManager.new()
 var missions := WbmMissionSystem.new()
+var achievements := WbmAchievementSystem.new()
 var season := WbmSeasonProgress.new()
 var replay_recorder: WbmReplayRecorder
 var result_recorded := false
@@ -53,6 +54,9 @@ func _process(delta: float) -> void:
 			var won := team_score[0] > team_score[1]
 			profile.add_battle_result(won)
 			missions.add_progress("play_3")
+			achievements.unlock("first_battle")
+			if won:
+				achievements.unlock("first_victory")
 			season.add_xp(100 if won else 50)
 			replay_recorder.stop_recording()
 			replay_recorder.save_replay()
@@ -230,6 +234,8 @@ func _on_tank_destroyed(tank: WbmTank) -> void:
 		enemies.erase(tank)
 		score += 1
 		missions.add_progress("destroy_5")
+		if score >= 10:
+			achievements.unlock("tank_ace")
 		_respawn_bot(1)
 	else:
 		allies.erase(tank)
