@@ -33,6 +33,9 @@ func _physics_process(delta: float) -> void:
 		var body: Object = hit.collider
 		if body is Node and body.has_method("apply_damage") and int(body.get("team")) != team:
 			body.apply_damage(damage, team, hit.position)
+		var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+		if audio:
+			audio.play_event("impact", hit.position, -9.0)
 		global_position = hit.position
 		queue_free()
 		return
