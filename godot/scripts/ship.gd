@@ -22,6 +22,7 @@ var weapons_health := 100.0
 var module_status := "ВСЕ СИСТЕМЫ ИСПРАВНЫ"
 var _destroyed_emitted := false
 var repair_tick := 0.0
+var wake_timer := 0.0
 var _hull_material: StandardMaterial3D
 
 func _ready() -> void:
@@ -63,6 +64,30 @@ func _physics_process(delta: float) -> void:
 	current_speed = move_toward(current_speed, target_speed, rate * delta)
 	velocity = -global_transform.basis.z * current_speed
 	move_and_slide()
+	_update_wake(delta)
+
+
+func _update_wake(delta: float) -> void:
+	wake_timer -= delta
+	if absf(current_speed) < 1.4 or wake_timer > 0.0:
+		return
+	wake_timer = 0.42
+	var wake := MeshInstance3D.new()
+	var mesh := PlaneMesh.new()
+	mesh.size = Vector2(2.0, 4.8)
+	wake.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(0.55, 0.72, 0.76, 0.28)
+	material.roughness = 0.25
+	wake.material_override = material
+	get_tree().current_scene.add_child(wake)
+	wake.global_position = global_position + global_transform.basis.z * 7.2 + Vector3.UP * 0.09
+	wake.global_rotation.y = global_rotation.y
+	var tween := get_tree().create_tween()
+	tween.tween_property(material, "albedo_color:a", 0.0, 3.0)
+	tween.tween_callback(wake.queue_free)
 
 func _ai_naval_combat(delta: float) -> float:
 	if not is_instance_valid(target) or not target.is_in_group("naval_vehicles") or float(target.get("health")) <= 0.0:
