@@ -100,6 +100,16 @@ func _build_vehicle() -> void:
 		_add_box(self, Vector3(0.48, 0.025, 0.72), Vector3(px, 1.515, pz), patch_mat)
 	_add_box(self, Vector3(0.08, 0.035, 0.72), Vector3(-1.505, 1.55, -0.15), camo_light)
 	_add_box(self, Vector3(0.08, 0.035, 0.72), Vector3(1.505, 1.55, -0.15), camo_light)
+	# Additional original armor geometry: sloped glacis, side skirts and service fittings.
+	var glacis := _add_box(self, Vector3(2.78, 0.22, 1.18), Vector3(0, 1.48, -1.72), hull_material)
+	glacis.rotation.x = -0.24
+	var applique := _make_material(Color(0.16, 0.21, 0.15) if team == 0 else Color(0.29, 0.14, 0.12), 0.34, 0.82)
+	for side in [-1.0, 1.0]:
+		_add_box(self, Vector3(0.12, 0.48, 1.35), Vector3(side * 1.78, 1.18, -0.75), applique)
+		for bolt_index in range(4):
+			_add_cylinder(self, 0.055, 0.035, Vector3(side * 1.79, 1.31, -1.25 + bolt_index * 0.32), Vector3(0, 0, PI / 2.0), steel, 8)
+	_add_box(turret, Vector3(0.18, 0.12, 0.58), Vector3(0.82, 0.52, 0.45), dark)
+	_add_box(turret, Vector3(0.18, 0.12, 0.58), Vector3(-0.82, 0.52, 0.45), dark)
 
 func _make_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
