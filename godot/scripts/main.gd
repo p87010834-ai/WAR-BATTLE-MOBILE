@@ -56,9 +56,9 @@ func _process(delta: float) -> void:
 	match_time = maxf(0.0, match_time - delta)
 	if match_time <= 0.0 or team_score[0] >= 1000 or team_score[1] >= 1000:
 		match_over = true
+		var won: bool = int(team_score[0]) > int(team_score[1])
 		if not result_recorded:
 			result_recorded = true
-			var won: bool = int(team_score[0]) > int(team_score[1])
 			profile.add_battle_result(won)
 			missions.add_progress("play_3")
 			achievements.unlock("first_battle")
