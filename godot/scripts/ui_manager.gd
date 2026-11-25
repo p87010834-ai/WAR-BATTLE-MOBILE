@@ -479,31 +479,50 @@ func _select_hangar_vehicle(vehicle_class: String) -> void:
 		_add_text("Техника этого класса сейчас недоступна. Попробуйте после её возрождения.")
 
 func _build_profile_page() -> void:
-	_add_heading("ЛИЧНОЕ ДЕЛО")
+	_add_heading("ЛИЧНОЕ ДЕЛО / КОМАНДИР")
 	if not is_instance_valid(game_manager):
 		_add_text("Профиль пока недоступен.")
 		return
 	var p = game_manager.profile
-	_add_text("Позывной: %s" % p.username)
+	_add_text("ПОЗЫВНОЙ: %s" % p.username.to_upper())
 	var nickname_input := LineEdit.new()
 	nickname_input.placeholder_text = "Новый позывной (3–16 символов)"
 	nickname_input.text = p.username
 	content_box.add_child(nickname_input)
 	_add_action("СОХРАНИТЬ ПОЗЫВНОЙ", func():
-		var validation := WbmPlayerIdentity.validate_username(nickname_input.text)
+		var clean_nickname := nickname_input.text.strip_edges()
+		var validation := WbmPlayerIdentity.validate_username(clean_nickname)
 		if bool(validation.valid):
-			p.username = nickname_input.text.strip_edges()
+			p.username = clean_nickname
 			p.save_profile()
 			_open_page("Профиль")
 		else:
 			_add_text(str(validation.reason))
 	)
-	_add_text("Уровень аккаунта: %d / 100" % p.account_level)
-	_add_text("Опыт: %d XP" % p.experience)
-	_add_text("Боёв: %d" % p.total_battles)
-	_add_text("Побед: %d" % p.total_wins)
+	_add_heading("ПРОГРЕСС КОМАНДИРА")
+	_add_text("УРОВЕНЬ %d / 100" % p.account_level)
+	var xp_bar := ProgressBar.new()
+	xp_bar.min_value = 0.0
+	xp_bar.max_value = 1.0
+	xp_bar.show_percentage = false
+	var xp_needed := 0
+	if p.account_level < WbmPlayerProfile.MAX_LEVEL:
+		xp_needed = 500 + int(p.account_level) * 125
+		xp_bar.value = clampf(float(p.experience) / float(maxi(1, xp_needed)), 0.0, 1.0)
+	else:
+		xp_bar.value = 1.0
+	content_box.add_child(xp_bar)
+	if p.account_level < WbmPlayerProfile.MAX_LEVEL:
+		_add_text("ОПЫТ: %d / %d XP ДО СЛЕДУЮЩЕГО УРОВНЯ" % [p.experience, xp_needed])
+	else:
+		_add_text("МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ")
+	_add_heading("БОЕВАЯ СТАТИСТИКА")
+	var losses := maxi(0, p.total_battles - p.total_wins)
 	var win_rate := 0.0 if p.total_battles == 0 else float(p.total_wins) * 100.0 / float(p.total_battles)
-	_add_text("Процент побед: %.1f%%" % win_rate)
+	_add_text("ПРОВЕДЕНО БОЁВ: %d" % p.total_battles)
+	_add_text("ПОБЕД: %d     ПОРАЖЕНИЙ: %d" % [p.total_wins, losses])
+	_add_text("ДОЛЯ ПОБЕД: %.1f%%" % win_rate)
+	_add_text("Статистика и прогресс хранятся локально на этом устройстве; облачная синхронизация ещё не подключена.")
 	_add_action("ПОЛУЧИТЬ ЕЖЕДНЕВНУЮ НАГРАДУ", _claim_daily_reward)
 
 func _claim_daily_reward() -> void:
