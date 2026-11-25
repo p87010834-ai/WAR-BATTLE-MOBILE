@@ -30,6 +30,52 @@ func _process(delta: float) -> void:
 	if recording:
 		elapsed += delta
 
+func list_replays() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var directory := DirAccess.open("user://replays")
+	if directory == null:
+		return result
+	directory.list_dir_begin()
+	var file_name := directory.get_next()
+	while not file_name.is_empty():
+		if not directory.current_is_dir() and file_name.to_lower().ends_with(".json"):
+			var path := "user://replays/" + file_name
+			var file := FileAccess.open(path, FileAccess.READ)
+			if file != null:
+				var parsed = JSON.parse_string(file.get_as_text())
+				file.close()
+				if parsed is Dictionary and parsed.get("samples", []) is Array:
+					var entries: Array = parsed.get("samples", [])
+					result.append({
+						"name": file_name,
+						"duration": float(parsed.get("duration", 0.0)),
+						"sample_count": entries.size(),
+						"valid": not entries.is_empty()
+					})
+		file_name = directory.get_next()
+	directory.list_dir_end()
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.name) > str(b.name))
+	return result
+
+func load_replay(file_name: String) -> Dictionary:
+	var safe_name := file_name.get_file().validate_filename()
+	if safe_name.is_empty() or not safe_name.to_lower().ends_with(".json"):
+		return {}
+	var file := FileAccess.open("user://replays/" + safe_name, FileAccess.READ)
+	if file == null:
+		return {}
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not parsed is Dictionary or not parsed.get("samples", []) is Array:
+		return {}
+	return parsed
+
+func delete_replay(file_name: String) -> Error:
+	var safe_name := file_name.get_file().validate_filename()
+	if safe_name.is_empty() or not safe_name.to_lower().ends_with(".json"):
+		return ERR_INVALID_PARAMETER
+	return DirAccess.remove_absolute(ProjectSettings.globalize_path("user://replays/" + safe_name))
+
 func save_replay(file_name: String = "latest_replay.json") -> Error:
 	if recording:
 		stop_recording()
