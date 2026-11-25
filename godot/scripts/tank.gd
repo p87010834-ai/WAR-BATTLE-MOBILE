@@ -108,6 +108,23 @@ func _build_vehicle() -> void:
 	_add_box(turret, Vector3(0.72, 0.42, 0.45), Vector3(0, 0.38, -1.03), steel)
 	_add_cylinder(turret, 0.14, 2.75, Vector3(0, 0.43, -2.18), Vector3(PI / 2.0, 0, 0), steel, 16)
 	_add_cylinder(turret, 0.19, 0.34, Vector3(0, 0.43, -0.98), Vector3(PI / 2.0, 0, 0), dark, 16)
+	# Turret smoke dischargers, sight housings and additional armor fittings.
+	var optic_glass := _make_material(Color(0.035, 0.12, 0.16), 0.62, 0.18)
+	var smoke_tube := _make_material(Color(0.075, 0.085, 0.08), 0.58, 0.66)
+	for side in [-1.0, 1.0]:
+		for tube_index in range(3):
+			var tube_z := -0.18 + float(tube_index) * 0.25
+			var launcher := _add_cylinder(turret, 0.075, 0.48, Vector3(side * 0.88, 0.48, tube_z), Vector3(PI / 2.0, 0, side * -0.18), smoke_tube, 10)
+			launcher.rotation.x = PI / 2.0
+		_add_box(turret, Vector3(0.28, 0.16, 0.42), Vector3(side * 0.72, 0.77, -0.52), dark)
+		_add_box(turret, Vector3(0.22, 0.12, 0.18), Vector3(side * 0.72, 0.86, -0.58), optic_glass)
+		# Welded lifting lugs and side stowage brackets.
+		_add_box(turret, Vector3(0.12, 0.18, 0.24), Vector3(side * 0.78, 0.73, 0.88), steel)
+		_add_box(turret, Vector3(0.42, 0.22, 0.58), Vector3(side * 0.78, 0.05, 0.72), dark)
+	# Roof hatch hinges and low-profile periscope blocks.
+	for hatch_side in [-1.0, 1.0]:
+		_add_box(turret, Vector3(0.32, 0.045, 0.08), Vector3(hatch_side * 0.55, 0.96, 0.58), steel)
+		_add_box(turret, Vector3(0.16, 0.11, 0.12), Vector3(hatch_side * 0.28, 0.88, 0.82), optic_glass)
 	muzzle = Marker3D.new()
 	muzzle.position = Vector3(0, 0.43, -3.58)
 	turret.add_child(muzzle)
