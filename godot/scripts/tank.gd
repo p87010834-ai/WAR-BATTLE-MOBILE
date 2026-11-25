@@ -28,6 +28,9 @@ func _ready() -> void:
 	add_to_group("combat_vehicles")
 	health = max_health
 	_build_vehicle()
+	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+	if audio:
+		audio.attach_engine(self, "tank")
 	if not is_player:
 		ai_fire_timer = randf_range(0.5, 1.5)
 
@@ -232,6 +235,9 @@ func fire_shell() -> void:
 	shell.set_script(load("res://scripts/shell.gd"))
 	get_tree().current_scene.add_child(shell)
 	shell.global_position = muzzle.global_position
+	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+	if audio:
+		audio.play_event("cannon", muzzle.global_position, -1.0)
 
 func _update_repair(delta: float) -> void:
 	if not is_player:
@@ -289,5 +295,8 @@ func apply_damage(amount: float, attacker_team: int, impact_position: Vector3 = 
 		_add_impact_scorch(impact_position)
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
+		var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+		if audio:
+			audio.play_event("explosion", global_position, 1.0)
 		destroyed.emit(self)
 		queue_free()
