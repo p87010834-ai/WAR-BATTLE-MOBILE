@@ -20,6 +20,7 @@ const PAGES := [
 
 func _ready() -> void:
 	game_manager = get_tree().get_first_node_in_group("game_manager")
+	add_to_group("game_ui_manager")
 	compact_layout = get_viewport().get_visible_rect().size.x < 760.0
 	local_data.load(local_data_path)
 	_build_interface()
@@ -495,3 +496,21 @@ func _build_events_page() -> void:
 	else:
 		_add_text("Награда уже получена.")
 	_add_text("Сезонные сетевые события и глобальные таблицы появятся после подключения сервера.")
+
+func show_match_results(won: bool, blue_score: int, red_score: int) -> void:
+	overlay.visible = true
+	current_page = "Результаты боя"
+	page_title.text = "WBM / РЕЗУЛЬТАТЫ"
+	for child in content_box.get_children():
+		child.queue_free()
+	_add_heading("ПОБЕДА" if won else ("НИЧЬЯ" if blue_score == red_score else "ПОРАЖЕНИЕ"))
+	_add_text("СИНИЕ  %d  :  %d  КРАСНЫЕ" % [blue_score, red_score])
+	if is_instance_valid(game_manager):
+		_add_text("Всего боёв: %d" % game_manager.profile.total_battles)
+		_add_text("Побед: %d" % game_manager.profile.total_wins)
+		_add_text("Уровень аккаунта: %d / 100" % game_manager.profile.account_level)
+	_add_text("Телеметрия матча сохранена локально. Повтор пока нельзя воспроизвести.")
+	_add_action("НОВЫЙ БОЙ", _restart_match)
+	_add_action("В АНГАР / ГЛАВНОЕ МЕНЮ", func():
+		_open_page("Главное меню")
+	)
