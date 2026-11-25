@@ -47,8 +47,6 @@ func _ai_flight(delta: float) -> void:
 		return
 	var to_target := target.global_position - global_position
 	var aim_point := target.global_position + Vector3.UP * 1.5
-	if to_target.length() > 0.5:
-		look_at(aim_point, Vector3.UP)
 	speed = move_toward(speed, max_speed * 0.72, throttle_acceleration * delta)
 	var control_authority := clampf(speed / 45.0, 0.35, 1.0)
 	if to_target.length() > 0.5:
