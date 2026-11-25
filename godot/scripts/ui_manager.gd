@@ -215,14 +215,30 @@ func _add_action(caption: String, callback: Callable) -> void:
 
 func _build_hangar_page() -> void:
 	_add_heading("АНГАР / ВЫБОР ТЕХНИКИ")
-	var catalog := WbmVehicleCatalog.get_available(int(game_manager.profile.account_level)) if is_instance_valid(game_manager) else []
+	if not is_instance_valid(game_manager):
+		_add_text("Игровая сессия ещё не готова.")
+		return
+	var catalog := WbmVehicleCatalog.get_available(int(game_manager.profile.account_level))
+	var selected := str(local_data.get_value("hangar", "selected_class", "tank"))
+	_add_text("Выберите класс техники для управления в текущем бою. Доступность зависит от уровня профиля.")
 	for item in catalog:
+		var vehicle_class := str(item.get("class", "tank"))
 		_add_heading(str(item.name).to_upper())
 		_add_text("%s • открытие с %d уровня" % [str(item.role), int(item.unlock_level)])
-	_add_text("В боевой сборке доступны прототипы танка, самолёта и корабля. Каталог техники пока тестовый.")
-	if is_instance_valid(game_manager):
-		_add_action("ПЕРЕКЛЮЧИТЬ ТЕХНИКУ В БОЮ", Callable(game_manager, "switch_player_vehicle"))
-		_add_text("Сейчас переключение работает между доступными союзными экземплярами техники, а не через полноценный серверный ангар.")
+		_add_text("Статус: %s" % ("ВЫБРАНО" if selected == vehicle_class else "доступно"))
+		_add_action("ВЫБРАТЬ: " + str(item.name).to_upper(), _select_hangar_vehicle.bind(vehicle_class))
+	_add_text("Модели и характеристики каталога пока демонстрационные; выбор переключает управление на доступный союзный экземпляр.")
+	_add_action("ЦИКЛИЧЕСКИ ПЕРЕКЛЮЧИТЬ ТЕХНИКУ", Callable(game_manager, "switch_player_vehicle"))
+
+func _select_hangar_vehicle(vehicle_class: String) -> void:
+	if not is_instance_valid(game_manager):
+		return
+	if game_manager.select_vehicle_from_hangar(vehicle_class):
+		local_data.set_value("hangar", "selected_class", vehicle_class)
+		_save_local_data()
+		_open_page("Ангар")
+	else:
+		_add_text("Техника этого класса сейчас недоступна. Попробуйте после её возрождения.")
 
 func _build_profile_page() -> void:
 	_add_heading("ЛИЧНОЕ ДЕЛО")
@@ -231,6 +247,19 @@ func _build_profile_page() -> void:
 		return
 	var p = game_manager.profile
 	_add_text("Позывной: %s" % p.username)
+	var nickname_input := LineEdit.new()
+	nickname_input.placeholder_text = "Новый позывной (3–16 символов)"
+	nickname_input.text = p.username
+	content_box.add_child(nickname_input)
+	_add_action("СОХРАНИТЬ ПОЗЫВНОЙ", func():
+		var validation := WbmPlayerIdentity.validate_username(nickname_input.text)
+		if bool(validation.valid):
+			p.username = nickname_input.text.strip_edges()
+			p.save_profile()
+			_open_page("Профиль")
+		else:
+			_add_text(str(validation.reason))
+	)
 	_add_text("Уровень аккаунта: %d / 100" % p.account_level)
 	_add_text("Опыт: %d XP" % p.experience)
 	_add_text("Боёв: %d" % p.total_battles)
@@ -407,13 +436,14 @@ func _build_friends_page() -> void:
 	content_box.add_child(field)
 	_add_action("ДОБАВИТЬ КОНТАКТ", func():
 		var nick := field.text.strip_edges()
-		if nick.length() >= 3 and nick.length() <= 16 and not nick in friends:
+		var validation := WbmPlayerIdentity.validate_username(nick)
+		if bool(validation.valid) and not nick in friends:
 			friends.append(nick)
 			local_data.set_value("social", "friends", friends)
 			_save_local_data()
 			_open_page("Друзья")
 		else:
-			_add_text("Нужен уникальный позывной длиной 3–16 символов.")
+			_add_text(str(validation.reason) if not bool(validation.valid) else "Этот контакт уже добавлен.")
 	)
 
 func _build_squad_page() -> void:
@@ -489,6 +519,7 @@ func _build_events_page() -> void:
 		_add_action("ПОЛУЧИТЬ НАГРАДУ СОБЫТИЯ", func():
 			if is_instance_valid(game_manager):
 				game_manager.profile.add_experience(150)
+				game_manager.profile.save_profile()
 			local_data.set_value("events", "steel_claimed", true)
 			_save_local_data()
 			_open_page("События")
