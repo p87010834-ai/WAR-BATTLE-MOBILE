@@ -291,6 +291,23 @@ func _build_ship() -> void:
 			_ship_cylinder(0.13, 2.65, Vector3(side * 0.28, 1.95, turret_z - 1.48), Vector3(PI / 2.0, 0, 0), steel, 12)
 		_ship_box(Vector3(0.5, 0.18, 0.42), Vector3(0, 2.1, turret_z + 0.18), dark)
 
+	# Armored gunhouse cheeks, mantlets and barrel reinforcement collars.
+	var turret_armor := _ship_material(Color(0.25, 0.28, 0.27), 0.68, 0.62)
+	for turret_z in [-5.8, 5.4]:
+		_ship_box(Vector3(1.35, 0.62, 1.15), Vector3(0, 2.12, turret_z + 0.22), turret_armor)
+		for barrel_side in [-1.0, 1.0]:
+			_ship_cylinder(0.16, 0.18, Vector3(barrel_side * 0.28, 1.95, turret_z - 0.38), Vector3(PI / 2.0, 0, 0), dark, 12)
+			_ship_cylinder(0.15, 0.12, Vector3(barrel_side * 0.28, 1.95, turret_z - 2.55), Vector3(PI / 2.0, 0, 0), steel, 12)
+		for armor_side in [-1.0, 1.0]:
+			_ship_box(Vector3(0.08, 0.34, 0.72), Vector3(armor_side * 0.70, 2.12, turret_z + 0.22), steel)
+	# Deck hatches and ventilation grilles around the machinery spaces.
+	var vent_dark := _ship_material(Color(0.055, 0.065, 0.067), 0.52, 0.78)
+	for vent_index in range(4):
+		var vent_z: float = -1.2 + float(vent_index) * 1.0
+		_ship_box(Vector3(0.72, 0.06, 0.48), Vector3(0, 1.16, vent_z), dark)
+		for grille_index in range(5):
+			_ship_box(Vector3(0.58, 0.025, 0.035), Vector3(-0.29 + float(grille_index) * 0.145, 1.205, vent_z), vent_dark)
+
 	# Secondary mounts, lifeboats, vents, bollards and rail posts.
 	for side in [-1.0, 1.0]:
 		for z in [-3.4, 0.0, 5.8]:
