@@ -85,3 +85,5 @@ jobs:
           path: godot/build/WAR_BATTLE_MOBILE.apk
           if-no-files-found: error
           retention-days: 14
+
+# Trigger validation for the latest interface and hangar changes.
