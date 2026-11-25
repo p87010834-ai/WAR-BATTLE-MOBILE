@@ -1,24 +1,27 @@
 # WAR BATTLE MOBILE — Godot migration
 
-Development is isolated on branch `godot-migration`. The previous Unity project is not modified.
+Development is isolated on branch `godot-migration`; the legacy Unity project is untouched.
 
-## Current prototype systems
-- Godot 4.4 project using the Compatibility renderer.
-- Procedurally assembled 3D greybox arena and Russian HUD.
-- Player tank movement, firing, armor and destruction.
-- Three team capture objectives with neutral/blue/red ownership.
-- Match countdown and team score from held objectives.
-- Player and bot respawns after destruction.
-- Allied and enemy bots dynamically select the nearest living opponent.
-- Virtual joystick and touch fire control scripts.
+## Prototype systems
+- Godot 4.4 Compatibility-renderer 3D greybox arena and Russian HUD.
+- Player tank controls, firing, armor and destruction.
+- Three team capture points, ownership, match timer and team scoring.
+- Player and bot respawns.
+- Team bots select the nearest living opponent.
+- Shell impacts pass hit positions into a localized module-damage model:
+  - frontal impacts can disable the gun temporarily;
+  - rear impacts damage the engine and reduce speed;
+  - side impacts can damage tracks and reduce turning;
+  - module condition is shown in the HUD.
+- Virtual joystick and touch fire-control scripts.
 
 ## Controls
 - W / S: forward / reverse
 - A / D: turn
 - Space: fire
-- R: restart the match
+- R: restart
 
-## Status and limitations
-This remains an early greybox prototype, not a finished game and not an APK. Tank visuals are primitive geometry. The capture/respawn/AI changes have been committed but have not yet been validated by launching Godot or running on an Android device. The GitHub Actions workflow is configured for a headless Godot check, but its result has not been confirmed.
+## Status
+This is an early greybox prototype, not a finished game or APK. Vehicle geometry is placeholder geometry. Recent gameplay code has been committed but has not been validated by running Godot or on an Android device. The configured GitHub Actions headless check has not yet been confirmed.
 
-Aircraft, ships, production-quality original models/materials/audio, full menus, accounts, authoritative online multiplayer/server infrastructure and Android export/signing remain to be implemented. The Unity project remains untouched.
+Still outstanding: proper original vehicle and environment art, sound, aircraft, ships, authoritative online multiplayer/server infrastructure, accounts and social systems, production UI, Android export/signing and device performance testing.
