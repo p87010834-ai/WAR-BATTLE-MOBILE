@@ -38,7 +38,7 @@ func save_replay(file_name: String = "latest_replay.json") -> Error:
 		safe_name = "latest_replay.json"
 	var file := FileAccess.open("user://replays/" + safe_name, FileAccess.WRITE)
 	if file == null:
-		DirAccess.make_dir_recursive_absolute("user://replays")
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://replays"))
 		file = FileAccess.open("user://replays/" + safe_name, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
