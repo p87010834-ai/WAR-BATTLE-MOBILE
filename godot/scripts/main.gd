@@ -49,7 +49,7 @@ func _process(delta: float) -> void:
 	var minutes := int(match_time) / 60
 	var seconds := int(match_time) % 60
 	if is_instance_valid(player):
-		health_label.text = "БРОНЯ  %d%%" % roundi(player.health)
+		health_label.text = "БРОНЯ  %d%%   |   %s" % [roundi(player.health), player.module_status]
 	else:
 		health_label.text = "МАШИНА УНИЧТОЖЕНА — ВОЗРОЖДЕНИЕ"
 	status_label.text = "ВРАГИ: %d   УНИЧТОЖЕНО: %d   ВРЕМЯ: %02d:%02d" % [enemies.size(), score, minutes, seconds]
