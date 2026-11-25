@@ -37,6 +37,8 @@ func _physics_process(delta: float) -> void:
 
 func _ai_flight(delta: float) -> void:
 	if not is_instance_valid(target) or not target.has_method("apply_damage") or float(target.get("health")) <= 0.0:
+		target = _find_enemy_target()
+	if not is_instance_valid(target):
 		velocity = -global_transform.basis.z * speed
 		return
 	var to_target := target.global_position - global_position
@@ -47,6 +49,20 @@ func _ai_flight(delta: float) -> void:
 	velocity = -global_transform.basis.z * speed
 	if to_target.length() < 115.0 and absf(to_target.normalized().dot(-global_transform.basis.z)) > 0.82:
 		fire_weapon()
+
+func _find_enemy_target() -> Node3D:
+	var best: Node3D
+	var best_distance := INF
+	for candidate in get_tree().get_nodes_in_group("combat_vehicles"):
+		if not is_instance_valid(candidate) or not candidate.has_method("apply_damage"):
+			continue
+		if int(candidate.get("team")) == team or float(candidate.get("health")) <= 0.0:
+			continue
+		var distance := global_position.distance_squared_to(candidate.global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = candidate as Node3D
+	return best
 
 func _player_flight(delta: float) -> void:
 	var pitch := Input.get_action_strength("air_pitch_down") - Input.get_action_strength("air_pitch_up")
