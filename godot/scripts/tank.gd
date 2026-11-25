@@ -21,6 +21,8 @@ var engine_damaged := false
 var track_damaged := false
 var gun_disabled_left := 0.0
 var module_status := "НОРМА"
+var repair_progress := 0.0
+var repair_cooldown := 0.0
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -90,6 +92,8 @@ func _build_vehicle() -> void:
 func _physics_process(delta: float) -> void:
 	reload_left = maxf(0.0, reload_left - delta)
 	gun_disabled_left = maxf(0.0, gun_disabled_left - delta)
+	repair_cooldown = maxf(0.0, repair_cooldown - delta)
+	_update_repair(delta)
 	if is_player:
 		_player_drive(delta)
 	else:
@@ -105,6 +109,8 @@ func _player_drive(delta: float) -> void:
 	velocity.x = forward.x * throttle * effective_speed
 	velocity.z = forward.z * throttle * effective_speed
 	velocity.y -= 24.0 * delta
+	if Input.is_action_pressed("repair"):
+		return
 	if Input.is_action_just_pressed("fire") and gun_disabled_left <= 0.0:
 		fire_shell()
 
@@ -172,9 +178,30 @@ func fire_shell() -> void:
 	shell.set_meta("direction", direction)
 	shell.set_meta("speed", 55.0)
 	shell.set_meta("damage", 28.0)
+	shell.set_meta("shooter_id", get_instance_id())
 	shell.set_script(load("res://scripts/shell.gd"))
 	get_tree().current_scene.add_child(shell)
 	shell.global_position = muzzle.global_position
+
+func _update_repair(delta: float) -> void:
+	if not is_player:
+		return
+	var repairing := Input.is_action_pressed("repair")
+	var moving := absf(Input.get_action_strength("move_forward") - Input.get_action_strength("move_backward")) > 0.08 or absf(Input.get_action_strength("turn_left") - Input.get_action_strength("turn_right")) > 0.08
+	if not repairing or moving or repair_cooldown > 0.0:
+		repair_progress = 0.0
+		return
+	repair_progress += delta
+	if repair_progress >= 4.0:
+		health = minf(max_health, health + 20.0 * delta)
+		engine_damaged = false
+		track_damaged = false
+		gun_disabled_left = 0.0
+		module_status = "РЕМОНТ" if health < max_health else "НОРМА"
+		if health >= max_health:
+			repair_cooldown = 1.0
+	if is_instance_valid(hull_material) and not engine_damaged and not track_damaged:
+		hull_material.albedo_color = Color(0.20, 0.27, 0.18) if team == 0 else Color(0.34, 0.16, 0.13)
 
 func _apply_module_damage(impact_position: Vector3) -> void:
 	var local_hit := to_local(impact_position)
