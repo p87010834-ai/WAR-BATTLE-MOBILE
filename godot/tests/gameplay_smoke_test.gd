@@ -22,7 +22,8 @@ func _run_test() -> void:
 	var allies: Array = game.get("allies")
 	var active_vehicle := game.get("active_vehicle") as Node3D
 	var ui := root.get_tree().get_first_node_in_group("game_ui_manager")
-	var controls := root.get_tree().get_first_node_in_group("game_manager")
+	var manager := root.get_tree().get_first_node_in_group("game_manager")
+	var controls := root.get_tree().get_first_node_in_group("game_touch_controls")
 
 	if not is_instance_valid(player):
 		push_error("SMOKE TEST: player tank was not spawned")
@@ -40,7 +41,7 @@ func _run_test() -> void:
 		push_error("SMOKE TEST: player must start in the tank")
 		quit(1)
 		return
-	if ui == null or controls == null:
+	if ui == null or manager == null or controls == null:
 		push_error("SMOKE TEST: gameplay UI or game manager is missing")
 		quit(1)
 		return
