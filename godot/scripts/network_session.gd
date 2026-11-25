@@ -9,6 +9,13 @@ const MAX_CLIENTS := 10
 var is_host := false
 var connected := false
 
+func _ready() -> void:
+	multiplayer.peer_connected.connect(_on_peer_connected)
+	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	multiplayer.connected_to_server.connect(_on_connected)
+	multiplayer.connection_failed.connect(_on_connection_failed)
+	multiplayer.server_disconnected.connect(_on_server_disconnected)
+
 func host_game(port: int = DEFAULT_PORT, max_clients: int = MAX_CLIENTS) -> Error:
 	leave_session()
 	var peer := ENetMultiplayerPeer.new()
@@ -19,8 +26,6 @@ func host_game(port: int = DEFAULT_PORT, max_clients: int = MAX_CLIENTS) -> Erro
 	multiplayer.multiplayer_peer = peer
 	is_host = true
 	connected = true
-	multiplayer.peer_connected.connect(_on_peer_connected)
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	connection_status_changed.emit(true, "Локальный сервер создан")
 	player_count_changed.emit(1)
 	return OK
@@ -37,9 +42,6 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 	multiplayer.multiplayer_peer = peer
 	is_host = false
 	connected = true
-	multiplayer.connected_to_server.connect(_on_connected)
-	multiplayer.connection_failed.connect(_on_connection_failed)
-	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	return OK
 
 func leave_session() -> void:
