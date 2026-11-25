@@ -73,8 +73,8 @@ jobs:
           GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p godot/build
-          godot --headless --path godot --export-debug "Android" build/WAR_BATTLE_MOBILE.apk
-          test -s godot/build/WAR_BATTLE_MOBILE.apk
+          godot --headless --path godot --export-debug "Android" "$GITHUB_WORKSPACE/godot/build/WAR_BATTLE_MOBILE.apk"
+          test -s "$GITHUB_WORKSPACE/godot/build/WAR_BATTLE_MOBILE.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
