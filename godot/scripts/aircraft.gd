@@ -259,6 +259,28 @@ func _build_aircraft() -> void:
 		_air_box(Vector3(0.32, 0.14, 0.9), Vector3(side * 4.65, -0.18, 0.35), dark)
 		_air_box(Vector3(0.12, 0.16, 0.42), Vector3(side * 5.25, -0.05, -0.34), glass)
 
+	# Fixed landing gear assemblies with oleo struts, hubs, brake discs and doors.
+	var tyre_mat := _air_material(Color(0.025, 0.03, 0.032), 0.0, 0.96)
+	var hub_mat := _air_material(Color(0.24, 0.27, 0.29), 0.82, 0.38)
+	for side in [-1.0, 1.0]:
+		var gear_x := side * 2.05
+		_air_cylinder(0.075, 0.82, Vector3(gear_x, -0.48, 0.48), Vector3(0, 0, side * -0.16), hub_mat, 12)
+		_air_cylinder(0.34, 0.17, Vector3(gear_x, -0.91, 0.48), Vector3(PI / 2.0, 0, PI / 2.0), tyre_mat, 20)
+		_air_cylinder(0.19, 0.19, Vector3(gear_x, -0.91, 0.48), Vector3(PI / 2.0, 0, PI / 2.0), hub_mat, 16)
+		_air_cylinder(0.10, 0.20, Vector3(gear_x, -0.91, 0.48), Vector3(PI / 2.0, 0, PI / 2.0), steel_air(), 12)
+		_air_box(Vector3(0.42, 0.055, 0.62), Vector3(gear_x, -0.34, 0.48), dark)
+		_air_box(Vector3(0.12, 0.035, 0.72), Vector3(gear_x, -0.27, 0.48), marking)
+	# Nose wheel and twin fork.
+	_air_cylinder(0.065, 0.68, Vector3(0, -0.48, -2.42), Vector3.ZERO, hub_mat, 12)
+	_air_cylinder(0.27, 0.14, Vector3(0, -0.82, -2.42), Vector3(PI / 2.0, 0, PI / 2.0), tyre_mat, 18)
+	_air_cylinder(0.14, 0.16, Vector3(0, -0.82, -2.42), Vector3(PI / 2.0, 0, PI / 2.0), hub_mat, 14)
+	_air_box(Vector3(0.42, 0.055, 0.55), Vector3(0, -0.31, -2.42), dark)
+	# Wing access panels and recessed-looking inspection covers.
+	for side in [-1.0, 1.0]:
+		for panel_index in range(3):
+			var panel_x := side * (1.2 + float(panel_index) * 0.82)
+			_air_box(Vector3(0.48, 0.018, 0.34), Vector3(panel_x, -0.015, -0.28), dark)
+			_air_box(Vector3(0.34, 0.012, 0.025), Vector3(panel_x, -0.003, -0.43), steel_air())
 	# Antenna, pitot probe and small surface panels.
 	_air_cylinder(0.035, 0.8, Vector3(0, 0.53, 1.55), Vector3.ZERO, dark, 8)
 	_air_cylinder(0.035, 0.9, Vector3(0, 0.02, -3.25), Vector3(PI / 2.0, 0, 0), steel_air(), 8)
