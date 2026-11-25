@@ -180,6 +180,10 @@ func _build_world() -> void:
 	ground_shader.code = """
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
+varying vec3 world_pos;
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
 float hash21(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
 	p += dot(p, p + 45.32);
@@ -193,7 +197,7 @@ float noise2(vec2 p) {
 		mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 void fragment() {
-	vec2 p = WORLD_POSITION.xz * 0.19;
+	vec2 p = world_pos.xz * 0.19;
 	float n = noise2(p) * 0.55 + noise2(p * 3.7) * 0.28 + noise2(p * 11.0) * 0.17;
 	vec3 soil = vec3(0.105, 0.125, 0.105);
 	vec3 grass = vec3(0.23, 0.255, 0.19);
