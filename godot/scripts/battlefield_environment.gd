@@ -91,7 +91,7 @@ func _add_ruins() -> void:
 func _add_trench_sections() -> void:
 	for side in [-1.0, 1.0]:
 		for i in range(8):
-			var x := side * (18.0 + float(i) * 3.0)
+			var x: float = side * (18.0 + float(i) * 3.0)
 			var z := -11.0 if i % 2 == 0 else -13.0
 			_box(self, Vector3(2.8, 0.65, 0.55), Vector3(x, 0.33, z), _materials["sand"], 0.0)
 			_box(self, Vector3(0.55, 0.65, 2.2), Vector3(x + 1.35, 0.33, z + 0.9), _materials["sand"], 0.0)
@@ -99,7 +99,7 @@ func _add_trench_sections() -> void:
 
 func _add_barriers_and_sandbags() -> void:
 	for i in range(12):
-		var x := -48.0 + float(i) * 8.5
+		var x: float = -48.0 + float(i) * 8.5
 		if absf(x) < 15.0:
 			continue
 		_box(self, Vector3(3.2, 0.85, 0.65), Vector3(x, 0.43, 28.0), _materials["concrete"], 0.0)
