@@ -1,6 +1,8 @@
 extends Node3D
 
 var player: WbmTank
+var active_vehicle: Node3D
+var current_vehicle_mode := "tank"
 var profile := WbmPlayerProfile.new()
 var weather_manager: WbmWeatherManager
 var settings := WbmSettingsManager.new()
@@ -88,8 +90,11 @@ func _process(delta: float) -> void:
 		health_label.text = "МАШИНА УНИЧТОЖЕНА — ВОЗРОЖДЕНИЕ"
 	status_label.text = "ВРАГИ: %d   УНИЧТОЖЕНО: %d   ВРЕМЯ: %02d:%02d" % [enemies.size(), score, minutes, seconds]
 	capture_label.text = "ТОЧКИ: %d/3   СИНИЕ %d  :  %d КРАСНЫЕ" % [owned, team_score[0], team_score[1]]
+	if is_instance_valid(active_vehicle):
+		camera_pivot.global_position = active_vehicle.global_position
+		var active_health := float(active_vehicle.get("health"))
+		health_label.text = "%s  %d%%" % [_vehicle_mode_label(), roundi(active_health / float(active_vehicle.get("max_health")) * 100.0)]
 	if is_instance_valid(player):
-		camera_pivot.global_position = player.global_position
 		replay_recorder.record_vehicle(player, "player", player.team, player.health)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -232,6 +237,7 @@ func _spawn_match() -> void:
 		enemies.append(enemy)
 	_spawn_air_support()
 	_spawn_naval_battle()
+	active_vehicle = player
 	camera_pivot.global_position = player.global_position
 
 func _spawn_air_support() -> void:
@@ -255,6 +261,8 @@ func _spawn_air_support() -> void:
 	enemy_aircraft.append(hostile_air)
 
 func _on_aircraft_destroyed(vehicle: WbmAircraft) -> void:
+	if vehicle.is_player:
+		_switch_to_tank()
 	if vehicle.team == 1:
 		enemy_aircraft.erase(vehicle)
 		score += 1
@@ -298,6 +306,8 @@ func _spawn_naval_battle() -> void:
 	enemy_ships.append(hostile_ship)
 
 func _on_ship_destroyed(vessel: WbmShip) -> void:
+	if vessel.is_player:
+		_switch_to_tank()
 	if vessel.team == 1:
 		enemy_ships.erase(vessel)
 		score += 1
@@ -379,3 +389,56 @@ func _respawn_bot(faction: int) -> void:
 		var at: Vector3 = ally_spawns[randi() % ally_spawns.size()]
 		var ally := _create_tank(at, 0, false)
 		allies.append(ally)
+
+func switch_player_vehicle() -> void:
+	if match_over:
+		return
+	if current_vehicle_mode == "tank":
+		if not allied_aircraft.is_empty() and is_instance_valid(allied_aircraft[0]):
+			_set_player_vehicle(allied_aircraft[0], "aircraft")
+		elif not allied_ships.is_empty() and is_instance_valid(allied_ships[0]):
+			_set_player_vehicle(allied_ships[0], "ship")
+	elif current_vehicle_mode == "aircraft":
+		if not allied_ships.is_empty() and is_instance_valid(allied_ships[0]):
+			_set_player_vehicle(allied_ships[0], "ship")
+		else:
+			_switch_to_tank()
+	else:
+		_switch_to_tank()
+
+func _set_player_vehicle(vehicle: Node3D, mode: String) -> void:
+	if is_instance_valid(active_vehicle):
+		active_vehicle.set("is_player", false)
+		if active_vehicle is WbmTank:
+			(active_vehicle as WbmTank).target = enemies[0] if not enemies.is_empty() else null
+		elif active_vehicle is WbmAircraft:
+			(active_vehicle as WbmAircraft).target = enemies[0] if not enemies.is_empty() else null
+	vehicle.set("is_player", true)
+	active_vehicle = vehicle
+	current_vehicle_mode = mode
+	camera_pivot.global_position = vehicle.global_position
+	_update_vehicle_hud()
+
+func _switch_to_tank() -> void:
+	if not is_instance_valid(player):
+		return
+	if is_instance_valid(active_vehicle) and active_vehicle != player:
+		active_vehicle.set("is_player", false)
+	player.is_player = true
+	active_vehicle = player
+	current_vehicle_mode = "tank"
+	camera_pivot.global_position = player.global_position
+	_update_vehicle_hud()
+
+func _vehicle_mode_label() -> String:
+	match current_vehicle_mode:
+		"aircraft":
+			return "САМОЛЁТ"
+		"ship":
+			return "КОРАБЛЬ"
+		_:
+			return "ТАНК"
+
+func _update_vehicle_hud() -> void:
+	if is_instance_valid(status_label):
+		status_label.text = "УПРАВЛЕНИЕ: %s  |  КНОПКА «ТЕХНИКА» — СМЕНА" % _vehicle_mode_label()
