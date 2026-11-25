@@ -31,25 +31,6 @@ var _elevator: Node3D
 var _rudder: Node3D
 var _visual_time := 0.0
 
-	# Fine airframe pass: flush inspection panels, rivet rows and control-hinge caps.
-	var rivet_mat := _air_material(Color(0.43, 0.46, 0.46), 0.82, 0.48)
-	var panel_mat := _air_material(Color(0.19, 0.24, 0.26), 0.64, 0.62)
-	for side in [-1.0, 1.0]:
-		for row in range(3):
-			var row_x: float = side * (0.95 + float(row) * 1.12)
-			for rivet_index in range(9):
-				var rivet_z: float = -1.18 + float(rivet_index) * 0.22
-				_air_cylinder(0.014, 0.018, Vector3(row_x, 0.018, rivet_z), Vector3.ZERO, rivet_mat, 6)
-		# Flush fuel and service access panels on the upper wing skin.
-		_air_box(Vector3(0.74, 0.018, 0.46), Vector3(side * 3.35, -0.004, -0.15), panel_mat)
-		for bolt_index in range(6):
-			var bolt_z: float = -0.34 + float(bolt_index) * 0.075
-			_air_cylinder(0.014, 0.018, Vector3(side * 3.35, 0.012, bolt_z), Vector3.ZERO, rivet_mat, 6)
-		# Hinge caps and reinforcement strips on the aileron.
-		_air_box(Vector3(1.9, 0.025, 0.055), Vector3(side * 3.05, -0.17, 0.48), rivet_mat)
-	# Small dorsal access hatch and antenna base.
-	_air_box(Vector3(0.42, 0.035, 0.52), Vector3(0.0, 0.455, 0.72), panel_mat)
-	_air_cylinder(0.085, 0.045, Vector3(0.0, 0.49, 1.34), Vector3.ZERO, rivet_mat, 12)
 func _ready() -> void:
 	add_to_group("combat_vehicles")
 	health = max_health
