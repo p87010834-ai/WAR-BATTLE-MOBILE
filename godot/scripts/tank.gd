@@ -24,6 +24,7 @@ var module_status := "НОРМА"
 var repair_progress := 0.0
 var repair_cooldown := 0.0
 var _road_wheels: Array[MeshInstance3D] = []
+var _suspension_phase := 0.0
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -153,6 +154,11 @@ func _process(delta: float) -> void:
 	for wheel in _road_wheels:
 		if is_instance_valid(wheel):
 			wheel.rotate_object_local(Vector3.RIGHT, wheel_rate * delta)
+	_suspension_phase += delta * (2.0 + travel_speed * 0.55)
+	if is_instance_valid(turret) and is_instance_valid(target) and not is_player:
+		var target_local := to_local(target.global_position)
+		var desired_turret_yaw := atan2(-target_local.x, -target_local.z)
+		turret.rotation.y = rotate_toward(turret.rotation.y, desired_turret_yaw, 1.25 * delta)
 
 func _physics_process(delta: float) -> void:
 	reload_left = maxf(0.0, reload_left - delta)
@@ -189,6 +195,9 @@ func _bot_drive(delta: float) -> void:
 	rotation.y = rotate_toward(rotation.y, desired_angle, turn_speed * (0.55 if track_damaged else 1.0) * delta)
 	var distance := to_target.length()
 	var forward := -global_transform.basis.z
+	var target_local := to_local(target.global_position)
+	var desired_turret_yaw := atan2(-target_local.x, -target_local.z)
+	turret.rotation.y = rotate_toward(turret.rotation.y, desired_turret_yaw, 1.8 * delta)
 	var throttle := 1.0 if distance > 17.0 else (-0.25 if distance < 9.0 else 0.0)
 	var effective_speed := move_speed * (0.55 if engine_damaged else 1.0)
 	velocity.x = forward.x * throttle * effective_speed * 0.72
