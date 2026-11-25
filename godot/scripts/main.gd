@@ -161,15 +161,24 @@ func _build_hud() -> void:
 	add_child(layer)
 	var panel := ColorRect.new()
 	panel.color = Color(0.025, 0.035, 0.04, 0.84)
-	panel.position = Vector2(18, 16)
-	panel.size = Vector2(700, 112)
+	panel.anchor_right = 1.0
+	panel.offset_left = 18.0
+	panel.offset_top = 16.0
+	panel.offset_right = -18.0
+	panel.offset_bottom = 128.0
 	layer.add_child(panel)
 	health_label = _make_label(panel, "БРОНЯ", Vector2(16, 7), 24, Color(1.0, 0.58, 0.16))
 	status_label = _make_label(panel, "", Vector2(16, 43), 16, Color(0.9, 0.92, 0.9))
 	capture_label = _make_label(panel, "", Vector2(16, 76), 16, Color(0.95, 0.65, 0.25))
 	var help := Label.new()
 	help.text = "W/S — движение    A/D — поворот    ПРОБЕЛ — огонь    R — заново"
-	help.position = Vector2(22, 674)
+	help.anchor_top = 1.0
+	help.anchor_bottom = 1.0
+	help.offset_left = 22.0
+	help.offset_top = -42.0
+	help.offset_right = -18.0
+	help.offset_bottom = -12.0
+	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	help.add_theme_font_size_override("font_size", 17)
 	help.add_theme_color_override("font_color", Color(0.94, 0.94, 0.9))
 	layer.add_child(help)
