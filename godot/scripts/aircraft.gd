@@ -362,18 +362,6 @@ func _build_aircraft() -> void:
 	_rudder.add_child(rudder_mesh)
 	_air_box(Vector3(0.08, 0.08, 0.72), Vector3(0, 0.78, 2.35), steel_air())
 
-func _add_aircraft_scorch(impact: Vector3) -> void:
-	var mark := MeshInstance3D.new()
-	var mesh := SphereMesh.new()
-	mesh.radius = 0.3
-	mesh.height = 0.08
-	mark.mesh = mesh
-	var mat := _air_material(Color(0.035, 0.028, 0.025), 0.0, 1.0)
-	mark.material_override = mat
-	mark.position = to_local(impact)
-	mark.scale = Vector3(1.25, 0.2, 0.7)
-	add_child(mark)
-
 	# Final airframe detailing: trailing-edge flaps, hinges, aerials, pitot probe and gun ports.
 	var control_surface_mat := _air_material(Color(0.17, 0.22, 0.24), 0.62, 0.58)
 	var fastener_mat := _air_material(Color(0.36, 0.39, 0.39), 0.82, 0.42)
@@ -404,6 +392,19 @@ func _add_aircraft_scorch(impact: Vector3) -> void:
 		for port_index in range(2):
 			_air_cylinder(0.055, 0.035, Vector3(side * (1.35 + float(port_index) * 0.34), -0.005, -1.02), Vector3(PI / 2.0, 0, 0), dark, 10)
 		_air_box(Vector3(0.32, 0.025, 0.22), Vector3(side * 0.82, 0.015, -0.38), marking)
+
+func _add_aircraft_scorch(impact: Vector3) -> void:
+	var mark := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.3
+	mesh.height = 0.08
+	mark.mesh = mesh
+	var mat := _air_material(Color(0.035, 0.028, 0.025), 0.0, 1.0)
+	mark.material_override = mat
+	mark.position = to_local(impact)
+	mark.scale = Vector3(1.25, 0.2, 0.7)
+	add_child(mark)
+
 
 func _air_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
