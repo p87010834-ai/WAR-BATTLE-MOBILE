@@ -437,7 +437,7 @@ func _build_achievements_page() -> void:
 	var achievements = game_manager.achievements
 	for achievement_id in WbmAchievementSystem.DEFINITIONS.keys():
 		var definition: Dictionary = WbmAchievementSystem.DEFINITIONS[achievement_id]
-		var unlocked := achievement_id in achievements.unlocked
+		var unlocked: bool = achievements.unlocked.has(achievement_id)
 		_add_text("%s — %s" % [("✓" if unlocked else "🔒"), str(definition.title)])
 		_add_text(str(definition.description))
 	_add_text("Открыто: %d / %d" % [achievements.get_unlocked_count(), WbmAchievementSystem.DEFINITIONS.size()])
@@ -611,7 +611,7 @@ func _build_shop_page() -> void:
 	_add_text("Демонстрационные бесплатные варианты оформления. Реальных платежей и покупок за деньги здесь нет.")
 	var owned: Array = local_data.get_value("shop", "unlocked", ["Стандартный камуфляж"])
 	for skin in ["Песчаный камуфляж", "Лесной камуфляж", "Зимний камуфляж"]:
-		var is_owned := skin in owned
+		var is_owned: bool = owned.has(skin)
 		_add_text(skin + (" — открыт" if is_owned else " — доступен в демо"))
 		if not is_owned:
 			_add_action("ОТКРЫТЬ БЕСПЛАТНО: " + skin.to_upper(), func():
