@@ -73,7 +73,7 @@ func _process(delta: float) -> void:
 			ui_manager.show_match_results(won, team_score[0], team_score[1])
 		return
 
-	var living := _get_alive_tanks()
+	var living := _get_alive_combat_vehicles()
 	for point in capture_points:
 		point.update_control(living, delta)
 		if point.owner_team >= 0:
@@ -384,6 +384,13 @@ func _get_alive_tanks() -> Array[WbmTank]:
 	for tank in enemies:
 		if is_instance_valid(tank) and tank.health > 0.0:
 			result.append(tank)
+	return result
+
+func _get_alive_combat_vehicles() -> Array[Node3D]:
+	var result: Array[Node3D] = []
+	for vehicle in get_tree().get_nodes_in_group("combat_vehicles"):
+		if is_instance_valid(vehicle) and vehicle is Node3D and float(vehicle.get("health")) > 0.0:
+			result.append(vehicle as Node3D)
 	return result
 
 func _on_capture_point_captured(team: int) -> void:
