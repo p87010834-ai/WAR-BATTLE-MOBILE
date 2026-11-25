@@ -17,6 +17,10 @@ var ai_fire_timer := 0.0
 var turret: Node3D
 var muzzle: Marker3D
 var hull_material: StandardMaterial3D
+var engine_damaged := false
+var track_damaged := false
+var gun_disabled_left := 0.0
+var module_status := "НОРМА"
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -85,6 +89,7 @@ func _build_vehicle() -> void:
 
 func _physics_process(delta: float) -> void:
 	reload_left = maxf(0.0, reload_left - delta)
+	gun_disabled_left = maxf(0.0, gun_disabled_left - delta)
 	if is_player:
 		_player_drive(delta)
 	else:
@@ -94,12 +99,13 @@ func _physics_process(delta: float) -> void:
 func _player_drive(delta: float) -> void:
 	var throttle := Input.get_action_strength("move_forward") - Input.get_action_strength("move_backward")
 	var steering := Input.get_action_strength("turn_left") - Input.get_action_strength("turn_right")
-	rotation.y += steering * turn_speed * delta * (0.45 + absf(throttle) * 0.55)
+	rotation.y += steering * turn_speed * (0.55 if track_damaged else 1.0) * delta * (0.45 + absf(throttle) * 0.55)
 	var forward := -global_transform.basis.z
-	velocity.x = forward.x * throttle * move_speed
-	velocity.z = forward.z * throttle * move_speed
+	var effective_speed := move_speed * (0.55 if engine_damaged else 1.0)
+	velocity.x = forward.x * throttle * effective_speed
+	velocity.z = forward.z * throttle * effective_speed
 	velocity.y -= 24.0 * delta
-	if Input.is_action_just_pressed("fire"):
+	if Input.is_action_just_pressed("fire") and gun_disabled_left <= 0.0:
 		fire_shell()
 
 func _bot_drive(delta: float) -> void:
@@ -111,15 +117,16 @@ func _bot_drive(delta: float) -> void:
 	var to_target := target.global_position - global_position
 	to_target.y = 0.0
 	var desired_angle := atan2(-to_target.x, -to_target.z)
-	rotation.y = rotate_toward(rotation.y, desired_angle, turn_speed * delta)
+	rotation.y = rotate_toward(rotation.y, desired_angle, turn_speed * (0.55 if track_damaged else 1.0) * delta)
 	var distance := to_target.length()
 	var forward := -global_transform.basis.z
 	var throttle := 1.0 if distance > 17.0 else (-0.25 if distance < 9.0 else 0.0)
-	velocity.x = forward.x * throttle * move_speed * 0.72
-	velocity.z = forward.z * throttle * move_speed * 0.72
+	var effective_speed := move_speed * (0.55 if engine_damaged else 1.0)
+	velocity.x = forward.x * throttle * effective_speed * 0.72
+	velocity.z = forward.z * throttle * effective_speed * 0.72
 	velocity.y -= 24.0 * delta
 	ai_fire_timer -= delta
-	if distance < 42.0 and ai_fire_timer <= 0.0:
+	if distance < 42.0 and ai_fire_timer <= 0.0 and gun_disabled_left <= 0.0:
 		fire_shell()
 		ai_fire_timer = randf_range(1.8, 3.0)
 
@@ -139,7 +146,7 @@ func _find_nearest_opponent() -> WbmTank:
 	return nearest
 
 func fire_shell() -> void:
-	if reload_left > 0.0:
+	if reload_left > 0.0 or gun_disabled_left > 0.0:
 		return
 	reload_left = reload_seconds
 	var shell := Area3D.new()
@@ -169,9 +176,26 @@ func fire_shell() -> void:
 	get_tree().current_scene.add_child(shell)
 	shell.global_position = muzzle.global_position
 
-func apply_damage(amount: float, attacker_team: int) -> void:
+func _apply_module_damage(impact_position: Vector3) -> void:
+	var local_hit := to_local(impact_position)
+	if local_hit.z < -0.75:
+		gun_disabled_left = maxf(gun_disabled_left, 8.0)
+		module_status = "ОРУДИЕ ПОВРЕЖДЕНО"
+	elif local_hit.z > 0.75:
+		engine_damaged = true
+		module_status = "ДВИГАТЕЛЬ ПОВРЕЖДЁН"
+	elif absf(local_hit.x) > 0.9:
+		track_damaged = true
+		module_status = "ГУСЕНИЦА ПОВРЕЖДЕНА"
+	else:
+		module_status = "БРОНЯ ПРОБИТА"
+	if is_instance_valid(hull_material):
+		hull_material.albedo_color = Color(0.38, 0.22, 0.12) if (engine_damaged or track_damaged) else Color(0.48, 0.34, 0.16)
+
+func apply_damage(amount: float, attacker_team: int, impact_position: Vector3 = Vector3.ZERO) -> void:
 	if attacker_team == team or health <= 0.0:
 		return
+	_apply_module_damage(impact_position)
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
 		destroyed.emit(self)
