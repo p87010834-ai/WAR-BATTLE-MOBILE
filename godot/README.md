@@ -2,7 +2,7 @@
 
 Development is isolated on branch `godot-migration`; the legacy Unity project and `main` branch are untouched.
 
-## Implemented prototype foundations
+## Current prototype foundations
 - Godot 4.4 Compatibility-renderer 3D greybox arena and Russian HUD.
 - Player tank movement, firing, armor, module damage, destruction and respawn.
 - Three team capture points, ownership, match timer and team scoring.
@@ -10,21 +10,41 @@ Development is isolated on branch `godot-migration`; the legacy Unity project an
 - Stationary field repair for the player (E / mobile button).
 - Swept ray collision for fast tank shells.
 - Virtual joystick, mobile fire and repair controls.
-- Aircraft foundation: procedural low-poly test airframe, flight control, throttle, pitch/roll/yaw inputs, and ray-tested cannon projectile.
-- Naval foundation: procedural test ship, movement, steering, health and weapon placeholder.
-- Weather foundation: moving procedural cloud clusters and fog state control.
-- Local profile foundation: save/load, level progression to 100, experience, battle statistics and daily reward date guard.
-- Match rule helpers for 1–10 players per team, timer formatting and winner text.
+- Aircraft prototype: procedural low-poly test airframe, pitch/roll/yaw, throttle and ray-tested cannon projectile.
+- Naval prototype: procedural test ship, movement, steering, health and weapon placeholder.
+- Weather prototype: moving procedural cloud clusters and fog controls.
+- Local profile: save/load, level progression to 100, XP, battle stats and daily reward date guard.
+- Local settings persistence: audio levels, graphics preset value, sensitivity, language and control options.
+- Local mission progress and reward claims; local season XP and 50-tier progression state.
+- Achievement persistence and initial battle/victory/kill milestones.
+- Username validation (3–16 chars; Cyrillic/Latin/digits/underscore/hyphen) and a basic profanity mask for chat text.
+- Replay sample recorder writing local JSON telemetry.
+- ENet host/join/leave session wrapper (transport foundation only; not a production online game service).
+- Vehicle catalog data and RU/EN text lookup foundations.
+- Match rule helpers for 1–10 players per team and score/timer utilities.
 
 ## Controls
 Tank: W/S move, A/D turn, Space fire, E repair, R restart.
 Aircraft test controller: I/K pitch, J/L roll, A/D yaw, W/S throttle, Space fire.
 Ship test controller: W/S throttle, A/D steering, Space fire.
 
-## Important status and limitations
-This is an early development prototype, NOT a complete game and NOT an Android APK. The new aircraft and ship scripts are reusable foundations and are not yet wired into a vehicle-selection/combined-arms match flow. The weather system currently supplies moving placeholder clouds and fog; it does not yet simulate full rain, snow, seasons, or live real-world weather. The profile is local-only and is not an account/server system.
+## Critical implementation status
+This is an early prototype, NOT a complete game and NOT an Android APK. Tank combat is the only mode currently running in the main arena. Aircraft and ship scripts are not yet integrated into a vehicle selection flow or a shared combined-arms battle. Weather, profile, settings, missions, achievements, season state, replay and social rules are local foundations, not complete production systems.
 
-Not implemented: authoritative online multiplayer, matchmaking, dedicated servers, accounts/authentication, friends, parties, clans, global clan territory war, chat/moderation, shop/payments, battle pass, ranked seasons, missions/events, replay/free camera, production maps, original production-grade vehicle assets, sound, full damage models for aircraft/ships, carrier operations, complete localization/settings UI, Android export/signing, anti-cheat, analytics, backend services and device performance/thermal testing.
+The ENet wrapper can host/join a peer session but there is no authoritative dedicated server, matchmaking, persistence backend, account authentication, anti-cheat, secure economy, cross-device profile sync or production network protocol. Local profile/mission/season/achievement data can be modified on the device and must not be trusted for a live competitive game. Chat filtering is only a client-side preliminary mask; server moderation and reporting are absent.
+
+## Still required for a full release
+- Production-grade original vehicle models, animations, materials, damage visuals, sound and licensed/original effects.
+- Complete maps, collision/navigation, destructible environments, carrier operations and spawn systems.
+- Fully integrated tanks + aircraft + ships, balanced combat, complete aircraft/ship damage and weapon physics.
+- Dedicated authoritative multiplayer servers, matchmaking, reconnect, lag compensation, server-side validation, anti-cheat and regional infrastructure.
+- Accounts, secure cloud saves, friends, parties, clans, clan territory war, gifts and referral system.
+- Server-backed missions, daily/weekly rewards, battle pass, ranked seasons, events, shop and purchase validation.
+- Full localization, responsive mobile UI, hangar, vehicle progression, settings screens, accessibility and tutorial.
+- Replay playback/free camera and export/share.
+- AI GUARD moderation dashboard, player reports, chat server filters and admin tools.
+- Android export preset, signing configuration, device compatibility, performance profiling, thermal management and store compliance.
+- Automated unit/integration tests, multiplayer load tests, security review and real-device QA.
 
 ## Validation
-Code is committed to GitHub but has not been run in the Godot editor or on an Android device in this session. GitHub Actions is configured for a headless import/run check; its result must be inspected before claiming the project passes. Placeholder geometry and scripts must be tested and corrected before expanding toward production.
+Source changes are committed to GitHub. The project has not yet been opened or run in the Godot editor or on an Android device in this session. GitHub Actions is configured for headless import/run checks, but no successful result has been confirmed. Do not treat committed source as a verified build.
