@@ -1,27 +1,24 @@
 # WAR BATTLE MOBILE — Godot migration
 
-This folder is the new engine-independent-from-Unity project root. The Unity project is left untouched in the repository history and on the main branch; development is isolated on branch `godot-migration`.
+Development is isolated on branch `godot-migration`. The previous Unity project is not modified.
 
-## Current prototype
-- Godot 4.4 project, Compatibility renderer for broad mobile GPU support.
-- Procedurally assembled 3D greybox arena.
-- Player tank movement, turret and shell firing.
-- Four basic enemy tanks with pursuit and firing behavior.
-- Armor/health and destruction loop.
-- Russian combat HUD.
+## Current prototype systems
+- Godot 4.4 project using the Compatibility renderer.
+- Procedurally assembled 3D greybox arena and Russian HUD.
+- Player tank movement, firing, armor and destruction.
+- Three team capture objectives with neutral/blue/red ownership.
+- Match countdown and team score from held objectives.
+- Player and bot respawns after destruction.
+- Allied and enemy bots dynamically select the nearest living opponent.
+- Virtual joystick and touch fire control scripts.
 
-## Controls (desktop smoke-test)
+## Controls
 - W / S: forward / reverse
 - A / D: turn
 - Space: fire
-- R: restart after defeat
+- R: restart the match
 
-## Important status
-This is an early playable-prototype foundation, not the finished game and not an APK. The tank visuals are primitive greybox geometry. Mobile touch controls, aircraft, ships, multiplayer/server authority, production art/audio, menus and Android export configuration are still pending. No Unity Editor or Unity cloud build is required for this Godot project.
+## Status and limitations
+This remains an early greybox prototype, not a finished game and not an APK. Tank visuals are primitive geometry. The capture/respawn/AI changes have been committed but have not yet been validated by launching Godot or running on an Android device. The GitHub Actions workflow is configured for a headless Godot check, but its result has not been confirmed.
 
-## Next development milestones
-1. Validate the project with Godot headless CI and fix parser/runtime errors.
-2. Add touch controls and a mobile camera.
-3. Replace greybox tank parts with original optimized models/materials.
-4. Add capture points, respawn rules and improved bot tactics.
-5. Configure Android export and produce a test APK through a cloud runner.
+Aircraft, ships, production-quality original models/materials/audio, full menus, accounts, authoritative online multiplayer/server infrastructure and Android export/signing remain to be implemented. The Unity project remains untouched.
