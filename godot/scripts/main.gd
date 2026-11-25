@@ -68,6 +68,9 @@ func _process(delta: float) -> void:
 			replay_recorder.stop_recording()
 			replay_recorder.save_replay()
 		status_label.text = "БОЙ ОКОНЧЕН — %s" % ("ПОБЕДА" if team_score[0] > team_score[1] else "ПОРАЖЕНИЕ" if team_score[1] > team_score[0] else "НИЧЬЯ")
+		var ui_manager := get_tree().get_first_node_in_group("game_ui_manager")
+		if ui_manager and ui_manager.has_method("show_match_results"):
+			ui_manager.show_match_results(won, team_score[0], team_score[1])
 		return
 
 	var living := _get_alive_tanks()
