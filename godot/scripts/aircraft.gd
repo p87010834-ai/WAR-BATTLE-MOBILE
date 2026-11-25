@@ -177,6 +177,17 @@ func _build_aircraft() -> void:
 		_air_box(Vector3(0.36, 0.035, 0.22), Vector3(side * 4.65, -0.005, -0.3), dark)
 		_air_box(Vector3(0.18, 0.035, 0.52), Vector3(side * 0.34, -0.22, 0.35), dark)
 	_air_box(Vector3(0.5, 0.035, 0.42), Vector3(0, -0.22, -2.1), marking)
+	# Flight-control surfaces, hinge lines and engine intake lips.
+	var control_mat := _air_material(Color(0.13, 0.17, 0.19) if team == 0 else Color(0.25, 0.12, 0.10), 0.48, 0.68)
+	for side in [-1.0, 1.0]:
+		var aileron := _air_box(Vector3(2.25, 0.075, 0.32), Vector3(side * 4.15, -0.235, 0.62), control_mat)
+		aileron.rotation.y = side * 0.035
+		_air_box(Vector3(2.15, 0.025, 0.045), Vector3(side * 4.1, -0.235, 0.43), dark)
+		_air_cylinder(0.245, 0.09, Vector3(side * 2.45, -0.05, -0.42), Vector3(PI / 2.0, 0, 0), steel_air(), 20)
+		_air_box(Vector3(0.42, 0.06, 0.18), Vector3(side * 2.45, -0.23, 1.72), marking)
+	var elevator := _air_box(Vector3(2.65, 0.07, 0.28), Vector3(0, 0.08, 2.62), control_mat)
+	elevator.rotation.y = 0.0
+	_air_box(Vector3(0.08, 0.08, 0.72), Vector3(0, 0.78, 2.35), steel_air())
 
 func _add_aircraft_scorch(impact: Vector3) -> void:
 	var mark := MeshInstance3D.new()
