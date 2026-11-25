@@ -146,8 +146,39 @@ func fire_guns() -> void:
 		var forward := -global_transform.basis.z
 		var direction := (target.global_position - global_position).normalized()
 		if distance <= 78.0 and forward.dot(direction) > 0.82:
-			var damage := 26.0 * clampf(weapons_health / 100.0, 0.25, 1.0)
-			target.apply_damage(damage, team, target.global_position)
+			var damage := 13.0 * clampf(weapons_health / 100.0, 0.25, 1.0)
+			_launch_naval_shell(target, damage)
+
+func _launch_naval_shell(victim: Node3D, damage: float) -> void:
+	var shell := Area3D.new()
+	shell.name = "NavalShell"
+	var collision := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.32
+	collision.shape = sphere
+	shell.add_child(collision)
+	var visual := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.27
+	mesh.height = 0.54
+	visual.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(1.0, 0.58, 0.19)
+	material.emission_enabled = true
+	material.emission = Color(1.0, 0.28, 0.06)
+	visual.material_override = material
+	shell.add_child(visual)
+	var launch_position := global_position + Vector3.UP * 2.0 - global_transform.basis.z * 7.0
+	var aim_position := victim.global_position + Vector3.UP * 1.1
+	var direction := (aim_position - launch_position).normalized()
+	shell.set_meta("team", team)
+	shell.set_meta("direction", direction)
+	shell.set_meta("speed", 52.0)
+	shell.set_meta("damage", damage)
+	shell.set_meta("shooter_id", get_instance_id())
+	shell.set_script(load("res://scripts/shell.gd"))
+	get_tree().current_scene.add_child(shell)
+	shell.global_position = launch_position
 
 func _add_ship_scorch(world_position: Vector3) -> void:
 	var mark := MeshInstance3D.new()
