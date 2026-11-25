@@ -3,6 +3,11 @@ extends Node3D
 var player: WbmTank
 var profile := WbmPlayerProfile.new()
 var weather_manager: WbmWeatherManager
+var settings := WbmSettingsManager.new()
+var missions := WbmMissionSystem.new()
+var season := WbmSeasonProgress.new()
+var replay_recorder: WbmReplayRecorder
+var result_recorded := false
 var allies: Array[WbmTank] = []
 var enemies: Array[WbmTank] = []
 var capture_points: Array[WbmCapturePoint] = []
@@ -23,6 +28,13 @@ var ally_spawns := [Vector3(-9, 0.15, 23), Vector3(9, 0.15, 23)]
 func _ready() -> void:
 	_build_world()
 	profile.load_profile()
+	settings.load_settings()
+	settings.apply_audio()
+	season.load()
+	replay_recorder = WbmReplayRecorder.new()
+	replay_recorder.name = "ReplayRecorder"
+	add_child(replay_recorder)
+	replay_recorder.start_recording()
 	weather_manager = WbmWeatherManager.new()
 	weather_manager.name = "WeatherManager"
 	add_child(weather_manager)
@@ -36,6 +48,14 @@ func _process(delta: float) -> void:
 	match_time = maxf(0.0, match_time - delta)
 	if match_time <= 0.0 or team_score[0] >= 1000 or team_score[1] >= 1000:
 		match_over = true
+		if not result_recorded:
+			result_recorded = true
+			var won := team_score[0] > team_score[1]
+			profile.add_battle_result(won)
+			missions.add_progress("play_3")
+			season.add_xp(100 if won else 50)
+			replay_recorder.stop_recording()
+			replay_recorder.save_replay()
 		status_label.text = "БОЙ ОКОНЧЕН — %s" % ("ПОБЕДА" if team_score[0] > team_score[1] else "ПОРАЖЕНИЕ" if team_score[1] > team_score[0] else "НИЧЬЯ")
 		return
 
@@ -62,6 +82,7 @@ func _process(delta: float) -> void:
 	capture_label.text = "ТОЧКИ: %d/3   СИНИЕ %d  :  %d КРАСНЫЕ" % [owned, team_score[0], team_score[1]]
 	if is_instance_valid(player):
 		camera_pivot.global_position = player.global_position
+		replay_recorder.record_vehicle(player, "player", player.team, player.health)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
@@ -208,6 +229,7 @@ func _on_tank_destroyed(tank: WbmTank) -> void:
 	elif tank.team == 1:
 		enemies.erase(tank)
 		score += 1
+		missions.add_progress("destroy_5")
 		_respawn_bot(1)
 	else:
 		allies.erase(tank)
