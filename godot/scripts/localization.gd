@@ -10,6 +10,6 @@ const TEXT := {
 static func set_language(language: String) -> void:
 	current_language = "en" if language == "en" else "ru"
 
-static func tr(key: String) -> String:
+static func translate_text(key: String) -> String:
 	var dictionary: Dictionary = TEXT.get(current_language, TEXT["ru"])
 	return str(dictionary.get(key, key))
