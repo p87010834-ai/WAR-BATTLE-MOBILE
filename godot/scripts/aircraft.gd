@@ -114,9 +114,11 @@ func fire_weapon() -> void:
 	get_tree().current_scene.add_child(bolt)
 	bolt.global_position = global_position - global_transform.basis.z * 4.0
 
-func apply_damage(amount: float, attacker_team: int, _impact: Vector3 = Vector3.ZERO) -> void:
+func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.ZERO) -> void:
 	if attacker_team == team or health <= 0.0:
 		return
+	if impact != Vector3.ZERO and health > amount:
+		_add_aircraft_scorch(impact)
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
 		destroyed.emit(self)
@@ -168,6 +170,25 @@ func _build_aircraft() -> void:
 	_air_cylinder(0.035, 0.8, Vector3(0, 0.53, 1.55), Vector3.ZERO, dark, 8)
 	_air_cylinder(0.035, 0.9, Vector3(0, 0.02, -3.25), Vector3(PI / 2.0, 0, 0), steel_air(), 8)
 	_air_box(Vector3(0.14, 0.08, 0.65), Vector3(0, -0.15, 1.15), dark)
+	# Original squadron bands and maintenance panels.
+	var marking := _air_material(Color(0.95, 0.48, 0.12) if team == 0 else Color(0.78, 0.22, 0.13), 0.22, 0.62)
+	for side in [-1.0, 1.0]:
+		_air_box(Vector3(0.72, 0.035, 0.28), Vector3(side * 3.9, -0.005, -0.3), marking)
+		_air_box(Vector3(0.36, 0.035, 0.22), Vector3(side * 4.65, -0.005, -0.3), dark)
+		_air_box(Vector3(0.18, 0.035, 0.52), Vector3(side * 0.34, -0.22, 0.35), dark)
+	_air_box(Vector3(0.5, 0.035, 0.42), Vector3(0, -0.22, -2.1), marking)
+
+func _add_aircraft_scorch(impact: Vector3) -> void:
+	var mark := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.3
+	mesh.height = 0.08
+	mark.mesh = mesh
+	var mat := _air_material(Color(0.035, 0.028, 0.025), 0.0, 1.0)
+	mark.material_override = mat
+	mark.position = to_local(impact)
+	mark.scale = Vector3(1.25, 0.2, 0.7)
+	add_child(mark)
 
 func _air_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
