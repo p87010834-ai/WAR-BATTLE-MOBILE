@@ -183,6 +183,32 @@ func _build_vehicle() -> void:
 	_add_box(turret, Vector3(0.18, 0.12, 0.58), Vector3(0.82, 0.52, 0.45), dark)
 	_add_box(turret, Vector3(0.18, 0.12, 0.58), Vector3(-0.82, 0.52, 0.45), dark)
 
+	# Final exterior fittings: tow cables, spare track links, lifting eyes and grab handles.
+	var cable_mat := _make_material(Color(0.095, 0.105, 0.10), 0.82, 0.58)
+	var fitting_mat := _make_material(Color(0.29, 0.31, 0.28), 0.78, 0.52)
+	for side in [-1.0, 1.0]:
+		# Paired tow-cable runs along the upper rear hull shoulders.
+		for cable_offset in [-0.18, 0.18]:
+			_add_cylinder(self, 0.035, 2.65, Vector3(side * 1.43, 1.53, 0.52 + cable_offset), Vector3(PI / 2.0, 0, 0), cable_mat, 8)
+		# Three spare track links secured to each rear quarter.
+		for spare_index in range(3):
+			var spare_z: float = 1.45 + float(spare_index) * 0.27
+			var spare := _add_box(self, Vector3(0.12, 0.16, 0.24), Vector3(side * 1.49, 1.72, spare_z), track_steel)
+			spare.rotation.x = 0.08
+			_add_cylinder(self, 0.035, 0.035, Vector3(side * 1.56, 1.72, spare_z), Vector3(0, 0, PI / 2.0), fitting_mat, 8)
+		# Welded lifting eyes and grab handles on the hull shoulders.
+		for handle_index in range(2):
+			var handle_z: float = -1.55 + float(handle_index) * 2.8
+			_add_box(self, Vector3(0.10, 0.07, 0.32), Vector3(side * 1.32, 1.72, handle_z), fitting_mat)
+			_add_box(self, Vector3(0.10, 0.07, 0.32), Vector3(side * 1.32, 1.82, handle_z), fitting_mat)
+			_add_box(self, Vector3(0.10, 0.17, 0.07), Vector3(side * 1.32, 1.77, handle_z - 0.13), fitting_mat)
+			_add_box(self, Vector3(0.10, 0.17, 0.07), Vector3(side * 1.32, 1.77, handle_z + 0.13), fitting_mat)
+	# Rear towing pintle and armored access-panel fasteners.
+	_add_cylinder(self, 0.16, 0.32, Vector3(0, 0.88, 2.43), Vector3(PI / 2.0, 0, 0), fitting_mat, 12)
+	for access_x in [-0.42, 0.42]:
+		for access_z in [-1.82, 1.82]:
+			_add_cylinder(self, 0.045, 0.035, Vector3(access_x, 1.59, access_z), Vector3.ZERO, fitting_mat, 8)
+
 func _make_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
