@@ -2,7 +2,7 @@ extends RefCounted
 class_name WbmChatFilter
 
 const MAX_MESSAGE_LENGTH := 240
-const BLOCKED_TERMS := ["оскорбление1", "оскорбление2"]
+const BLOCKED_TERMS := ["бля", "хуй", "пизд", "еба", "сука", "мудак"]
 
 static func sanitize_message(raw_text: String) -> String:
 	var cleaned := raw_text.strip_edges()
