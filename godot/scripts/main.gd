@@ -13,6 +13,8 @@ var allies: Array[WbmTank] = []
 var enemies: Array[WbmTank] = []
 var allied_aircraft: Array[WbmAircraft] = []
 var enemy_aircraft: Array[WbmAircraft] = []
+var allied_ships: Array[WbmShip] = []
+var enemy_ships: Array[WbmShip] = []
 var capture_points: Array[WbmCapturePoint] = []
 var health_label: Label
 var status_label: Label
@@ -128,6 +130,18 @@ func _build_world() -> void:
 	ground.add_child(ground_collision)
 	add_child(ground)
 
+	var ocean := MeshInstance3D.new()
+	var ocean_mesh := PlaneMesh.new()
+	ocean_mesh.size = Vector2(100, 38)
+	ocean.mesh = ocean_mesh
+	ocean.position = Vector3(0, 0.035, -69)
+	var ocean_material := StandardMaterial3D.new()
+	ocean_material.albedo_color = Color(0.035, 0.16, 0.23)
+	ocean_material.roughness = 0.28
+	ocean_material.metallic = 0.18
+	ocean.material_override = ocean_material
+	add_child(ocean)
+
 	for i in range(22):
 		var block := StaticBody3D.new()
 		var mesh_instance := MeshInstance3D.new()
@@ -217,6 +231,7 @@ func _spawn_match() -> void:
 		enemy.target = player
 		enemies.append(enemy)
 	_spawn_air_support()
+	_spawn_naval_battle()
 	camera_pivot.global_position = player.global_position
 
 func _spawn_air_support() -> void:
@@ -264,6 +279,47 @@ func _respawn_aircraft(faction: int) -> void:
 		enemy_aircraft.append(aircraft)
 	else:
 		allied_aircraft.append(aircraft)
+
+func _spawn_naval_battle() -> void:
+	var friendly_ship := WbmShip.new()
+	friendly_ship.team = 0
+	friendly_ship.position = Vector3(-24, 1.25, -69)
+	friendly_ship.rotation.y = -PI / 2.0
+	friendly_ship.destroyed.connect(_on_ship_destroyed)
+	add_child(friendly_ship)
+	allied_ships.append(friendly_ship)
+
+	var hostile_ship := WbmShip.new()
+	hostile_ship.team = 1
+	hostile_ship.position = Vector3(24, 1.25, -69)
+	hostile_ship.rotation.y = PI / 2.0
+	hostile_ship.destroyed.connect(_on_ship_destroyed)
+	add_child(hostile_ship)
+	enemy_ships.append(hostile_ship)
+
+func _on_ship_destroyed(vessel: WbmShip) -> void:
+	if vessel.team == 1:
+		enemy_ships.erase(vessel)
+		score += 1
+		_respawn_ship(1)
+	else:
+		allied_ships.erase(vessel)
+		_respawn_ship(0)
+
+func _respawn_ship(faction: int) -> void:
+	await get_tree().create_timer(18.0).timeout
+	if match_over:
+		return
+	var vessel := WbmShip.new()
+	vessel.team = faction
+	vessel.position = Vector3(-24 if faction == 0 else 24, 1.25, -69)
+	vessel.rotation.y = -PI / 2.0 if faction == 0 else PI / 2.0
+	vessel.destroyed.connect(_on_ship_destroyed)
+	add_child(vessel)
+	if faction == 0:
+		allied_ships.append(vessel)
+	else:
+		enemy_ships.append(vessel)
 
 func _create_tank(at: Vector3, faction: int, controlled: bool) -> WbmTank:
 	var tank := WbmTank.new()
