@@ -224,6 +224,18 @@ func _build_ship() -> void:
 	_ship_box(Vector3(0.12, 0.12, 1.1), Vector3(2.03, 1.13, 0.2), fleet_mark)
 	for deck_line in range(5):
 		_ship_box(Vector3(2.8, 0.018, 0.035), Vector3(0, 1.095, -4.1 + deck_line * 1.65), steel)
+	# Funnels, exhaust caps, anchor gear and deck-service equipment.
+	var funnel_mat := _ship_material(Color(0.12, 0.15, 0.16), 0.58, 0.58)
+	for funnel_z in [0.2, 2.0]:
+		_ship_box(Vector3(0.72, 1.25, 0.82), Vector3(0, 4.15, funnel_z), funnel_mat)
+		_ship_box(Vector3(0.82, 0.12, 0.9), Vector3(0, 4.82, funnel_z), dark)
+		_ship_box(Vector3(0.78, 0.08, 0.86), Vector3(0, 4.9, funnel_z), steel)
+	_ship_cylinder(0.18, 0.5, Vector3(-1.72, 1.2, -8.0), Vector3(0, 0, PI / 2.0), steel, 12)
+	_ship_cylinder(0.18, 0.5, Vector3(1.72, 1.2, -8.0), Vector3(0, 0, PI / 2.0), steel, 12)
+	for side in [-1.0, 1.0]:
+		_ship_box(Vector3(0.22, 0.22, 0.8), Vector3(side * 1.72, 1.28, -6.8), dark)
+		_ship_box(Vector3(0.3, 0.16, 1.2), Vector3(side * 1.35, 1.3, 6.0), steel)
+	_ship_box(Vector3(1.1, 0.16, 0.42), Vector3(0, 1.3, -9.25), deck_mat)
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(5.0, 2.0, 18.0)
