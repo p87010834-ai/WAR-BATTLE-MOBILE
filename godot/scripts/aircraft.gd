@@ -14,6 +14,7 @@ var health := 120.0
 var speed := 25.0
 var throttle := 0.35
 var fire_cooldown := 0.0
+var gun_audio_timer := 0.0
 var is_player := false
 var target: Node3D
 var _visual_material: StandardMaterial3D
@@ -34,6 +35,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	fire_cooldown = maxf(0.0, fire_cooldown - delta)
+	gun_audio_timer = maxf(0.0, gun_audio_timer - delta)
 	if is_player:
 		_player_flight(delta)
 	else:
@@ -134,9 +136,11 @@ func fire_weapon() -> void:
 	bolt.set_meta("direction", -global_transform.basis.z)
 	get_tree().current_scene.add_child(bolt)
 	bolt.global_position = global_position - global_transform.basis.z * 4.0
-	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
-	if audio:
-		audio.play_event("gun", bolt.global_position, -8.0)
+	if gun_audio_timer <= 0.0:
+		var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+		if audio:
+			audio.play_event("gun", bolt.global_position, -8.0)
+		gun_audio_timer = 0.42
 
 func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.ZERO) -> void:
 	if attacker_team == team or health <= 0.0:
