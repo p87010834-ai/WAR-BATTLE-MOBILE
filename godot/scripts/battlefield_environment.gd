@@ -129,17 +129,19 @@ func _add_craters_and_debris() -> void:
 
 func _add_forest_details() -> void:
 	for i in range(54):
-		var x := randf_range(-86.0, 86.0)
-		var z := randf_range(-78.0, 68.0)
+		var x: float = randf_range(-86.0, 86.0)
+		var z: float = randf_range(-78.0, 68.0)
 		if Vector2(x, z - 18.0).length() < 38.0:
 			continue
 		var trunk_height := randf_range(2.4, 4.2)
 		_cylinder(self, randf_range(0.10, 0.19), trunk_height, Vector3(x, trunk_height * 0.5, z), _materials["wood"])
 		for tier in range(3):
 			var crown := MeshInstance3D.new()
-			var crown_mesh := ConeMesh.new()
-			crown_mesh.radius = randf_range(1.0, 1.65) * (1.0 - float(tier) * 0.16)
+			var crown_mesh := CylinderMesh.new()
+			crown_mesh.top_radius = 0.04
+			crown_mesh.bottom_radius = randf_range(1.0, 1.65) * (1.0 - float(tier) * 0.16)
 			crown_mesh.height = randf_range(1.7, 2.5)
+			crown_mesh.radial_segments = 8
 			crown.mesh = crown_mesh
 			crown.material_override = _materials["grass"]
 			crown.position = Vector3(x, 2.0 + float(tier) * 1.1, z)
