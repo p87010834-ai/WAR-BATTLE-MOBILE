@@ -23,6 +23,7 @@ var gun_disabled_left := 0.0
 var module_status := "НОРМА"
 var repair_progress := 0.0
 var repair_cooldown := 0.0
+var _road_wheels: Array[MeshInstance3D] = []
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -59,8 +60,10 @@ func _build_vehicle() -> void:
 		_add_box(self, Vector3(0.7, 0.16, 4.55), Vector3(side * 1.62, 1.18, 0), steel)
 		for wheel_index in range(6):
 			var wheel_z := -1.78 + float(wheel_index) * 0.71
-			_add_cylinder(self, 0.39, 0.20, Vector3(side * 1.69, 0.66, wheel_z), Vector3(0, 0, PI / 2.0), rubber, 16)
-			_add_cylinder(self, 0.17, 0.215, Vector3(side * 1.70, 0.66, wheel_z), Vector3(0, 0, PI / 2.0), steel, 12)
+			var road_wheel := _add_cylinder(self, 0.39, 0.20, Vector3(side * 1.69, 0.66, wheel_z), Vector3(0, 0, PI / 2.0), rubber, 16)
+			_road_wheels.append(road_wheel)
+			var hub := _add_cylinder(self, 0.17, 0.215, Vector3(side * 1.70, 0.66, wheel_z), Vector3(0, 0, PI / 2.0), steel, 12)
+			_road_wheels.append(hub)
 		_add_cylinder(self, 0.43, 0.2, Vector3(side * 1.69, 0.66, -2.12), Vector3(0, 0, PI / 2.0), steel, 16)
 		_add_cylinder(self, 0.43, 0.2, Vector3(side * 1.69, 0.66, 2.12), Vector3(0, 0, PI / 2.0), steel, 16)
 
@@ -144,6 +147,13 @@ func _add_cylinder(parent: Node3D, radius: float, height: float, at: Vector3, an
 	node.material_override = material
 	parent.add_child(node)
 	return node
+func _process(delta: float) -> void:
+	var travel_speed := Vector2(velocity.x, velocity.z).length()
+	var wheel_rate := travel_speed * 0.72
+	for wheel in _road_wheels:
+		if is_instance_valid(wheel):
+			wheel.rotate_object_local(Vector3.RIGHT, wheel_rate * delta)
+
 func _physics_process(delta: float) -> void:
 	reload_left = maxf(0.0, reload_left - delta)
 	gun_disabled_left = maxf(0.0, gun_disabled_left - delta)
