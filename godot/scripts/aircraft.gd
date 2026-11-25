@@ -276,6 +276,19 @@ func _build_aircraft() -> void:
 	_air_cylinder(0.27, 0.14, Vector3(0, -0.82, -2.42), Vector3(PI / 2.0, 0, PI / 2.0), tyre_mat, 18)
 	_air_cylinder(0.14, 0.16, Vector3(0, -0.82, -2.42), Vector3(PI / 2.0, 0, PI / 2.0), hub_mat, 14)
 	_air_box(Vector3(0.42, 0.055, 0.55), Vector3(0, -0.31, -2.42), dark)
+	# Original underwing pylons, stores rails and gun-port detailing.
+	var ordnance_mat := _air_material(Color(0.19, 0.21, 0.20), 0.58, 0.62)
+	var warning_mat := _air_material(Color(0.78, 0.36, 0.10), 0.18, 0.72)
+	for side in [-1.0, 1.0]:
+		for station in range(2):
+			var station_x := side * (2.95 + float(station) * 1.45)
+			_air_box(Vector3(0.22, 0.42, 0.34), Vector3(station_x, -0.39, 0.38), ordnance_mat)
+			_air_box(Vector3(0.12, 0.055, 0.62), Vector3(station_x, -0.61, 0.38), steel_air())
+			_air_cylinder(0.105, 1.28, Vector3(station_x, -0.79, 0.38), Vector3(PI / 2.0, 0, 0), ordnance_mat, 14)
+			_air_cylinder(0.11, 0.12, Vector3(station_x, -0.79, -0.28), Vector3(PI / 2.0, 0, 0), warning_mat, 12)
+		# Wing-root gun ports and inspection marks.
+		_air_cylinder(0.065, 0.07, Vector3(side * 1.02, -0.105, -1.08), Vector3(PI / 2.0, 0, 0), dark, 12)
+		_air_box(Vector3(0.22, 0.018, 0.11), Vector3(side * 1.02, -0.005, -1.28), warning_mat)
 	# Wing access panels and recessed-looking inspection covers.
 	for side in [-1.0, 1.0]:
 		for panel_index in range(3):
