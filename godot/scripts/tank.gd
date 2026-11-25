@@ -53,6 +53,10 @@ func _build_vehicle() -> void:
 	_add_box(self, Vector3(2.45, 0.48, 3.05), Vector3(0, 1.68, 0.18), hull_material)
 	_add_box(self, Vector3(2.8, 0.18, 3.8), Vector3(0, 1.48, 0), hull_material)
 
+	var dark := _make_material(Color(0.065, 0.075, 0.07), 0.18, 0.88)
+	var steel := _make_material(Color(0.16, 0.18, 0.17), 0.72, 0.48)
+	var rubber := _make_material(Color(0.035, 0.04, 0.038), 0.0, 0.95)
+
 	# Individually modeled track shoes: segmented links around both track runs.
 	var track_steel := _make_material(Color(0.085, 0.095, 0.09), 0.32, 0.88)
 	var track_ridge := _make_material(Color(0.16, 0.17, 0.15), 0.48, 0.72)
@@ -83,9 +87,6 @@ func _build_vehicle() -> void:
 		_add_cylinder(self, 0.16, 0.22, Vector3(side * 0.88, 1.05, 2.38), Vector3(PI / 2.0, 0, 0), dark, 12)
 		_add_cylinder(self, 0.105, 0.24, Vector3(side * 0.88, 1.05, 2.48), Vector3(PI / 2.0, 0, 0), steel, 12)
 		_add_cylinder(self, 0.11, 0.18, Vector3(side * 1.25, 0.92, -2.36), Vector3(0, 0, PI / 2.0), steel, 12)
-	var dark := _make_material(Color(0.065, 0.075, 0.07), 0.18, 0.88)
-	var steel := _make_material(Color(0.16, 0.18, 0.17), 0.72, 0.48)
-	var rubber := _make_material(Color(0.035, 0.04, 0.038), 0.0, 0.95)
 	for side in [-1.0, 1.0]:
 		_add_box(self, Vector3(0.62, 0.9, 4.75), Vector3(side * 1.62, 0.72, 0), dark)
 		_add_box(self, Vector3(0.7, 0.16, 4.55), Vector3(side * 1.62, 1.18, 0), steel)
