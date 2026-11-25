@@ -94,7 +94,14 @@ func _process(delta: float) -> void:
 	if is_instance_valid(active_vehicle):
 		camera_pivot.global_position = active_vehicle.global_position
 		var active_health := float(active_vehicle.get("health"))
-		health_label.text = "%s  %d%%" % [_vehicle_mode_label(), roundi(active_health / float(active_vehicle.get("max_health")) * 100.0)]
+		var health_percent := roundi(active_health / float(active_vehicle.get("max_health")) * 100.0)
+		if active_vehicle is WbmAircraft:
+			var plane := active_vehicle as WbmAircraft
+			health_label.text = "САМОЛЁТ  %d%%  |  СКОРОСТЬ %d  |  ВЫСОТА %d м" % [health_percent, roundi(plane.speed), roundi(plane.global_position.y)]
+		elif active_vehicle is WbmShip:
+			health_label.text = "КОРАБЛЬ  %d%%" % health_percent
+		else:
+			health_label.text = "ТАНК  %d%%  |  %s" % [health_percent, (active_vehicle as WbmTank).module_status]
 	if is_instance_valid(player):
 		replay_recorder.record_vehicle(player, "player", player.team, player.health)
 
