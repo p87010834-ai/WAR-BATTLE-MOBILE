@@ -86,35 +86,59 @@ func _build_interface() -> void:
 	header.add_child(close)
 	close.pressed.connect(_hide_menu)
 
-	var body_row := HBoxContainer.new()
-	body_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_row.add_theme_constant_override("separation", 8)
-	layout.add_child(body_row)
+	var body_column := VBoxContainer.new()
+	body_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_column.add_theme_constant_override("separation", 8)
+	layout.add_child(body_column)
 
 	var nav_scroll := ScrollContainer.new()
-	nav_scroll.custom_minimum_size.x = 112 if compact_layout else 178
-	nav_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_row.add_child(nav_scroll)
-	var nav := VBoxContainer.new()
-	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nav.add_theme_constant_override("separation", 5)
-	nav_scroll.add_child(nav)
-	for page in PAGES:
-		var nav_button := Button.new()
-		nav_button.text = page
-		nav_button.custom_minimum_size.y = 40
-		nav_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		nav_button.focus_mode = Control.FOCUS_NONE
-		nav_button.add_theme_font_size_override("font_size", 12 if compact_layout else 14)
-		_style_button(nav_button, Color(0.12, 0.17, 0.19, 1))
-		nav.add_child(nav_button)
-		nav_button.pressed.connect(_open_page.bind(page))
+	nav_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nav_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	if compact_layout:
+		nav_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		nav_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		nav_scroll.custom_minimum_size.y = 46
+		body_column.add_child(nav_scroll)
+		var nav_row := HBoxContainer.new()
+		nav_row.add_theme_constant_override("separation", 5)
+		nav_scroll.add_child(nav_row)
+		for page in PAGES:
+			var nav_button := Button.new()
+			nav_button.text = page
+			nav_button.custom_minimum_size = Vector2(92, 40)
+			nav_button.focus_mode = Control.FOCUS_NONE
+			nav_button.add_theme_font_size_override("font_size", 11)
+			_style_button(nav_button, Color(0.12, 0.17, 0.19, 1))
+			nav_row.add_child(nav_button)
+			nav_button.pressed.connect(_open_page.bind(page))
+	else:
+		var body_row := HBoxContainer.new()
+		body_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		body_row.add_theme_constant_override("separation", 8)
+		body_column.add_child(body_row)
+		nav_scroll.custom_minimum_size.x = 178
+		nav_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		body_row.add_child(nav_scroll)
+		var nav := VBoxContainer.new()
+		nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nav.add_theme_constant_override("separation", 5)
+		nav_scroll.add_child(nav)
+		for page in PAGES:
+			var nav_button := Button.new()
+			nav_button.text = page
+			nav_button.custom_minimum_size.y = 40
+			nav_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			nav_button.focus_mode = Control.FOCUS_NONE
+			nav_button.add_theme_font_size_override("font_size", 14)
+			_style_button(nav_button, Color(0.12, 0.17, 0.19, 1))
+			nav.add_child(nav_button)
+			nav_button.pressed.connect(_open_page.bind(page))
+		body_row.add_child(VSeparator.new())
 
-	body_row.add_child(VSeparator.new())
 	var page_scroll := ScrollContainer.new()
 	page_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	page_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body_row.add_child(page_scroll)
+	body_column.add_child(page_scroll)
 	content_box = VBoxContainer.new()
 	content_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content_box.add_theme_constant_override("separation", 10)
