@@ -11,6 +11,8 @@ var replay_recorder: WbmReplayRecorder
 var result_recorded := false
 var allies: Array[WbmTank] = []
 var enemies: Array[WbmTank] = []
+var allied_aircraft: Array[WbmAircraft] = []
+var enemy_aircraft: Array[WbmAircraft] = []
 var capture_points: Array[WbmCapturePoint] = []
 var health_label: Label
 var status_label: Label
@@ -214,7 +216,54 @@ func _spawn_match() -> void:
 		var enemy := _create_tank(at, 1, false)
 		enemy.target = player
 		enemies.append(enemy)
+	_spawn_air_support()
 	camera_pivot.global_position = player.global_position
+
+func _spawn_air_support() -> void:
+	var friendly_air := WbmAircraft.new()
+	friendly_air.team = 0
+	friendly_air.position = Vector3(-18, 30, 18)
+	friendly_air.speed = 62.0
+	friendly_air.target = enemies[0] if not enemies.is_empty() else null
+	friendly_air.destroyed.connect(_on_aircraft_destroyed)
+	add_child(friendly_air)
+	allied_aircraft.append(friendly_air)
+
+	var hostile_air := WbmAircraft.new()
+	hostile_air.team = 1
+	hostile_air.position = Vector3(18, 34, -18)
+	hostile_air.rotation.y = PI
+	hostile_air.speed = 62.0
+	hostile_air.target = player
+	hostile_air.destroyed.connect(_on_aircraft_destroyed)
+	add_child(hostile_air)
+	enemy_aircraft.append(hostile_air)
+
+func _on_aircraft_destroyed(vehicle: WbmAircraft) -> void:
+	if vehicle.team == 1:
+		enemy_aircraft.erase(vehicle)
+		score += 1
+		_respawn_aircraft(1)
+	else:
+		allied_aircraft.erase(vehicle)
+		_respawn_aircraft(0)
+
+func _respawn_aircraft(faction: int) -> void:
+	await get_tree().create_timer(12.0).timeout
+	if match_over:
+		return
+	var aircraft := WbmAircraft.new()
+	aircraft.team = faction
+	aircraft.position = Vector3(-20 if faction == 0 else 20, 32, 22 if faction == 0 else -22)
+	aircraft.rotation.y = PI if faction == 1 else 0.0
+	aircraft.speed = 62.0
+	aircraft.target = player if faction == 1 else (enemies[0] if not enemies.is_empty() else null)
+	aircraft.destroyed.connect(_on_aircraft_destroyed)
+	add_child(aircraft)
+	if faction == 1:
+		enemy_aircraft.append(aircraft)
+	else:
+		allied_aircraft.append(aircraft)
 
 func _create_tank(at: Vector3, faction: int, controlled: bool) -> WbmTank:
 	var tank := WbmTank.new()
