@@ -15,6 +15,7 @@ var speed := 25.0
 var throttle := 0.35
 var fire_cooldown := 0.0
 var is_player := false
+var target: Node3D
 var _visual_material: StandardMaterial3D
 
 func _ready() -> void:
@@ -27,12 +28,25 @@ func _physics_process(delta: float) -> void:
 	if is_player:
 		_player_flight(delta)
 	else:
-		velocity = -global_transform.basis.z * speed
+		_ai_flight(delta)
 	velocity += Vector3.DOWN * 9.81 * delta * (0.15 if speed > 18.0 else 1.0)
 	move_and_slide()
 	if global_position.y < 2.0:
 		global_position.y = 2.0
 		velocity.y = maxf(0.0, velocity.y)
+
+func _ai_flight(delta: float) -> void:
+	if not is_instance_valid(target) or not target.has_method("apply_damage") or float(target.get("health")) <= 0.0:
+		velocity = -global_transform.basis.z * speed
+		return
+	var to_target := target.global_position - global_position
+	var aim_point := target.global_position + Vector3.UP * 1.5
+	if to_target.length() > 0.5:
+		look_at(aim_point, Vector3.UP)
+	speed = move_toward(speed, max_speed * 0.72, throttle_acceleration * delta)
+	velocity = -global_transform.basis.z * speed
+	if to_target.length() < 115.0 and absf(to_target.normalized().dot(-global_transform.basis.z)) > 0.82:
+		fire_weapon()
 
 func _player_flight(delta: float) -> void:
 	var pitch := Input.get_action_strength("air_pitch_down") - Input.get_action_strength("air_pitch_up")
