@@ -106,8 +106,27 @@ func _process(delta: float) -> void:
 			health_label.text = "КОРАБЛЬ  %d%%  |  СКОРОСТЬ %.1f  |  %s" % [health_percent, vessel.current_speed, vessel.module_status]
 		else:
 			health_label.text = "ТАНК  %d%%  |  %s" % [health_percent, (active_vehicle as WbmTank).module_status]
-	if is_instance_valid(player):
-		replay_recorder.record_vehicle(player, "player", player.team, player.health)
+	for tank_index in range(_get_alive_tanks().size()):
+		var tank := _get_alive_tanks()[tank_index]
+		if is_instance_valid(tank):
+			var tank_id := "player_tank" if tank == player else ("tank_blue_%d" % tank_index if tank.team == 0 else "tank_red_%d" % tank_index)
+			replay_recorder.record_vehicle(tank, tank_id, tank.team, tank.health)
+	for aircraft_index in range(allied_aircraft.size()):
+		var aircraft := allied_aircraft[aircraft_index]
+		if is_instance_valid(aircraft) and aircraft.health > 0.0:
+			replay_recorder.record_vehicle(aircraft, "aircraft_blue_%d" % aircraft_index, aircraft.team, aircraft.health)
+	for aircraft_index in range(enemy_aircraft.size()):
+		var aircraft := enemy_aircraft[aircraft_index]
+		if is_instance_valid(aircraft) and aircraft.health > 0.0:
+			replay_recorder.record_vehicle(aircraft, "aircraft_red_%d" % aircraft_index, aircraft.team, aircraft.health)
+	for ship_index in range(allied_ships.size()):
+		var vessel := allied_ships[ship_index]
+		if is_instance_valid(vessel) and vessel.health > 0.0:
+			replay_recorder.record_vehicle(vessel, "ship_blue_%d" % ship_index, vessel.team, vessel.health)
+	for ship_index in range(enemy_ships.size()):
+		var vessel := enemy_ships[ship_index]
+		if is_instance_valid(vessel) and vessel.health > 0.0:
+			replay_recorder.record_vehicle(vessel, "ship_red_%d" % ship_index, vessel.team, vessel.health)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
