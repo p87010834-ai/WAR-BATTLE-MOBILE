@@ -7,7 +7,6 @@ var _engine_players: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("wbm_audio_manager")
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), -3.0)
 	_streams["tank"] = _make_loop(72.0, 2, 0.42)
 	_streams["aircraft"] = _make_loop(118.0, 1, 0.24)
 	_streams["ship"] = _make_loop(48.0, 2, 0.32)
