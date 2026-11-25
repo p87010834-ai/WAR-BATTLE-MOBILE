@@ -10,6 +10,7 @@ var capture_label: Label
 var score_label: Label
 var score := 0
 var team_score := [0, 0]
+var score_remainder := [0.0, 0.0]
 var match_time := 600.0
 var match_over := false
 var camera_pivot: Node3D
@@ -36,7 +37,11 @@ func _process(delta: float) -> void:
 	for point in capture_points:
 		point.update_control(living, delta)
 		if point.owner_team >= 0:
-			team_score[point.owner_team] += int(delta * 2.0)
+			score_remainder[point.owner_team] += delta * 2.0
+			if score_remainder[point.owner_team] >= 1.0:
+				var gained := int(score_remainder[point.owner_team])
+				team_score[point.owner_team] += gained
+				score_remainder[point.owner_team] -= float(gained)
 	var owned := 0
 	for point in capture_points:
 		if point.owner_team == 0:
