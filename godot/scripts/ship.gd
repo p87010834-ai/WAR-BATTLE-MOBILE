@@ -24,6 +24,9 @@ var _destroyed_emitted := false
 var repair_tick := 0.0
 var wake_timer := 0.0
 var _hull_material: StandardMaterial3D
+var _visual_root: Node3D
+var _wave_phase := 0.0
+var _turn_visual := 0.0
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -33,6 +36,18 @@ func _ready() -> void:
 	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
 	if audio:
 		audio.attach_engine(self, "ship")
+
+func _process(delta: float) -> void:
+	_wave_phase += delta
+	if not is_instance_valid(_visual_root):
+		return
+	var speed_ratio := clampf(absf(current_speed) / maxf(cruise_speed, 0.1), 0.0, 1.0)
+	var wave_a := sin(_wave_phase * 1.15 + float(get_instance_id() % 17)) 
+	var wave_b := sin(_wave_phase * 1.73 + 1.2)
+	_visual_root.position.y = 0.12 + wave_a * 0.075 + wave_b * 0.035
+	_visual_root.rotation.x = wave_b * 0.012 * (0.35 + speed_ratio)
+	_visual_root.rotation.z = _turn_visual * 0.035 * speed_ratio + wave_a * 0.009
+	_turn_visual = move_toward(_turn_visual, 0.0, delta * 1.8)
 
 func _physics_process(delta: float) -> void:
 	weapon_cooldown = maxf(0.0, weapon_cooldown - delta)
@@ -52,7 +67,9 @@ func _physics_process(delta: float) -> void:
 		var steering := Input.get_action_strength("ship_turn_left") - Input.get_action_strength("ship_turn_right")
 		throttle = Input.get_action_strength("ship_forward") - Input.get_action_strength("ship_reverse")
 		var steering_factor := clampf(steering_health / 100.0, 0.0, 1.0)
-		rotation.y += steering * turn_rate * steering_factor * (0.35 + current_speed / maxf(cruise_speed, 0.1)) * delta
+		var turn_input := steering * steering_factor * (0.35 + absf(current_speed) / maxf(cruise_speed, 0.1))
+		rotation.y += turn_input * turn_rate * delta
+		_turn_visual = turn_input
 		if Input.is_action_just_pressed("ship_fire"):
 			fire_guns()
 	else:
@@ -98,7 +115,9 @@ func _ai_naval_combat(delta: float) -> float:
 	var desired_yaw := atan2(-to_target.x, -to_target.z)
 	var difference := wrapf(desired_yaw - rotation.y, -PI, PI)
 	var steering_factor := clampf(steering_health / 100.0, 0.0, 1.0)
+	var turn_delta := wrapf(desired_yaw - rotation.y, -PI, PI)
 	rotation.y = rotate_toward(rotation.y, desired_yaw, turn_rate * steering_factor * delta)
+	_turn_visual = clampf(turn_delta * 1.8, -1.0, 1.0)
 	if to_target.length() <= 72.0 and absf(difference) < 0.34:
 		fire_guns()
 	return 0.65
@@ -203,6 +222,9 @@ func repair_modules(amount: float = 18.0) -> void:
 	_update_module_status()
 
 func _build_ship() -> void:
+	_visual_root = Node3D.new()
+	_visual_root.name = "FloatingShipVisuals"
+	add_child(_visual_root)
 	_hull_material = StandardMaterial3D.new()
 	_hull_material.albedo_color = Color(0.22, 0.30, 0.31) if team == 0 else Color(0.36, 0.20, 0.17)
 	_hull_material.metallic = 0.48
@@ -290,7 +312,7 @@ func _ship_box(size: Vector3, at: Vector3, material: Material) -> MeshInstance3D
 	node.mesh = mesh
 	node.position = at
 	node.material_override = material
-	add_child(node)
+	_visual_root.add_child(node)
 	return node
 
 func _ship_cylinder(radius: float, height: float, at: Vector3, angles: Vector3, material: Material, segments: int = 16) -> MeshInstance3D:
@@ -304,5 +326,5 @@ func _ship_cylinder(radius: float, height: float, at: Vector3, angles: Vector3, 
 	node.position = at
 	node.rotation = angles
 	node.material_override = material
-	add_child(node)
+	_visual_root.add_child(node)
 	return node
