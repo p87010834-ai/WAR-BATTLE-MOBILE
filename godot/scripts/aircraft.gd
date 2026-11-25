@@ -196,10 +196,10 @@ func _build_aircraft() -> void:
 	add_child(collision)
 	_visual_material = StandardMaterial3D.new()
 	_visual_material.albedo_color = Color(0.24, 0.31, 0.35) if team == 0 else Color(0.42, 0.19, 0.15)
-	_visual_material.metallic = 0.62
-	_visual_material.roughness = 0.42
+	_visual_material.metallic = 0.18
+	_visual_material.roughness = 0.72
 	var dark := _air_material(Color(0.07, 0.085, 0.09), 0.72, 0.42)
-	var glass := _air_material(Color(0.035, 0.16, 0.22), 0.78, 0.16)
+	var glass := _air_material(Color(0.018, 0.075, 0.095), 0.42, 0.12)
 	var fuselage := _air_cylinder(0.43, 6.1, Vector3(0, 0, 0), Vector3(PI / 2.0, 0, 0), _visual_material, 20)
 	_air_box(Vector3(0.72, 0.38, 2.3), Vector3(0, 0.08, 0.15), _visual_material)
 	_air_cylinder(0.4, 0.85, Vector3(0, 0, -3.38), Vector3(PI / 2.0, 0, 0), dark, 16)
