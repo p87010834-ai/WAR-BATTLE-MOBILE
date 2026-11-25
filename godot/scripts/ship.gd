@@ -155,53 +155,86 @@ func repair_modules(amount: float = 18.0) -> void:
 	_update_module_status()
 
 func _build_ship() -> void:
-	var hull := MeshInstance3D.new()
-	var hull_mesh := BoxMesh.new()
-	hull_mesh.size = Vector3(5.0, 2.0, 18.0)
-	hull.mesh = hull_mesh
 	_hull_material = StandardMaterial3D.new()
 	_hull_material.albedo_color = Color(0.22, 0.30, 0.31) if team == 0 else Color(0.36, 0.20, 0.17)
-	_hull_material.metallic = 0.45
-	_hull_material.roughness = 0.72
-	hull.material_override = _hull_material
-	add_child(hull)
+	_hull_material.metallic = 0.48
+	_hull_material.roughness = 0.7
+	var deck_mat := _ship_material(Color(0.27, 0.29, 0.27), 0.38, 0.78)
+	var dark := _ship_material(Color(0.075, 0.09, 0.095), 0.65, 0.52)
+	var steel := _ship_material(Color(0.38, 0.40, 0.38), 0.78, 0.4)
+	var glass := _ship_material(Color(0.035, 0.13, 0.17), 0.72, 0.18)
 
-	var deck := MeshInstance3D.new()
-	var deck_mesh := BoxMesh.new()
-	deck_mesh.size = Vector3(4.2, 0.5, 13.0)
-	deck.mesh = deck_mesh
-	deck.position.y = 1.1
-	deck.material_override = _hull_material
-	add_child(deck)
+	# Layered hull with narrowed bow and stern shoulders.
+	_ship_box(Vector3(4.4, 1.65, 12.8), Vector3(0, 0, 0.2), _hull_material)
+	_ship_box(Vector3(3.5, 1.25, 3.6), Vector3(0, 0.08, -7.45), _hull_material)
+	_ship_box(Vector3(2.8, 1.0, 2.2), Vector3(0, 0.12, -9.85), _hull_material)
+	_ship_box(Vector3(3.9, 1.35, 3.2), Vector3(0, 0.05, 7.2), _hull_material)
+	_ship_box(Vector3(4.0, 0.28, 14.0), Vector3(0, 0.94, 0.1), deck_mat)
+	_ship_box(Vector3(2.7, 0.3, 2.8), Vector3(0, 1.12, -7.4), steel)
 
-	var bridge := MeshInstance3D.new()
-	var bridge_mesh := BoxMesh.new()
-	bridge_mesh.size = Vector3(2.5, 2.5, 3.0)
-	bridge.mesh = bridge_mesh
-	bridge.position = Vector3(0, 2.3, 1.0)
-	bridge.material_override = _hull_material
-	add_child(bridge)
+	# Superstructure and bridge levels.
+	_ship_box(Vector3(2.55, 1.55, 3.8), Vector3(0, 1.9, 2.2), _hull_material)
+	_ship_box(Vector3(2.05, 1.0, 2.25), Vector3(0, 3.12, 2.15), deck_mat)
+	_ship_box(Vector3(2.2, 0.22, 2.45), Vector3(0, 3.72, 2.15), steel)
+	_ship_box(Vector3(2.0, 0.85, 0.16), Vector3(0, 3.15, 1.0), glass)
+	_ship_box(Vector3(0.16, 0.85, 1.65), Vector3(-1.0, 3.15, 2.15), glass)
+	_ship_box(Vector3(0.16, 0.85, 1.65), Vector3(1.0, 3.15, 2.15), glass)
+	_ship_cylinder(0.12, 3.0, Vector3(0, 5.15, 2.0), Vector3.ZERO, steel, 12)
+	_ship_box(Vector3(0.12, 1.0, 0.12), Vector3(0, 6.45, 2.0), dark)
 
-	for turret_z in [-5.5, 5.0]:
-		var turret := MeshInstance3D.new()
-		var turret_mesh := CylinderMesh.new()
-		turret_mesh.top_radius = 0.8
-		turret_mesh.bottom_radius = 0.9
-		turret_mesh.height = 0.65
-		turret.mesh = turret_mesh
-		turret.position = Vector3(0, 1.55, turret_z)
-		turret.material_override = _hull_material
-		add_child(turret)
-		var barrel := MeshInstance3D.new()
-		var barrel_mesh := BoxMesh.new()
-		barrel_mesh.size = Vector3(0.18, 0.18, 2.6)
-		barrel.mesh = barrel_mesh
-		barrel.position = Vector3(0, 1.75, turret_z - 1.3)
-		barrel.material_override = _hull_material
-		add_child(barrel)
+	# Two main gun turrets with barrels and rangefinder details.
+	for turret_z in [-5.8, 5.4]:
+		_ship_cylinder(0.88, 0.52, Vector3(0, 1.45, turret_z), Vector3.ZERO, dark, 20)
+		_ship_cylinder(0.72, 0.48, Vector3(0, 1.78, turret_z), Vector3.ZERO, steel, 20)
+		for side in [-1.0, 1.0]:
+			_ship_cylinder(0.13, 2.65, Vector3(side * 0.28, 1.95, turret_z - 1.48), Vector3(PI / 2.0, 0, 0), steel, 12)
+		_ship_box(Vector3(0.5, 0.18, 0.42), Vector3(0, 2.1, turret_z + 0.18), dark)
 
+	# Secondary mounts, lifeboats, vents, bollards and rail posts.
+	for side in [-1.0, 1.0]:
+		for z in [-3.4, 0.0, 5.8]:
+			_ship_cylinder(0.36, 0.38, Vector3(side * 1.55, 1.25, z), Vector3.ZERO, steel, 12)
+			_ship_cylinder(0.09, 1.25, Vector3(side * 1.55, 1.7, z - 0.62), Vector3(PI / 2.0, 0, 0), dark, 8)
+		_ship_box(Vector3(0.75, 0.42, 2.0), Vector3(side * 1.7, 1.45, 3.6), _ship_material(Color(0.55, 0.48, 0.30), 0.12, 0.8))
+		_ship_box(Vector3(0.16, 0.28, 0.9), Vector3(side * 2.02, 1.38, -1.2), steel)
+		for rail_index in range(5):
+			_ship_box(Vector3(0.07, 0.34, 0.07), Vector3(side * 1.93, 1.25, -5.0 + rail_index * 1.5), steel)
+
+	_ship_box(Vector3(0.75, 0.5, 1.2), Vector3(0, 1.35, 8.0), dark)
+	_ship_cylinder(0.28, 0.85, Vector3(0, 2.0, 7.4), Vector3.ZERO, steel, 12)
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(5.0, 2.0, 18.0)
 	collision.shape = shape
 	add_child(collision)
+
+func _ship_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.metallic = metal
+	mat.roughness = rough
+	return mat
+
+func _ship_box(size: Vector3, at: Vector3, material: Material) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	node.mesh = mesh
+	node.position = at
+	node.material_override = material
+	add_child(node)
+	return node
+
+func _ship_cylinder(radius: float, height: float, at: Vector3, angles: Vector3, material: Material, segments: int = 16) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius * 0.92
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
+	node.mesh = mesh
+	node.position = at
+	node.rotation = angles
+	node.material_override = material
+	add_child(node)
+	return node
