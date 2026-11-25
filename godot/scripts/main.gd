@@ -408,6 +408,27 @@ func _respawn_bot(faction: int) -> void:
 		var ally := _create_tank(at, 0, false)
 		allies.append(ally)
 
+
+func select_vehicle_from_hangar(vehicle_class: String) -> bool:
+	if match_over:
+		return false
+	match vehicle_class:
+		"tank":
+			if is_instance_valid(player) and player.health > 0.0:
+				_set_player_vehicle(player, "tank")
+				return true
+		"aircraft":
+			for aircraft in allied_aircraft:
+				if is_instance_valid(aircraft) and aircraft.health > 0.0:
+					_set_player_vehicle(aircraft, "aircraft")
+					return true
+		"ship":
+			for vessel in allied_ships:
+				if is_instance_valid(vessel) and vessel.health > 0.0:
+					_set_player_vehicle(vessel, "ship")
+					return true
+	return false
+
 func switch_player_vehicle() -> void:
 	if match_over:
 		return
