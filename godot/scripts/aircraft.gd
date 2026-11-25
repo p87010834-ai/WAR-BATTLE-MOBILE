@@ -209,7 +209,15 @@ func _build_aircraft() -> void:
 	_propeller.name = "AnimatedPropeller"
 	_propeller.position = Vector3(0, 0, -4.12)
 	add_child(_propeller)
-	var prop_hub := _air_cylinder(0.16, 0.28, Vector3.ZERO, Vector3(PI / 2.0, 0, 0), steel_air(), 16)
+	var prop_hub := MeshInstance3D.new()
+	var prop_hub_mesh := CylinderMesh.new()
+	prop_hub_mesh.top_radius = 0.14
+	prop_hub_mesh.bottom_radius = 0.16
+	prop_hub_mesh.height = 0.28
+	prop_hub_mesh.radial_segments = 16
+	prop_hub.mesh = prop_hub_mesh
+	prop_hub.rotation.x = PI / 2.0
+	prop_hub.material_override = steel_air()
 	_propeller.add_child(prop_hub)
 	for blade_angle in [0.0, PI]:
 		var blade := MeshInstance3D.new()
