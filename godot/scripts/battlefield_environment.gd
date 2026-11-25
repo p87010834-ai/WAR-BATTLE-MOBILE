@@ -14,6 +14,7 @@ func _ready() -> void:
 	_add_barriers_and_sandbags()
 	_add_craters_and_debris()
 	_add_forest_details()
+	_add_ground_detail()
 	_add_outpost()
 
 func _make_materials() -> void:
@@ -157,3 +158,62 @@ func _add_outpost() -> void:
 	_box(tower, Vector3(4.0, 0.18, 4.0), Vector3(0.0, 5.2, 0.0), _materials["metal"])
 	_box(tower, Vector3(3.8, 0.15, 3.8), Vector3(0.0, 6.8, 0.0), _materials["wood"])
 	_cylinder(tower, 0.045, 2.0, Vector3(0.0, 7.8, 0.0), _materials["metal"])
+
+
+func _add_ground_detail() -> void:
+	# Low-cost instanced grass tufts: many silhouettes, one draw-friendly mesh.
+	var blade_mesh := BoxMesh.new()
+	blade_mesh.size = Vector3(0.075, 0.52, 0.055)
+	var blade_mat := StandardMaterial3D.new()
+	blade_mat.albedo_color = Color(0.19, 0.24, 0.13)
+	blade_mat.roughness = 1.0
+	blade_mat.vertex_color_use_as_albedo = true
+	blade_mesh.material = blade_mat
+	var grass_multi := MultiMesh.new()
+	grass_multi.transform_format = MultiMesh.TRANSFORM_3D
+	grass_multi.use_colors = true
+	grass_multi.mesh = blade_mesh
+	grass_multi.instance_count = 210
+	for i in range(grass_multi.instance_count):
+		var x := randf_range(-84.0, 84.0)
+		var z := randf_range(-78.0, 68.0)
+		if Vector2(x, z - 18.0).length() < 27.0:
+			x += 34.0 if x >= 0.0 else -34.0
+		var yaw := randf_range(0.0, TAU)
+		var height := randf_range(0.55, 1.25)
+		var basis := Basis(Vector3.UP, yaw).scaled(Vector3(1.0, height, 1.0))
+		grass_multi.set_instance_transform(i, Transform3D(basis, Vector3(x, height * 0.25, z)))
+		var shade := randf_range(0.72, 1.18)
+		grass_multi.set_instance_color(i, Color(shade, shade, shade * randf_range(0.78, 0.96), 1.0))
+	var grass_instance := MultiMeshInstance3D.new()
+	grass_instance.multimesh = grass_multi
+	add_child(grass_instance)
+
+	# Scattered low earth berms break up the flat horizon without blocking play.
+	for i in range(13):
+		var berm := MeshInstance3D.new()
+		var berm_mesh := SphereMesh.new()
+		berm_mesh.radius = randf_range(3.0, 6.0)
+		berm_mesh.height = randf_range(1.1, 2.0)
+		berm_mesh.radial_segments = 16
+		berm_mesh.rings = 8
+		berm.mesh = berm_mesh
+		berm.material_override = _materials["sand"]
+		berm.position = Vector3(randf_range(-82.0, 82.0), -0.38, randf_range(-72.0, 66.0))
+		berm.scale = Vector3(randf_range(1.2, 2.1), 0.75, randf_range(1.0, 1.8))
+		if Vector2(berm.position.x, berm.position.z - 18.0).length() > 31.0:
+			add_child(berm)
+
+	# Broken timber and twisted metal around ruined positions.
+	for i in range(18):
+		var log := MeshInstance3D.new()
+		var log_mesh := CylinderMesh.new()
+		log_mesh.top_radius = randf_range(0.07, 0.13)
+		log_mesh.bottom_radius = log_mesh.top_radius * 1.25
+		log_mesh.height = randf_range(1.4, 3.8)
+		log_mesh.radial_segments = 7
+		log.mesh = log_mesh
+		log.material_override = _materials["wood"] if i % 2 == 0 else _materials["metal"]
+		log.position = Vector3(randf_range(-70.0, 70.0), 0.16, randf_range(-62.0, 60.0))
+		log.rotation = Vector3(randf_range(-0.08, 0.08), randf_range(0.0, TAU), PI * 0.5 + randf_range(-0.08, 0.08))
+		add_child(log)
