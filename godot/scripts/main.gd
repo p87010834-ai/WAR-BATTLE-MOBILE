@@ -16,6 +16,7 @@ func _process(_delta: float) -> void:
 	if is_instance_valid(player):
 		health_label.text = "БРОНЯ  %d%%" % roundi(player.health)
 		status_label.text = "ЦЕЛЕЙ ОСТАЛОСЬ: %d     УНИЧТОЖЕНО: %d" % [enemies.size(), score]
+		camera_pivot.global_position = player.global_position
 	else:
 		health_label.text = "МАШИНА УНИЧТОЖЕНА"
 		status_label.text = "БОЙ ОКОНЧЕН — ПЕРЕЗАПУСК: R"
@@ -80,10 +81,11 @@ func _build_world() -> void:
 		add_child(block)
 
 	camera_pivot = Node3D.new()
+	camera_pivot.top_level = true
 	add_child(camera_pivot)
 	var camera := Camera3D.new()
 	camera.position = Vector3(0, 9, 14)
-	camera.rotation_degrees = Vector3(-24, 0, 0)
+	camera.rotation_degrees = Vector3(24, 0, 0)
 	camera.current = true
 	camera_pivot.add_child(camera)
 
@@ -96,12 +98,12 @@ func _build_hud() -> void:
 	panel.size = Vector2(540, 76)
 	layer.add_child(panel)
 	health_label = Label.new()
-	health_label.position = Vector2(34, 25)
+	health_label.position = Vector2(16, 8)
 	health_label.add_theme_font_size_override("font_size", 25)
 	health_label.add_theme_color_override("font_color", Color(1.0, 0.58, 0.16))
 	panel.add_child(health_label)
 	status_label = Label.new()
-	status_label.position = Vector2(34, 58)
+	status_label.position = Vector2(16, 42)
 	status_label.add_theme_font_size_override("font_size", 16)
 	status_label.add_theme_color_override("font_color", Color(0.86, 0.89, 0.87))
 	panel.add_child(status_label)
@@ -111,6 +113,9 @@ func _build_hud() -> void:
 	help.add_theme_font_size_override("font_size", 17)
 	help.add_theme_color_override("font_color", Color(0.94, 0.94, 0.9))
 	layer.add_child(help)
+	var touch_controls := CanvasLayer.new()
+	touch_controls.set_script(load("res://scripts/mobile_controls.gd"))
+	add_child(touch_controls)
 
 func _spawn_match() -> void:
 	player = _create_tank(Vector3(0, 0.15, 28), 0, true)
@@ -119,7 +124,6 @@ func _spawn_match() -> void:
 		enemy.target = player
 		enemy.destroyed.connect(_on_enemy_destroyed)
 		enemies.append(enemy)
-	camera_pivot.top_level = true
 	camera_pivot.global_position = player.global_position
 
 func _create_tank(at: Vector3, faction: int, controlled: bool) -> WbmTank:
