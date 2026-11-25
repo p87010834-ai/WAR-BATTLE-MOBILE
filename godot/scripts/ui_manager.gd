@@ -169,9 +169,7 @@ func _open_page(page: String) -> void:
 			_add_text("Захватывайте три контрольные точки. Удержание точек приносит команде очки.")
 			_add_action("НАЧАТЬ ЗАНОВО", _restart_match)
 		"Повторы":
-			_add_heading("АРХИВ СРАЖЕНИЙ")
-			_add_text("Система сохраняет локальные телеметрические записи завершённых боёв в папку user://replays.")
-			_add_text("Воспроизведение, перемотка, свободная камера и экспорт повтора пока не реализованы.")
+			_build_replays_page()
 		"Друзья":
 			_build_friends_page()
 		"Отряды":
@@ -545,3 +543,74 @@ func show_match_results(won: bool, blue_score: int, red_score: int) -> void:
 	_add_action("В АНГАР / ГЛАВНОЕ МЕНЮ", func():
 		_open_page("Главное меню")
 	)
+
+
+func _build_replays_page() -> void:
+	_add_heading("АРХИВ СРАЖЕНИЙ")
+	_add_text("Локальные записи на этом устройстве. Выберите бой, чтобы просмотреть сводку и временные отметки телеметрии.")
+	if not is_instance_valid(game_manager) or not is_instance_valid(game_manager.replay_recorder):
+		_add_text("Архив пока недоступен.")
+		return
+	var recorder = game_manager.replay_recorder
+	var replays: Array[Dictionary] = recorder.list_replays()
+	if replays.is_empty():
+		_add_text("Сохранённых повторов пока нет. Запись текущего боя сохранится после его завершения.")
+		return
+	for replay_info in replays:
+		var file_name := str(replay_info.get("name", ""))
+		var duration := float(replay_info.get("duration", 0.0))
+		var count := int(replay_info.get("sample_count", 0))
+		_add_heading(file_name)
+		_add_text("Длительность: %s  •  записей телеметрии: %d" % [_format_replay_time(duration), count])
+		if bool(replay_info.get("valid", false)):
+			_add_action("ОТКРЫТЬ СВОДКУ", _inspect_replay.bind(file_name))
+		_add_action("УДАЛИТЬ ПОВТОР", _delete_replay.bind(file_name))
+	_add_text("Важно: здесь доступен просмотр сохранённых данных и временных отметок. Полноценное 3D-воспроизведение и свободная камера ещё не реализованы.")
+
+func _inspect_replay(file_name: String) -> void:
+	if not is_instance_valid(game_manager) or not is_instance_valid(game_manager.replay_recorder):
+		return
+	var data: Dictionary = game_manager.replay_recorder.load_replay(file_name)
+	if data.is_empty():
+		_add_text("Не удалось прочитать этот файл повтора.")
+		return
+	_open_page("Повторы")
+	_add_heading("СВОДКА: " + file_name)
+	var entries: Array = data.get("samples", [])
+	_add_text("Длительность: %s" % _format_replay_time(float(data.get("duration", 0.0))))
+	_add_text("Всего точек телеметрии: %d" % entries.size())
+	var first_by_vehicle: Dictionary = {}
+	var last_by_vehicle: Dictionary = {}
+	for sample in entries:
+		if not sample is Dictionary:
+			continue
+		var vehicle_id := str(sample.get("id", "unknown"))
+		if not first_by_vehicle.has(vehicle_id):
+			first_by_vehicle[vehicle_id] = sample
+		last_by_vehicle[vehicle_id] = sample
+	_add_heading("УЧАСТНИКИ ЗАПИСИ")
+	for vehicle_id in first_by_vehicle.keys():
+		var first: Dictionary = first_by_vehicle[vehicle_id]
+		var last: Dictionary = last_by_vehicle[vehicle_id]
+		var team_label := "Синие" if int(first.get("team", 0)) == 0 else "Красные"
+		var hp := float(last.get("hp", 0.0))
+		_add_text("%s — %s; последняя записанная прочность: %.0f" % [str(vehicle_id), team_label, hp])
+	_add_heading("ВРЕМЕННЫЕ ОТМЕТКИ")
+	var step := maxi(1, int(entries.size() / 8))
+	for index in range(0, entries.size(), step):
+		var sample = entries[index]
+		if sample is Dictionary:
+			_add_text("%s  •  %s  •  HP %.0f" % [_format_replay_time(float(sample.get("t", 0.0))), str(sample.get("id", "—")), float(sample.get("hp", 0.0))])
+	_add_action("НАЗАД К АРХИВУ", _open_page.bind("Повторы"))
+
+func _delete_replay(file_name: String) -> void:
+	if not is_instance_valid(game_manager) or not is_instance_valid(game_manager.replay_recorder):
+		return
+	var result: Error = game_manager.replay_recorder.delete_replay(file_name)
+	_open_page("Повторы")
+	if result != OK:
+		_add_text("Не удалось удалить файл: %s" % error_string(result))
+
+func _format_replay_time(seconds: float) -> String:
+	var total := maxi(0, int(seconds))
+	return "%02d:%02d" % [total / 60, total % 60]
