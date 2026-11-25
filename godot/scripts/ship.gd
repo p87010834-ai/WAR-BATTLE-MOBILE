@@ -258,9 +258,9 @@ func _build_ship() -> void:
 	add_child(_visual_root)
 	_hull_material = StandardMaterial3D.new()
 	_hull_material.albedo_color = Color(0.22, 0.30, 0.31) if team == 0 else Color(0.36, 0.20, 0.17)
-	_hull_material.metallic = 0.48
-	_hull_material.roughness = 0.7
-	var deck_mat := _ship_material(Color(0.27, 0.29, 0.27), 0.38, 0.78)
+	_hull_material.metallic = 0.2
+	_hull_material.roughness = 0.86
+	var deck_mat := _ship_material(Color(0.27, 0.29, 0.27), 0.16, 0.9)
 	var dark := _ship_material(Color(0.075, 0.09, 0.095), 0.65, 0.52)
 	var steel := _ship_material(Color(0.38, 0.40, 0.38), 0.78, 0.4)
 	var glass := _ship_material(Color(0.035, 0.13, 0.17), 0.72, 0.18)
