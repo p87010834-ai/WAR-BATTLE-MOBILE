@@ -53,6 +53,36 @@ func _build_vehicle() -> void:
 	_add_box(self, Vector3(2.45, 0.48, 3.05), Vector3(0, 1.68, 0.18), hull_material)
 	_add_box(self, Vector3(2.8, 0.18, 3.8), Vector3(0, 1.48, 0), hull_material)
 
+	# Individually modeled track shoes: segmented links around both track runs.
+	var track_steel := _make_material(Color(0.085, 0.095, 0.09), 0.32, 0.88)
+	var track_ridge := _make_material(Color(0.16, 0.17, 0.15), 0.48, 0.72)
+	for side in [-1.0, 1.0]:
+		for link_index in range(16):
+			var link_z := -2.12 + float(link_index) * 0.282
+			var shoe := _add_box(self, Vector3(0.105, 0.19, 0.235), Vector3(side * 1.965, 1.16, link_z), track_steel)
+			shoe.rotation.x = -0.025
+			_add_box(self, Vector3(0.025, 0.035, 0.17), Vector3(side * 2.025, 1.16, link_z), track_ridge)
+			var lower_shoe := _add_box(self, Vector3(0.105, 0.19, 0.235), Vector3(side * 1.965, 0.19, link_z), track_steel)
+			lower_shoe.rotation.x = 0.025
+		for link_index in range(7):
+			var link_y := 0.24 + float(link_index) * 0.145
+			_add_box(self, Vector3(0.105, 0.19, 0.22), Vector3(side * 1.965, link_y, -2.34), track_steel)
+			_add_box(self, Vector3(0.105, 0.19, 0.22), Vector3(side * 1.965, link_y, 2.34), track_steel)
+		# Reinforced side-skirt panels and visible mounting bolts.
+		for panel_index in range(4):
+			var panel_z := -1.55 + float(panel_index) * 1.02
+			var skirt := _add_box(self, Vector3(0.10, 0.34, 0.88), Vector3(side * 1.88, 1.19, panel_z), hull_material)
+			skirt.rotation.z = side * -0.035
+			for bolt_side in [-1.0, 1.0]:
+				_add_cylinder(self, 0.045, 0.025, Vector3(side * 1.945, 1.31, panel_z + bolt_side * 0.31), Vector3(0, 0, PI / 2.0), steel, 8)
+	# Rear engine grille, exhaust outlets and front tow fittings.
+	_add_box(self, Vector3(1.35, 0.12, 0.48), Vector3(0, 1.56, 2.13), dark)
+	for grille_index in range(7):
+		_add_box(self, Vector3(0.045, 0.025, 0.39), Vector3(-0.55 + float(grille_index) * 0.18, 1.63, 2.13), steel)
+	for side in [-1.0, 1.0]:
+		_add_cylinder(self, 0.16, 0.22, Vector3(side * 0.88, 1.05, 2.38), Vector3(PI / 2.0, 0, 0), dark, 12)
+		_add_cylinder(self, 0.105, 0.24, Vector3(side * 0.88, 1.05, 2.48), Vector3(PI / 2.0, 0, 0), steel, 12)
+		_add_cylinder(self, 0.11, 0.18, Vector3(side * 1.25, 0.92, -2.36), Vector3(0, 0, PI / 2.0), steel, 12)
 	var dark := _make_material(Color(0.065, 0.075, 0.07), 0.18, 0.88)
 	var steel := _make_material(Color(0.16, 0.18, 0.17), 0.72, 0.48)
 	var rubber := _make_material(Color(0.035, 0.04, 0.038), 0.0, 0.95)
