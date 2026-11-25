@@ -374,21 +374,99 @@ func _build_security_page() -> void:
 	_add_text("Голосовой чат не предусмотрен. Текстовый онлайн-чат появится только после реализации серверной инфраструктуры.")
 
 func _build_hangar_page() -> void:
-	_add_heading("АНГАР / ВЫБОР ТЕХНИКИ")
+	_add_heading("АНГАР / ПАРК ТЕХНИКИ")
 	if not is_instance_valid(game_manager):
 		_add_text("Игровая сессия ещё не готова.")
 		return
-	var catalog := WbmVehicleCatalog.get_available(int(game_manager.profile.account_level))
-	var selected := str(local_data.get_value("hangar", "selected_class", "tank"))
-	_add_text("Выберите класс техники для управления в текущем бою. Доступность зависит от уровня профиля.")
-	for item in catalog:
+	var level := int(game_manager.profile.account_level)
+	var selected := str(game_manager.current_vehicle_mode)
+	_add_text("Уровень командира: %d / 100" % level)
+	_add_text("Выберите боевую машину. Открытая техника доступна для выбора, если союзная единица этого класса жива.")
+	for item in WbmVehicleCatalog.get_all():
 		var vehicle_class := str(item.get("class", "tank"))
-		_add_heading(str(item.name).to_upper())
-		_add_text("%s • открытие с %d уровня" % [str(item.role), int(item.unlock_level)])
-		_add_text("Статус: %s" % ("ВЫБРАНО" if selected == vehicle_class else "доступно"))
-		_add_action("ВЫБРАТЬ: " + str(item.name).to_upper(), _select_hangar_vehicle.bind(vehicle_class))
-	_add_text("Модели и характеристики каталога пока демонстрационные; выбор переключает управление на доступный союзный экземпляр.")
-	_add_action("ЦИКЛИЧЕСКИ ПЕРЕКЛЮЧИТЬ ТЕХНИКУ", Callable(game_manager, "switch_player_vehicle"))
+		var required_level := int(item.get("unlock_level", 1))
+		var unlocked := level >= required_level
+		var ready_now := _is_vehicle_class_ready(vehicle_class)
+		var is_selected := selected == vehicle_class
+		var card := PanelContainer.new()
+		var card_style := StyleBoxFlat.new()
+		card_style.bg_color = Color(0.075, 0.095, 0.105, 1.0)
+		card_style.border_color = ACCENT if is_selected else Color(0.22, 0.29, 0.31, 1.0)
+		card_style.set_border_width_all(2 if is_selected else 1)
+		card_style.set_corner_radius_all(8)
+		card_style.content_margin_left = 10
+		card_style.content_margin_right = 10
+		card_style.content_margin_top = 9
+		card_style.content_margin_bottom = 9
+		card.add_theme_stylebox_override("panel", card_style)
+		content_box.add_child(card)
+		var card_content := VBoxContainer.new()
+		card_content.add_theme_constant_override("separation", 5)
+		card.add_child(card_content)
+		var title := Label.new()
+		title.text = str(item.get("name", "Техника")).to_upper()
+		title.add_theme_font_size_override("font_size", 17 if compact_layout else 20)
+		title.add_theme_color_override("font_color", ACCENT if is_selected else Color(0.91, 0.93, 0.92))
+		card_content.add_child(title)
+		var class_label := Label.new()
+		class_label.text = _vehicle_class_description(vehicle_class)
+		class_label.add_theme_color_override("font_color", Color(0.70, 0.77, 0.78))
+		card_content.add_child(class_label)
+		var role_label := Label.new()
+		role_label.text = "РОЛЬ: %s" % str(item.get("role", "Поддержка"))
+		role_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		card_content.add_child(role_label)
+		var status_text := ""
+		if not unlocked:
+			status_text = "ЗАКРЫТО • требуется уровень %d" % required_level
+		elif is_selected:
+			status_text = "ВЫБРАНО • управление передано этому классу"
+		elif ready_now:
+			status_text = "ГОТОВО К БОЮ • союзная техника доступна"
+		else:
+			status_text = "ОЖИДАНИЕ • союзная техника уничтожена или отсутствует"
+		var status_label := Label.new()
+		status_label.text = status_text
+		status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		status_label.add_theme_color_override("font_color", ACCENT if is_selected else Color(0.76, 0.82, 0.82))
+		card_content.add_child(status_label)
+		var select_button := Button.new()
+		select_button.text = "ТЕКУЩАЯ ТЕХНИКА" if is_selected else ("ВЫБРАТЬ ТЕХНИКУ" if unlocked and ready_now else ("ЗАКРЫТО" if not unlocked else "НЕДОСТУПНО"))
+		select_button.custom_minimum_size.y = 42
+		select_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		select_button.disabled = not unlocked or not ready_now or is_selected
+		_style_button(select_button, Color(0.46, 0.20, 0.08, 1))
+		card_content.add_child(select_button)
+		if unlocked and ready_now and not is_selected:
+			select_button.pressed.connect(_select_hangar_vehicle.bind(vehicle_class))
+	_add_text("Переключение меняет управляемую союзную единицу в текущем тестовом бою. Каталог пока содержит по одному демонстрационному классу каждой категории.")
+	_add_action("ВЕРНУТЬСЯ В СРАЖЕНИЕ", _hide_menu)
+
+func _vehicle_class_description(vehicle_class: String) -> String:
+	match vehicle_class:
+		"tank":
+			return "НАЗЕМНАЯ ТЕХНИКА • ГУСЕНИЧНОЕ ШАССИ • ПРЯМАЯ ОГНЕВАЯ ПОДДЕРЖКА"
+		"aircraft":
+			return "АВИАЦИЯ • ВОЗДУШНЫЙ БОЙ • ВЫСОКАЯ СКОРОСТЬ"
+		"ship":
+			return "ФЛОТ • МОРСКОЙ БОЙ • ТЯЖЁЛОЕ ВООРУЖЕНИЕ"
+	return "БОЕВАЯ ЕДИНИЦА"
+
+func _is_vehicle_class_ready(vehicle_class: String) -> bool:
+	if not is_instance_valid(game_manager):
+		return false
+	match vehicle_class:
+		"tank":
+			return is_instance_valid(game_manager.player) and game_manager.player.health > 0.0
+		"aircraft":
+			for aircraft in game_manager.allied_aircraft:
+				if is_instance_valid(aircraft) and aircraft.health > 0.0:
+					return true
+		"ship":
+			for vessel in game_manager.allied_ships:
+				if is_instance_valid(vessel) and vessel.health > 0.0:
+					return true
+	return false
 
 func _select_hangar_vehicle(vehicle_class: String) -> void:
 	if not is_instance_valid(game_manager):
