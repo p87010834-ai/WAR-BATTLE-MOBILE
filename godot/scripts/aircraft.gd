@@ -250,6 +250,23 @@ func _build_aircraft() -> void:
 	add_child(canopy)
 	_air_box(Vector3(0.06, 0.09, 1.15), Vector3(0, 0.87, -0.82), dark)
 
+	# Canopy side rails, rear frame and front windscreen reinforcement.
+	var canopy_frame_mat := _air_material(Color(0.19, 0.22, 0.23), 0.78, 0.38)
+	for canopy_side in [-1.0, 1.0]:
+		_air_box(Vector3(0.055, 0.075, 1.55), Vector3(canopy_side * 0.405, 0.53, -0.78), canopy_frame_mat)
+		_air_box(Vector3(0.07, 0.08, 0.12), Vector3(canopy_side * 0.40, 0.78, -1.45), canopy_frame_mat)
+	_air_box(Vector3(0.78, 0.075, 0.07), Vector3(0, 0.83, -1.48), canopy_frame_mat)
+	_air_box(Vector3(0.72, 0.06, 0.06), Vector3(0, 0.88, -0.15), canopy_frame_mat)
+	# Distinctive low-intensity wingtip navigation lamps.
+	var nav_red := _air_material(Color(0.85, 0.08, 0.045), 0.05, 0.3)
+	nav_red.emission_enabled = true
+	nav_red.emission = Color(0.3, 0.02, 0.01)
+	var nav_green := _air_material(Color(0.04, 0.72, 0.18), 0.05, 0.3)
+	nav_green.emission_enabled = true
+	nav_green.emission = Color(0.01, 0.22, 0.04)
+	_air_box(Vector3(0.22, 0.12, 0.18), Vector3(-5.95, -0.06, -0.28), nav_red)
+	_air_box(Vector3(0.22, 0.12, 0.18), Vector3(5.95, -0.06, -0.28), nav_green)
+
 	# Twin engine nacelles, exhausts, pylons and wing hardpoints.
 	for side in [-1.0, 1.0]:
 		_air_cylinder(0.22, 2.35, Vector3(side * 2.45, -0.05, 0.72), Vector3(PI / 2.0, 0, 0), dark, 16)
