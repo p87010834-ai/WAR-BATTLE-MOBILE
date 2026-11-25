@@ -264,7 +264,7 @@ func _build_aircraft() -> void:
 	var tyre_mat := _air_material(Color(0.025, 0.03, 0.032), 0.0, 0.96)
 	var hub_mat := _air_material(Color(0.24, 0.27, 0.29), 0.82, 0.38)
 	for side in [-1.0, 1.0]:
-		var gear_x := side * 2.05
+		var gear_x: float = side * 2.05
 		_air_cylinder(0.075, 0.82, Vector3(gear_x, -0.48, 0.48), Vector3(0, 0, side * -0.16), hub_mat, 12)
 		_air_cylinder(0.34, 0.17, Vector3(gear_x, -0.91, 0.48), Vector3(PI / 2.0, 0, PI / 2.0), tyre_mat, 20)
 		_air_cylinder(0.19, 0.19, Vector3(gear_x, -0.91, 0.48), Vector3(PI / 2.0, 0, PI / 2.0), hub_mat, 16)
@@ -281,7 +281,7 @@ func _build_aircraft() -> void:
 	var warning_mat := _air_material(Color(0.78, 0.36, 0.10), 0.18, 0.72)
 	for side in [-1.0, 1.0]:
 		for station in range(2):
-			var station_x := side * (2.95 + float(station) * 1.45)
+			var station_x: float = side * (2.95 + float(station) * 1.45)
 			_air_box(Vector3(0.22, 0.42, 0.34), Vector3(station_x, -0.39, 0.38), ordnance_mat)
 			_air_box(Vector3(0.12, 0.055, 0.62), Vector3(station_x, -0.61, 0.38), steel_air())
 			_air_cylinder(0.105, 1.28, Vector3(station_x, -0.79, 0.38), Vector3(PI / 2.0, 0, 0), ordnance_mat, 14)
@@ -292,7 +292,7 @@ func _build_aircraft() -> void:
 	# Wing access panels and recessed-looking inspection covers.
 	for side in [-1.0, 1.0]:
 		for panel_index in range(3):
-			var panel_x := side * (1.2 + float(panel_index) * 0.82)
+			var panel_x: float = side * (1.2 + float(panel_index) * 0.82)
 			_air_box(Vector3(0.48, 0.018, 0.34), Vector3(panel_x, -0.015, -0.28), dark)
 			_air_box(Vector3(0.34, 0.012, 0.025), Vector3(panel_x, -0.003, -0.43), steel_air())
 	# Antenna, pitot probe and small surface panels.
