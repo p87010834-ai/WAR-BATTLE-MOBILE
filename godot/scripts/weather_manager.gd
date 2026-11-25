@@ -7,9 +7,13 @@ enum Weather { CLEAR, OVERCAST, RAIN, FOG }
 @export var animate_clouds := true
 var _clouds: Array[Node3D] = []
 var _environment: Environment
+var _rain: GPUParticles3D
+var _sun: DirectionalLight3D
 
 func _ready() -> void:
 	_create_cloud_layer()
+	_create_rain_system()
+	_sun = get_parent().get_node_or_null("Sun") as DirectionalLight3D
 	_apply_weather()
 
 func set_weather(next_weather: Weather, strength: float = 0.35) -> void:
@@ -45,6 +49,33 @@ func _create_cloud_layer() -> void:
 		add_child(cloud)
 		_clouds.append(cloud)
 
+func _create_rain_system() -> void:
+	_rain = GPUParticles3D.new()
+	_rain.name = "Rain"
+	_rain.amount = 520
+	_rain.lifetime = 1.8
+	_rain.explosiveness = 0.0
+	_rain.emitting = false
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3(-0.12, -1.0, 0.0)
+	process.spread = 8.0
+	process.initial_velocity_min = 28.0
+	process.initial_velocity_max = 38.0
+	process.gravity = Vector3(0.0, -5.0, 0.0)
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	process.emission_box_extents = Vector3(76.0, 18.0, 76.0)
+	_rain.process_material = process
+	var streak := QuadMesh.new()
+	streak.size = Vector2(0.035, 0.72)
+	var rain_material := StandardMaterial3D.new()
+	rain_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rain_material.albedo_color = Color(0.55, 0.72, 0.82, 0.62)
+	rain_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	streak.material = rain_material
+	_rain.draw_pass_1 = streak
+	_rain.position = Vector3(0.0, 18.0, 0.0)
+	add_child(_rain)
+
 func _apply_weather() -> void:
 	var world := get_parent()
 	if not world:
@@ -52,8 +83,20 @@ func _apply_weather() -> void:
 	var environment_node := world.get_node_or_null("WorldEnvironment")
 	if environment_node and environment_node is WorldEnvironment:
 		_environment = environment_node.environment
+		_environment.fog_enabled = weather == Weather.FOG or weather == Weather.RAIN
 		if weather == Weather.FOG:
-			_environment.fog_enabled = true
-			_environment.fog_density = 0.012 + intensity * 0.035
+			_environment.fog_density = 0.009 + intensity * 0.026
+		elif weather == Weather.RAIN:
+			_environment.fog_density = 0.002 + intensity * 0.008
 		else:
-			_environment.fog_enabled = false
+			_environment.fog_density = 0.0018
+		if _sun:
+			_sun.light_energy = 1.25 if weather == Weather.CLEAR else (0.72 if weather == Weather.OVERCAST else 0.88)
+			_sun.light_color = Color(1.0, 0.91, 0.78) if weather == Weather.CLEAR else Color(0.72, 0.79, 0.86)
+		if is_instance_valid(_rain):
+			_rain.emitting = weather == Weather.RAIN
+		for cloud in _clouds:
+			for puff in cloud.get_children():
+				if puff is MeshInstance3D and puff.material_override is StandardMaterial3D:
+					var cloud_mat := puff.material_override as StandardMaterial3D
+					cloud_mat.albedo_color = Color(0.72, 0.76, 0.78, 0.72) if weather == Weather.CLEAR else Color(0.43, 0.49, 0.55, 0.84)
