@@ -150,20 +150,20 @@ func _build_world() -> void:
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.075, 0.16, 0.27)
-	sky_material.sky_horizon_color = Color(0.48, 0.57, 0.62)
+	sky_material.sky_top_color = Color(0.035, 0.105, 0.19)
+	sky_material.sky_horizon_color = Color(0.39, 0.49, 0.53)
 	sky_material.ground_bottom_color = Color(0.075, 0.085, 0.09)
 	sky_material.ground_horizon_color = Color(0.24, 0.29, 0.30)
 	sky_material.sun_angle_max = 18.0
 	sky.sky_material = sky_material
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.48, 0.53, 0.58)
+	env.ambient_light_color = Color(0.38, 0.43, 0.39)
 	env.ambient_light_energy = 0.82
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.05
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.48, 0.55, 0.58)
+	env.fog_light_color = Color(0.37, 0.44, 0.42)
 	env.fog_density = 0.0018
 	env.glow_enabled = true
 	env.glow_intensity = 0.28
@@ -206,15 +206,25 @@ float noise2(vec2 p) {
 		mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 void fragment() {
-	vec2 p = world_pos.xz * 0.19;
-	float n = noise2(p) * 0.55 + noise2(p * 3.7) * 0.28 + noise2(p * 11.0) * 0.17;
-	vec3 soil = vec3(0.105, 0.125, 0.105);
-	vec3 grass = vec3(0.23, 0.255, 0.19);
-	vec3 dry = vec3(0.29, 0.255, 0.19);
-	vec3 col = mix(soil, grass, smoothstep(0.25, 0.72, n));
-	col = mix(col, dry, smoothstep(0.72, 0.94, n) * 0.32);
+	vec2 p = world_pos.xz * 0.115;
+	float broad = noise2(p);
+	float medium = noise2(p * 4.8);
+	float fine = noise2(p * 19.0);
+	float grain = hash21(floor(world_pos.xz * 34.0));
+	float n = broad * 0.48 + medium * 0.30 + fine * 0.16 + grain * 0.06;
+	vec3 dark_soil = vec3(0.075, 0.088, 0.075);
+	vec3 earth = vec3(0.145, 0.145, 0.115);
+	vec3 grass = vec3(0.205, 0.235, 0.155);
+	vec3 dry_grass = vec3(0.29, 0.245, 0.165);
+	vec3 col = mix(dark_soil, earth, smoothstep(0.16, 0.58, n));
+	col = mix(col, grass, smoothstep(0.42, 0.76, n));
+	col = mix(col, dry_grass, smoothstep(0.72, 0.96, n) * 0.48);
+	float flecks = smoothstep(0.76, 0.98, fine) * 0.12;
+	col = mix(col, vec3(0.34, 0.32, 0.25), flecks);
+	float damp = smoothstep(0.35, 0.7, broad) * (1.0 - smoothstep(0.68, 0.9, medium));
+	col *= 1.0 - damp * 0.13;
 	ALBEDO = col;
-	ROUGHNESS = 0.96;
+	ROUGHNESS = 0.98;
 }
 """
 	var ground_mat := ShaderMaterial.new()
