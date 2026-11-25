@@ -47,5 +47,11 @@ The ENet wrapper can host/join a peer session but there is no authoritative dedi
 - Android export preset, signing configuration, device compatibility, performance profiling, thermal management and store compliance.
 - Automated unit/integration tests, multiplayer load tests, security review and real-device QA.
 
+## Cloud Android build
+- `export_presets.cfg` defines a debug APK export named "Android" for ARM64 devices.
+- `.github/workflows/godot-android-build.yml` installs Godot 4.4.1 export templates, Java 17 and Android SDK dependencies, imports/parses the project, runs a short headless smoke test, exports a debug APK and uploads it as a 14-day GitHub Actions artifact.
+- The workflow creates a temporary debug signing key for CI. This is for testing only; it is not a production release signing key.
+- The workflow runs on pushes to `godot-migration` when Godot files or this workflow change, and can also be started manually from GitHub Actions.
+
 ## Validation
-Source changes are committed to GitHub. The project has not yet been opened or run in the Godot editor or on an Android device in this session. GitHub Actions is configured for headless import/run checks, but no successful result has been confirmed. Do not treat committed source as a verified build.
+The cloud build workflow has been committed but has not yet been confirmed successful. The project has not yet been opened or run in the Godot editor or on an Android device in this session. Do not treat committed source or a configured workflow as a verified build. A successful CI run and APK artifact are still required.
