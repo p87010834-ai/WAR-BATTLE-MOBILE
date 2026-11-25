@@ -17,6 +17,7 @@ var fire_cooldown := 0.0
 var is_player := false
 var target: Node3D
 var _visual_material: StandardMaterial3D
+var stall_warning := false
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -31,9 +32,12 @@ func _physics_process(delta: float) -> void:
 		_ai_flight(delta)
 	velocity += Vector3.DOWN * 9.81 * delta * (0.15 if speed > 18.0 else 1.0)
 	move_and_slide()
-	if global_position.y < 2.0:
-		global_position.y = 2.0
+	if global_position.y < 3.0:
+		global_position.y = 3.0
 		velocity.y = maxf(0.0, velocity.y)
+	if global_position.y > 150.0:
+		global_position.y = 150.0
+		velocity.y = minf(0.0, velocity.y)
 
 func _ai_flight(delta: float) -> void:
 	if not is_instance_valid(target) or not target.has_method("apply_damage") or float(target.get("health")) <= 0.0:
@@ -46,6 +50,10 @@ func _ai_flight(delta: float) -> void:
 	if to_target.length() > 0.5:
 		look_at(aim_point, Vector3.UP)
 	speed = move_toward(speed, max_speed * 0.72, throttle_acceleration * delta)
+	var control_authority := clampf(speed / 45.0, 0.35, 1.0)
+	if to_target.length() > 0.5:
+		var desired_transform := global_transform.looking_at(aim_point, Vector3.UP)
+		global_transform = global_transform.interpolate_with(desired_transform, clampf(turn_rate * control_authority * delta, 0.0, 1.0))
 	velocity = -global_transform.basis.z * speed
 	if to_target.length() < 115.0 and absf(to_target.normalized().dot(-global_transform.basis.z)) > 0.82:
 		fire_weapon()
@@ -70,10 +78,14 @@ func _player_flight(delta: float) -> void:
 	var yaw := Input.get_action_strength("air_yaw_right") - Input.get_action_strength("air_yaw_left")
 	throttle = clampf(throttle + Input.get_axis("air_throttle_down", "air_throttle_up") * delta * 0.35, 0.12, 1.0)
 	speed = move_toward(speed, max_speed * throttle, throttle_acceleration * delta)
-	rotate_object_local(Vector3.FORWARD, roll * turn_rate * delta)
-	rotate_object_local(Vector3.RIGHT, pitch * turn_rate * delta)
-	rotate_y(yaw * turn_rate * 0.65 * delta)
+	stall_warning = speed < 22.0
+	var control_authority := clampf(speed / 45.0, 0.35, 1.0)
+	rotate_object_local(Vector3.FORWARD, roll * turn_rate * control_authority * delta)
+	rotate_object_local(Vector3.RIGHT, pitch * turn_rate * control_authority * delta)
+	rotate_y(yaw * turn_rate * 0.65 * control_authority * delta)
 	velocity = -global_transform.basis.z * speed
+	if stall_warning:
+		velocity += Vector3.DOWN * (22.0 - speed) * 0.22
 	if Input.is_action_pressed("air_fire"):
 		fire_weapon()
 
