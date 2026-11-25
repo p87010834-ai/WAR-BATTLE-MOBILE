@@ -5,6 +5,7 @@ var game_manager: Node
 var current_mode := "tank"
 var fire_button: Button
 var repair_button: Button
+var flight_buttons: Array[Button] = []
 
 func _ready() -> void:
 	game_manager = get_tree().get_first_node_in_group("game_manager")
@@ -12,6 +13,7 @@ func _ready() -> void:
 	_build_fire_button()
 	_build_repair_button()
 	_build_vehicle_button()
+	_build_flight_buttons()
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(game_manager):
@@ -20,6 +22,8 @@ func _process(_delta: float) -> void:
 			_release_vehicle_actions()
 			current_mode = mode
 	repair_button.visible = current_mode == "tank"
+	for button in flight_buttons:
+		button.visible = current_mode == "aircraft"
 
 func _build_joystick() -> void:
 	var stick := Control.new()
@@ -109,6 +113,38 @@ func _on_joystick_changed(value: Vector2) -> void:
 		_set_action("move_forward", value.y < -0.18)
 		_set_action("move_backward", value.y > 0.18)
 
+
+func _build_flight_buttons() -> void:
+	_add_hold_button("КРЕН ◀", "air_roll_left", -326.0, -154.0)
+	_add_hold_button("КРЕН ▶", "air_roll_right", -326.0, -94.0)
+	_add_hold_button("ТЯГА +", "air_throttle_up", -326.0, -250.0)
+	_add_hold_button("ТЯГА −", "air_throttle_down", -326.0, -190.0)
+
+func _add_hold_button(caption: String, action: String, left: float, top: float) -> void:
+	var button := Button.new()
+	button.text = caption
+	button.focus_mode = Control.FOCUS_NONE
+	button.anchor_left = 1.0
+	button.anchor_right = 1.0
+	button.anchor_top = 1.0
+	button.anchor_bottom = 1.0
+	button.offset_left = left
+	button.offset_right = left + 138.0
+	button.offset_top = top
+	button.offset_bottom = top + 52.0
+	button.add_theme_font_size_override("font_size", 15)
+	button.add_theme_color_override("font_color", Color(1.0, 0.9, 0.78))
+	button.add_theme_stylebox_override("normal", _button_style(Color(0.16, 0.25, 0.31, 0.94)))
+	button.add_theme_stylebox_override("pressed", _button_style(Color(0.28, 0.43, 0.52, 1.0)))
+	add_child(button)
+	button.button_down.connect(func(): Input.action_press(action))
+	button.button_up.connect(func(): Input.action_release(action))
+	button.visibility_changed.connect(func():
+		if not button.visible and Input.is_action_pressed(action):
+			Input.action_release(action)
+	)
+	flight_buttons.append(button)
+
 func _build_vehicle_button() -> void:
 	var button := Button.new()
 	button.name = "VehicleSwitchButton"
@@ -140,7 +176,7 @@ func _fire_up() -> void:
 	Input.action_release(action)
 
 func _release_vehicle_actions() -> void:
-	for action in ["turn_left", "turn_right", "move_forward", "move_backward", "air_yaw_left", "air_yaw_right", "air_pitch_up", "air_pitch_down", "ship_turn_left", "ship_turn_right", "ship_forward", "ship_reverse", "fire", "air_fire", "ship_fire"]:
+	for action in ["turn_left", "turn_right", "move_forward", "move_backward", "air_yaw_left", "air_yaw_right", "air_pitch_up", "air_pitch_down", "air_roll_left", "air_roll_right", "air_throttle_up", "air_throttle_down", "ship_turn_left", "ship_turn_right", "ship_forward", "ship_reverse", "fire", "air_fire", "ship_fire"]:
 		if Input.is_action_pressed(action):
 			Input.action_release(action)
 
