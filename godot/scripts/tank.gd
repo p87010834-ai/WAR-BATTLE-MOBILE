@@ -125,6 +125,19 @@ func _build_vehicle() -> void:
 	for hatch_side in [-1.0, 1.0]:
 		_add_box(turret, Vector3(0.32, 0.045, 0.08), Vector3(hatch_side * 0.55, 0.96, 0.58), steel)
 		_add_box(turret, Vector3(0.16, 0.11, 0.12), Vector3(hatch_side * 0.28, 0.88, 0.82), optic_glass)
+	# Cannon thermal sleeve, reinforced collar bands and multi-port muzzle brake.
+	var barrel_band_mat := _make_material(Color(0.22, 0.25, 0.24), 0.78, 0.46)
+	for band_index in range(4):
+		var band_z: float = -1.42 - float(band_index) * 0.48
+		_add_cylinder(turret, 0.165, 0.075, Vector3(0, 0.43, band_z), Vector3(PI / 2.0, 0, 0), barrel_band_mat, 16)
+	_add_cylinder(turret, 0.205, 0.38, Vector3(0, 0.43, -3.42), Vector3(PI / 2.0, 0, 0), dark, 16)
+	_add_cylinder(turret, 0.155, 0.10, Vector3(0, 0.43, -3.64), Vector3(PI / 2.0, 0, 0), steel, 16)
+	for port_side in [-1.0, 1.0]:
+		_add_box(turret, Vector3(0.035, 0.11, 0.18), Vector3(port_side * 0.16, 0.43, -3.43), barrel_band_mat)
+	# Fine service bolts around the turret ring.
+	for bolt_index in range(12):
+		var bolt_angle: float = TAU * float(bolt_index) / 12.0
+		_add_cylinder(turret, 0.035, 0.045, Vector3(cos(bolt_angle) * 0.91, 0.20, sin(bolt_angle) * 0.91), Vector3(PI / 2.0, 0, 0), steel, 8)
 	muzzle = Marker3D.new()
 	muzzle.position = Vector3(0, 0.43, -3.58)
 	turret.add_child(muzzle)
