@@ -311,6 +311,25 @@ func _build_ship() -> void:
 	_ship_box(Vector3(0.12, 0.12, 1.1), Vector3(2.03, 1.13, 0.2), fleet_mark)
 	for deck_line in range(5):
 		_ship_box(Vector3(2.8, 0.018, 0.035), Vector3(0, 1.095, -4.1 + deck_line * 1.65), steel)
+	# Hull portholes, welded reinforcement strips and deck-edge fittings.
+	var porthole_mat := _ship_material(Color(0.025, 0.065, 0.075), 0.55, 0.24)
+	var hull_rib_mat := _ship_material(Color(0.16, 0.21, 0.22), 0.62, 0.72)
+	for side in [-1.0, 1.0]:
+		for porthole_index in range(7):
+			var porthole_z := -4.7 + float(porthole_index) * 1.55
+			_ship_cylinder(0.13, 0.055, Vector3(side * 2.225, 0.18, porthole_z), Vector3(0, 0, PI / 2.0), steel, 12)
+			_ship_cylinder(0.082, 0.065, Vector3(side * 2.26, 0.18, porthole_z), Vector3(0, 0, PI / 2.0), porthole_mat, 12)
+		for rib_index in range(5):
+			var rib_z := -5.3 + float(rib_index) * 2.45
+			_ship_box(Vector3(0.055, 0.72, 0.12), Vector3(side * 2.205, -0.12, rib_z), hull_rib_mat)
+		# Bow anchor-chain runs and hawse openings.
+		_ship_cylinder(0.07, 1.25, Vector3(side * 1.85, 0.83, -8.25), Vector3(0.12, 0, side * 0.32), dark, 10)
+		_ship_cylinder(0.22, 0.16, Vector3(side * 1.92, 0.93, -8.85), Vector3(0, 0, PI / 2.0), steel, 12)
+		# Deck cleats and mooring bollards.
+		for bollard_index in range(4):
+			var bollard_z := -5.0 + float(bollard_index) * 3.2
+			_ship_cylinder(0.095, 0.28, Vector3(side * 1.78, 1.16, bollard_z), Vector3.ZERO, steel, 10)
+			_ship_box(Vector3(0.34, 0.07, 0.12), Vector3(side * 1.78, 1.31, bollard_z), dark)
 	# Funnels, exhaust caps, anchor gear and deck-service equipment.
 	var funnel_mat := _ship_material(Color(0.12, 0.15, 0.16), 0.58, 0.58)
 	for funnel_z in [0.2, 2.0]:
