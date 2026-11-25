@@ -8,6 +8,7 @@ const DEFAULT_PORT := 24560
 const MAX_CLIENTS := 10
 var is_host := false
 var connected := false
+var connecting := false
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -50,6 +51,7 @@ func leave_session() -> void:
 		multiplayer.multiplayer_peer = null
 	is_host = false
 	connected = false
+	connecting = false
 
 func _on_peer_connected(_id: int) -> void:
 	player_count_changed.emit(multiplayer.get_peers().size() + 1)
@@ -58,12 +60,16 @@ func _on_peer_disconnected(_id: int) -> void:
 	player_count_changed.emit(multiplayer.get_peers().size() + 1)
 
 func _on_connected() -> void:
+	connecting = false
+	connected = true
 	connection_status_changed.emit(true, "Подключено к серверу")
 
 func _on_connection_failed() -> void:
+	connecting = false
 	connected = false
 	connection_status_changed.emit(false, "Соединение не установлено")
 
 func _on_server_disconnected() -> void:
+	connecting = false
 	connected = false
 	connection_status_changed.emit(false, "Соединение с сервером потеряно")
