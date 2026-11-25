@@ -1,6 +1,8 @@
 extends Node3D
 
 var player: WbmTank
+var profile := WbmPlayerProfile.new()
+var weather_manager: WbmWeatherManager
 var allies: Array[WbmTank] = []
 var enemies: Array[WbmTank] = []
 var capture_points: Array[WbmCapturePoint] = []
@@ -20,6 +22,10 @@ var ally_spawns := [Vector3(-9, 0.15, 23), Vector3(9, 0.15, 23)]
 
 func _ready() -> void:
 	_build_world()
+	profile.load_profile()
+	weather_manager = WbmWeatherManager.new()
+	weather_manager.name = "WeatherManager"
+	add_child(weather_manager)
 	_build_hud()
 	_build_capture_points()
 	_spawn_match()
