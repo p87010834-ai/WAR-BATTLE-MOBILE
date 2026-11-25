@@ -330,6 +330,27 @@ func _build_ship() -> void:
 			var bollard_z := -5.0 + float(bollard_index) * 3.2
 			_ship_cylinder(0.095, 0.28, Vector3(side * 1.78, 1.16, bollard_z), Vector3.ZERO, steel, 10)
 			_ship_box(Vector3(0.34, 0.07, 0.12), Vector3(side * 1.78, 1.31, bollard_z), dark)
+	# Bridge radar arrays, rotating-style antenna frame and mast crossarms.
+	var radar_mat := _ship_material(Color(0.16, 0.19, 0.20), 0.72, 0.42)
+	var nav_light_red := _ship_material(Color(0.72, 0.08, 0.045), 0.08, 0.28)
+	nav_light_red.emission_enabled = true
+	nav_light_red.emission = Color(0.28, 0.025, 0.01)
+	var nav_light_green := _ship_material(Color(0.05, 0.58, 0.22), 0.08, 0.28)
+	nav_light_green.emission_enabled = true
+	nav_light_green.emission = Color(0.015, 0.18, 0.045)
+	_ship_box(Vector3(1.45, 0.10, 0.22), Vector3(0, 6.52, 2.0), radar_mat)
+	_ship_box(Vector3(0.12, 0.62, 0.12), Vector3(0, 6.84, 2.0), radar_mat)
+	_ship_box(Vector3(0.92, 0.08, 0.08), Vector3(0, 7.12, 2.0), steel)
+	_ship_cylinder(0.055, 0.82, Vector3(0, 6.92, 2.0), Vector3(0, 0, PI / 2.0), radar_mat, 10)
+	_ship_cylinder(0.10, 0.10, Vector3(-1.16, 4.1, 2.0), Vector3.ZERO, nav_light_red, 10)
+	_ship_cylinder(0.10, 0.10, Vector3(1.16, 4.1, 2.0), Vector3.ZERO, nav_light_green, 10)
+	# Lifeboat seats, protective covers and davit arms.
+	var lifeboat_mat := _ship_material(Color(0.62, 0.49, 0.28), 0.08, 0.82)
+	for side in [-1.0, 1.0]:
+		for seat_index in range(3):
+			_ship_box(Vector3(0.46, 0.07, 0.10), Vector3(side * 1.7, 1.70, 2.95 + float(seat_index) * 0.48), steel)
+		_ship_box(Vector3(0.12, 0.72, 0.12), Vector3(side * 2.02, 1.82, 3.55), radar_mat)
+		_ship_box(Vector3(0.12, 0.10, 0.95), Vector3(side * 1.98, 2.16, 3.55), lifeboat_mat)
 	# Funnels, exhaust caps, anchor gear and deck-service equipment.
 	var funnel_mat := _ship_material(Color(0.12, 0.15, 0.16), 0.58, 0.58)
 	for funnel_z in [0.2, 2.0]:
