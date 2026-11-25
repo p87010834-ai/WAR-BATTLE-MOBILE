@@ -65,8 +65,20 @@ jobs:
       - name: Import and parse Godot project
         run: godot --headless --editor --path godot --quit
 
+      - name: Validate every GDScript file
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r script; do
+            echo "Checking $script"
+            godot --headless --path godot --check-only --script "res://${script#godot/}"
+          done < <(find godot/scripts -type f -name "*.gd" | sort)
+
       - name: Run headless smoke test
-        run: godot --headless --path godot --quit-after 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path godot --quit-after 5
 
       - name: Export debug APK
         env:
