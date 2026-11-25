@@ -214,6 +214,9 @@ func _build_hud() -> void:
 	var touch_controls := CanvasLayer.new()
 	touch_controls.set_script(load("res://scripts/mobile_controls.gd"))
 	add_child(touch_controls)
+	var game_ui := CanvasLayer.new()
+	game_ui.set_script(load("res://scripts/ui_manager.gd"))
+	add_child(game_ui)
 
 func _make_label(parent: Control, value: String, at: Vector2, font_size: int, color: Color) -> Label:
 	var label := Label.new()
