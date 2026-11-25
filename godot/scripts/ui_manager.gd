@@ -15,7 +15,8 @@ const ACCENT := Color(1.0, 0.58, 0.22)
 const PAGES := [
 	"Главное меню", "Ангар", "Профиль", "Миссии", "Достижения",
 	"Друзья", "Отряды", "Кланы", "Магазин", "Боевой пропуск",
-	"Рейтинг", "События", "Обучение", "Повторы", "Настройки"
+	"Рейтинг", "События", "Обучение", "Повторы", "Настройки",
+	"Управление", "Графика", "Звук", "Интерфейс", "Аккаунт", "Безопасность"
 ]
 
 func _ready() -> void:
@@ -161,6 +162,18 @@ func _open_page(page: String) -> void:
 			_build_achievements_page()
 		"Настройки":
 			_build_settings_page()
+		"Управление":
+			_build_control_settings()
+		"Графика":
+			_build_graphics_settings()
+		"Звук":
+			_build_audio_settings()
+		"Интерфейс":
+			_build_interface_settings()
+		"Аккаунт":
+			_build_account_page()
+		"Безопасность":
+			_build_security_page()
 		"Обучение":
 			_add_heading("УЧЕБНЫЙ ПОЛИГОН")
 			_add_text("ТАНК: виртуальный джойстик — движение и поворот; кнопка ОГОНЬ — выстрел; РЕМОНТ — восстановление модулей.")
@@ -210,6 +223,119 @@ func _add_action(caption: String, callback: Callable) -> void:
 	_style_button(button, Color(0.46, 0.20, 0.08, 1))
 	content_box.add_child(button)
 	button.pressed.connect(callback)
+
+
+func _build_control_settings() -> void:
+	_add_heading("УПРАВЛЕНИЕ ТЕХНИКОЙ")
+	if not is_instance_valid(game_manager):
+		_add_text("Настройки управления недоступны.")
+		return
+	var settings = game_manager.settings
+	_add_text("Чувствительность виртуального джойстика")
+	var sensitivity := HSlider.new()
+	sensitivity.min_value = 0.25
+	sensitivity.max_value = 2.5
+	sensitivity.step = 0.05
+	sensitivity.value = settings.sensitivity
+	content_box.add_child(sensitivity)
+	sensitivity.value_changed.connect(func(value: float):
+		settings.sensitivity = value
+		settings.save_settings()
+	)
+	var vibration := CheckButton.new()
+	vibration.text = "Вибрация при попадании (если поддерживается устройством)"
+	vibration.button_pressed = settings.vibration_enabled
+	content_box.add_child(vibration)
+	vibration.toggled.connect(func(value: bool):
+		settings.vibration_enabled = value
+		settings.save_settings()
+	)
+	var aim := CheckButton.new()
+	aim.text = "Помощь в прицеливании"
+	aim.button_pressed = settings.aim_assist_enabled
+	content_box.add_child(aim)
+	aim.toggled.connect(func(value: bool):
+		settings.aim_assist_enabled = value
+		settings.save_settings()
+	)
+	_add_text("Раскладка кнопок и переназначение клавиш пока не реализованы.")
+
+func _build_graphics_settings() -> void:
+	_add_heading("ГРАФИКА И ПРОИЗВОДИТЕЛЬНОСТЬ")
+	if not is_instance_valid(game_manager):
+		_add_text("Графические настройки недоступны.")
+		return
+	var settings = game_manager.settings
+	var quality := OptionButton.new()
+	quality.add_item("Производительность", 0)
+	quality.add_item("Сбалансированно", 1)
+	quality.add_item("Качество", 2)
+	quality.select(clampi(settings.graphics_quality, 0, 2))
+	content_box.add_child(quality)
+	quality.item_selected.connect(func(index: int):
+		settings.graphics_quality = index
+		settings.save_settings()
+	)
+	_add_text("Выбранный профиль сохраняется. Полное применение профилей к теням, LOD, эффектам и разрешению ещё требует графического менеджера.")
+
+func _build_audio_settings() -> void:
+	_add_heading("ЗВУК")
+	if not is_instance_valid(game_manager):
+		_add_text("Настройки звука недоступны.")
+		return
+	var settings = game_manager.settings
+	for entry in [["Общая громкость", "master_volume"], ["Музыка", "music_volume"], ["Эффекты", "effects_volume"]]:
+		_add_text(str(entry[0]))
+		var slider := HSlider.new()
+		slider.min_value = 0.0
+		slider.max_value = 1.0
+		slider.step = 0.05
+		slider.value = float(settings.get(entry[1]))
+		content_box.add_child(slider)
+		var property_name := str(entry[1])
+		slider.value_changed.connect(func(value: float):
+			settings.set(property_name, value)
+			settings.apply_audio()
+			settings.save_settings()
+		)
+
+func _build_interface_settings() -> void:
+	_add_heading("ИНТЕРФЕЙС БОЯ")
+	if not is_instance_valid(game_manager):
+		_add_text("Настройки интерфейса недоступны.")
+		return
+	var settings = game_manager.settings
+	var language := OptionButton.new()
+	language.add_item("Русский", 0)
+	language.add_item("English", 1)
+	language.select(0 if settings.language == "ru" else 1)
+	content_box.add_child(language)
+	language.item_selected.connect(func(index: int):
+		settings.language = "ru" if index == 0 else "en"
+		settings.save_settings()
+		_add_text("Язык сохранён. Перевод всех игровых сообщений будет подключаться по мере локализации.")
+	)
+	_add_text("Основной стиль: тёмная тактическая панель с оранжевыми акцентами.")
+	_add_text("HUD: индикаторы техники, прочности и телеметрия. Персональная настройка расположения HUD пока не реализована.")
+
+func _build_account_page() -> void:
+	_add_heading("АККАУНТ И ПРОФИЛЬ")
+	if not is_instance_valid(game_manager):
+		_add_text("Локальный профиль недоступен.")
+		return
+	var profile = game_manager.profile
+	_add_text("Позывной: %s" % profile.username)
+	_add_text("Уровень: %d / 100" % profile.account_level)
+	_add_text("Опыт: %d XP" % profile.experience)
+	_add_text("Это локальный профиль данного устройства. Регистрация, облачная синхронизация и перенос прогресса пока не подключены.")
+	_add_action("ОТКРЫТЬ ЛИЧНОЕ ДЕЛО", _open_page.bind("Профиль"))
+
+func _build_security_page() -> void:
+	_add_heading("БЕЗОПАСНОСТЬ И ПРАВИЛА")
+	_add_text("В прототипе нет регистрации, платежей или сетевого чата. Не вводите пароли и платёжные данные.")
+	_add_text("Планируемые меры: серверная проверка матчей, фильтрация оскорблений, жалобы на игроков, защита сессии и инструменты модерации.")
+	_add_text("Важно: эти серверные меры ещё не подключены; локальный фильтр текста не является полноценной защитой.")
+	_add_text("Голосовой чат не предусмотрен. Текстовый онлайн-чат появится только после реализации серверной инфраструктуры.")
 
 func _build_hangar_page() -> void:
 	_add_heading("АНГАР / ВЫБОР ТЕХНИКИ")
