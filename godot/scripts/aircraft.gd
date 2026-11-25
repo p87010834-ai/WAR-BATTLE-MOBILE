@@ -125,31 +125,80 @@ func apply_damage(amount: float, attacker_team: int, _impact: Vector3 = Vector3.
 func _build_aircraft() -> void:
 	_visual_material = StandardMaterial3D.new()
 	_visual_material.albedo_color = Color(0.24, 0.31, 0.35) if team == 0 else Color(0.42, 0.19, 0.15)
-	_visual_material.metallic = 0.55
-	var fuselage := MeshInstance3D.new()
-	var body := BoxMesh.new()
-	body.size = Vector3(0.9, 0.75, 5.5)
-	fuselage.mesh = body
-	fuselage.material_override = _visual_material
-	add_child(fuselage)
-	var wings := MeshInstance3D.new()
-	var wing_mesh := BoxMesh.new()
-	wing_mesh.size = Vector3(10.0, 0.18, 1.35)
-	wings.mesh = wing_mesh
-	wings.position.z = -0.35
-	wings.material_override = _visual_material
-	add_child(wings)
-	var tail := MeshInstance3D.new()
-	var tail_mesh := BoxMesh.new()
-	tail_mesh.size = Vector3(3.0, 0.14, 0.75)
-	tail.mesh = tail_mesh
-	tail.position.z = 2.0
-	tail.material_override = _visual_material
-	add_child(tail)
-	var fin := MeshInstance3D.new()
-	var fin_mesh := BoxMesh.new()
-	fin_mesh.size = Vector3(0.18, 1.1, 1.0)
-	fin.mesh = fin_mesh
-	fin.position = Vector3(0, 0.55, 2.0)
-	fin.material_override = _visual_material
-	add_child(fin)
+	_visual_material.metallic = 0.62
+	_visual_material.roughness = 0.42
+	var dark := _air_material(Color(0.07, 0.085, 0.09), 0.72, 0.42)
+	var glass := _air_material(Color(0.035, 0.16, 0.22), 0.78, 0.16)
+	var fuselage := _air_cylinder(0.43, 6.1, Vector3(0, 0, 0), Vector3(PI / 2.0, 0, 0), _visual_material, 20)
+	_air_box(Vector3(0.72, 0.38, 2.3), Vector3(0, 0.08, 0.15), _visual_material)
+	_air_cylinder(0.4, 0.85, Vector3(0, 0, -3.38), Vector3(PI / 2.0, 0, 0), dark, 16)
+	_air_cylinder(0.19, 0.34, Vector3(0, 0, -3.91), Vector3(PI / 2.0, 0, 0), steel_air(), 16)
+
+	var wings := _air_box(Vector3(11.2, 0.2, 1.55), Vector3(0, -0.12, -0.32), _visual_material)
+	var wing_tip_l := _air_box(Vector3(1.15, 0.16, 1.05), Vector3(-5.65, -0.12, -0.25), dark)
+	wing_tip_l.rotation.y = -0.08
+	var wing_tip_r := _air_box(Vector3(1.15, 0.16, 1.05), Vector3(5.65, -0.12, -0.25), dark)
+	wing_tip_r.rotation.y = 0.08
+	_air_box(Vector3(3.25, 0.16, 0.82), Vector3(0, 0.12, 2.18), _visual_material)
+	_air_box(Vector3(0.2, 1.45, 1.05), Vector3(0, 0.67, 2.35), _visual_material)
+	_air_box(Vector3(0.72, 0.12, 0.62), Vector3(0, 0.48, 2.35), dark)
+
+	# Raised cockpit glazing and framed canopy.
+	var canopy := MeshInstance3D.new()
+	var canopy_mesh := SphereMesh.new()
+	canopy_mesh.radius = 0.62
+	canopy_mesh.height = 1.0
+	canopy.mesh = canopy_mesh
+	canopy.scale = Vector3(0.72, 0.72, 1.55)
+	canopy.position = Vector3(0, 0.48, -0.78)
+	canopy.material_override = glass
+	add_child(canopy)
+	_air_box(Vector3(0.06, 0.09, 1.15), Vector3(0, 0.87, -0.82), dark)
+
+	# Twin engine nacelles, exhausts, pylons and wing hardpoints.
+	for side in [-1.0, 1.0]:
+		_air_cylinder(0.22, 2.35, Vector3(side * 2.45, -0.05, 0.72), Vector3(PI / 2.0, 0, 0), dark, 16)
+		_air_cylinder(0.18, 0.22, Vector3(side * 2.45, -0.05, 1.95), Vector3(PI / 2.0, 0, 0), steel_air(), 16)
+		_air_box(Vector3(0.18, 0.58, 0.22), Vector3(side * 3.45, -0.35, -0.34), dark)
+		_air_cylinder(0.09, 1.65, Vector3(side * 3.5, -0.45, -0.88), Vector3(PI / 2.0, 0, 0), steel_air(), 12)
+		_air_box(Vector3(0.32, 0.14, 0.9), Vector3(side * 4.65, -0.18, 0.35), dark)
+		_air_box(Vector3(0.12, 0.16, 0.42), Vector3(side * 5.25, -0.05, -0.34), glass)
+
+	# Antenna, pitot probe and small surface panels.
+	_air_cylinder(0.035, 0.8, Vector3(0, 0.53, 1.55), Vector3.ZERO, dark, 8)
+	_air_cylinder(0.035, 0.9, Vector3(0, 0.02, -3.25), Vector3(PI / 2.0, 0, 0), steel_air(), 8)
+	_air_box(Vector3(0.14, 0.08, 0.65), Vector3(0, -0.15, 1.15), dark)
+
+func _air_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.metallic = metal
+	mat.roughness = rough
+	return mat
+
+func steel_air() -> StandardMaterial3D:
+	return _air_material(Color(0.32, 0.36, 0.38), 0.82, 0.34)
+
+func _air_box(size: Vector3, at: Vector3, material: Material) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	node.mesh = mesh
+	node.position = at
+	node.material_override = material
+	add_child(node)
+	return node
+
+func _air_cylinder(radius: float, height: float, at: Vector3, angles: Vector3, material: Material, segments: int = 16) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius * 0.9
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = segments
+	node.mesh = mesh
+	node.position = at
+	node.rotation = angles
+	node.material_override = material
+	add_child(node)
+	return node
