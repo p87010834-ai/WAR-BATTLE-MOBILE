@@ -41,15 +41,15 @@ func _ready() -> void:
 	add_child(_label)
 	_refresh_visual()
 
-func update_control(tanks: Array[WbmTank], delta: float) -> void:
+func update_control(vehicles: Array[Node3D], delta: float) -> void:
 	var blue := 0
 	var red := 0
-	for tank in tanks:
-		if not is_instance_valid(tank) or tank.health <= 0.0:
+	for vehicle in vehicles:
+		if not is_instance_valid(vehicle) or float(vehicle.get("health")) <= 0.0:
 			continue
-		var distance := Vector2(tank.global_position.x - global_position.x, tank.global_position.z - global_position.z).length()
+		var distance := Vector2(vehicle.global_position.x - global_position.x, vehicle.global_position.z - global_position.z).length()
 		if distance <= capture_radius:
-			if tank.team == 0:
+			if int(vehicle.get("team")) == 0:
 				blue += 1
 			else:
 				red += 1
