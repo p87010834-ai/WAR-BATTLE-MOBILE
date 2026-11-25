@@ -9,6 +9,7 @@ signal captured(team: int)
 
 var owner_team := -1
 var progress := 0.0
+var progress_team := -1
 var _ring: MeshInstance3D
 var _core: MeshInstance3D
 var _label: Label3D
@@ -52,24 +53,44 @@ func update_control(tanks: Array[WbmTank], delta: float) -> void:
 				blue += 1
 			else:
 				red += 1
+
+	# A contested point cannot change hands while both teams are present.
+	if blue > 0 and red > 0:
+		return
 	if blue == red:
 		return
+
 	var attacking_team := 0 if blue > red else 1
 	var strength := minf(2.0, absf(float(blue - red)))
 	var step := capture_speed * strength * delta
+
 	if owner_team == attacking_team:
 		return
-	if owner_team != -1:
-		progress -= step
+
+	if owner_team >= 0:
+		# First drain the current owner's control before the point becomes neutral.
+		progress = maxf(0.0, progress - step)
 		if progress <= 0.0:
 			owner_team = -1
-			progress = 0.0
-	else:
-		progress += step
-		if progress >= 100.0:
-			owner_team = attacking_team
-			progress = 100.0
-			captured.emit(owner_team)
+			progress_team = attacking_team
+		_refresh_visual()
+		return
+
+	# Neutral capture progress belongs to one team; the opponent must reverse it.
+	if progress_team == -1:
+		progress_team = attacking_team
+	elif progress_team != attacking_team:
+		progress = maxf(0.0, progress - step)
+		if progress <= 0.0:
+			progress_team = attacking_team
+		_refresh_visual()
+		return
+
+	progress = minf(100.0, progress + step)
+	if progress >= 100.0:
+		owner_team = attacking_team
+		progress_team = attacking_team
+		captured.emit(owner_team)
 	_refresh_visual()
 
 func _refresh_visual() -> void:
@@ -81,4 +102,5 @@ func _refresh_visual() -> void:
 	_ring.material_override = mat
 	_core.material_override = mat
 	_label.modulate = tint
-	_label.text = "%s  %s" % [point_name, "НЕЙТРАЛЬНА" if owner_team == -1 else ("СИНИЕ" if owner_team == 0 else "КРАСНЫЕ")]
+	var state := "НЕЙТРАЛЬНА" if owner_team == -1 else ("СИНИЕ" if owner_team == 0 else "КРАСНЫЕ")
+	_label.text = "%s  %s  %d%%" % [point_name, state, roundi(progress)]
