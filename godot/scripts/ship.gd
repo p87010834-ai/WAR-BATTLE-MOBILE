@@ -126,14 +126,18 @@ func _damage_module(module_name: String, damage: float) -> void:
 			module_damaged.emit("ОРУДИЯ", weapons_health)
 
 func _update_module_status() -> void:
-	var damaged: Array[String] = []
+	var status_parts := ""
 	if engine_health < 75.0:
-		damaged.append("ДВИГАТЕЛЬ %d%%" % roundi(engine_health))
+		status_parts += "ДВИГАТЕЛЬ %d%%" % roundi(engine_health)
 	if steering_health < 75.0:
-		damaged.append("РУЛЬ %d%%" % roundi(steering_health))
+		if not status_parts.is_empty():
+			status_parts += " / "
+		status_parts += "РУЛЬ %d%%" % roundi(steering_health)
 	if weapons_health < 75.0:
-		damaged.append("ОРУДИЯ %d%%" % roundi(weapons_health))
-	module_status = " | ".join(damaged) if not damaged.is_empty() else "ВСЕ СИСТЕМЫ ИСПРАВНЫ"
+		if not status_parts.is_empty():
+			status_parts += " / "
+		status_parts += "ОРУДИЯ %d%%" % roundi(weapons_health)
+	module_status = status_parts if not status_parts.is_empty() else "ВСЕ СИСТЕМЫ ИСПРАВНЫ"
 
 func repair_modules(amount: float = 18.0) -> void:
 	engine_health = minf(100.0, engine_health + amount)
