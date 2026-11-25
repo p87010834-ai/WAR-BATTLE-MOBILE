@@ -24,6 +24,12 @@ var control_health := 100.0
 var oil_leak_time := 0.0
 var module_status := "СИСТЕМЫ ИСПРАВНЫ"
 var _crash_emitted := false
+var _propeller: Node3D
+var _left_aileron: Node3D
+var _right_aileron: Node3D
+var _elevator: Node3D
+var _rudder: Node3D
+var _visual_time := 0.0
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -32,6 +38,21 @@ func _ready() -> void:
 	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
 	if audio:
 		audio.attach_engine(self, "aircraft")
+
+func _process(delta: float) -> void:
+	_visual_time += delta
+	if is_instance_valid(_propeller):
+		var engine_factor := clampf(engine_health / 100.0, 0.0, 1.0)
+		_propeller.rotate_object_local(Vector3(0, 0, 1), delta * (18.0 + speed * 0.9) * engine_factor)
+	var control_factor := clampf(control_health / 100.0, 0.2, 1.0)
+	if is_instance_valid(_left_aileron):
+		_left_aileron.rotation.z = sin(_visual_time * 2.4) * 0.025 * control_factor
+	if is_instance_valid(_right_aileron):
+		_right_aileron.rotation.z = -sin(_visual_time * 2.4) * 0.025 * control_factor
+	if is_instance_valid(_elevator):
+		_elevator.rotation.x = sin(_visual_time * 1.7) * 0.018 * control_factor
+	if is_instance_valid(_rudder):
+		_rudder.rotation.y = sin(_visual_time * 1.3) * 0.025 * control_factor
 
 func _physics_process(delta: float) -> void:
 	fire_cooldown = maxf(0.0, fire_cooldown - delta)
@@ -183,6 +204,22 @@ func _build_aircraft() -> void:
 	_air_box(Vector3(0.72, 0.38, 2.3), Vector3(0, 0.08, 0.15), _visual_material)
 	_air_cylinder(0.4, 0.85, Vector3(0, 0, -3.38), Vector3(PI / 2.0, 0, 0), dark, 16)
 	_air_cylinder(0.19, 0.34, Vector3(0, 0, -3.91), Vector3(PI / 2.0, 0, 0), steel_air(), 16)
+	# Animated original propeller assembly.
+	_propeller = Node3D.new()
+	_propeller.name = "AnimatedPropeller"
+	_propeller.position = Vector3(0, 0, -4.12)
+	add_child(_propeller)
+	var prop_hub := _air_cylinder(0.16, 0.28, Vector3.ZERO, Vector3(PI / 2.0, 0, 0), steel_air(), 16)
+	_propeller.add_child(prop_hub)
+	for blade_angle in [0.0, PI]:
+		var blade := MeshInstance3D.new()
+		var blade_mesh := BoxMesh.new()
+		blade_mesh.size = Vector3(0.16, 1.35, 0.075)
+		blade.mesh = blade_mesh
+		blade.position = Vector3(0, 0.78, 0)
+		blade.rotation.z = blade_angle
+		blade.material_override = dark
+		_propeller.add_child(blade)
 
 	var wings := _air_box(Vector3(11.2, 0.2, 1.55), Vector3(0, -0.12, -0.32), _visual_material)
 	var wing_tip_l := _air_box(Vector3(1.15, 0.16, 1.05), Vector3(-5.65, -0.12, -0.25), dark)
@@ -228,13 +265,41 @@ func _build_aircraft() -> void:
 	# Flight-control surfaces, hinge lines and engine intake lips.
 	var control_mat := _air_material(Color(0.13, 0.17, 0.19) if team == 0 else Color(0.25, 0.12, 0.10), 0.48, 0.68)
 	for side in [-1.0, 1.0]:
-		var aileron := _air_box(Vector3(2.25, 0.075, 0.32), Vector3(side * 4.15, -0.235, 0.62), control_mat)
+		var hinge := Node3D.new()
+		hinge.position = Vector3(side * 4.15, -0.235, 0.62)
+		add_child(hinge)
+		var aileron := MeshInstance3D.new()
+		var aileron_mesh := BoxMesh.new()
+		aileron_mesh.size = Vector3(2.25, 0.075, 0.32)
+		aileron.mesh = aileron_mesh
+		aileron.material_override = control_mat
+		hinge.add_child(aileron)
 		aileron.rotation.y = side * 0.035
+		if side < 0.0:
+			_left_aileron = hinge
+		else:
+			_right_aileron = hinge
 		_air_box(Vector3(2.15, 0.025, 0.045), Vector3(side * 4.1, -0.235, 0.43), dark)
 		_air_cylinder(0.245, 0.09, Vector3(side * 2.45, -0.05, -0.42), Vector3(PI / 2.0, 0, 0), steel_air(), 20)
 		_air_box(Vector3(0.42, 0.06, 0.18), Vector3(side * 2.45, -0.23, 1.72), marking)
-	var elevator := _air_box(Vector3(2.65, 0.07, 0.28), Vector3(0, 0.08, 2.62), control_mat)
-	elevator.rotation.y = 0.0
+	_elevator = Node3D.new()
+	_elevator.position = Vector3(0, 0.08, 2.62)
+	add_child(_elevator)
+	var elevator_mesh := MeshInstance3D.new()
+	var elevator_shape := BoxMesh.new()
+	elevator_shape.size = Vector3(2.65, 0.07, 0.28)
+	elevator_mesh.mesh = elevator_shape
+	elevator_mesh.material_override = control_mat
+	_elevator.add_child(elevator_mesh)
+	_rudder = Node3D.new()
+	_rudder.position = Vector3(0, 0.78, 2.35)
+	add_child(_rudder)
+	var rudder_mesh := MeshInstance3D.new()
+	var rudder_shape := BoxMesh.new()
+	rudder_shape.size = Vector3(0.2, 0.78, 0.16)
+	rudder_mesh.mesh = rudder_shape
+	rudder_mesh.material_override = control_mat
+	_rudder.add_child(rudder_mesh)
 	_air_box(Vector3(0.08, 0.08, 0.72), Vector3(0, 0.78, 2.35), steel_air())
 
 func _add_aircraft_scorch(impact: Vector3) -> void:
