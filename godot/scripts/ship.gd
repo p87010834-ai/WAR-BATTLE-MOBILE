@@ -14,6 +14,7 @@ var target: Node3D
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
+	add_to_group("naval_vehicles")
 	health = max_health
 	_build_ship()
 
@@ -27,14 +28,39 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("ship_fire"):
 			fire_guns()
 	else:
-		velocity = -global_transform.basis.z * cruise_speed * 0.35
+		_ai_naval_combat(delta)
 	move_and_slide()
+
+func _ai_naval_combat(delta: float) -> void:
+	if not is_instance_valid(target) or not target.is_in_group("naval_vehicles") or float(target.get("health")) <= 0.0:
+		target = _find_enemy_ship()
+	if not is_instance_valid(target):
+		velocity = -global_transform.basis.z * cruise_speed * 0.2
+		return
+	var to_target := target.global_position - global_position
+	var desired_yaw := atan2(-to_target.x, -to_target.z)
+	rotation.y = rotate_toward(rotation.y, desired_yaw, turn_rate * delta)
+	velocity = -global_transform.basis.z * cruise_speed * 0.65
+	if to_target.length() <= 65.0 and absf(wrapf(desired_yaw - rotation.y, -PI, PI)) < 0.28:
+		fire_guns()
+
+func _find_enemy_ship() -> Node3D:
+	var best: Node3D
+	var best_distance := INF
+	for candidate in get_tree().get_nodes_in_group("naval_vehicles"):
+		if not is_instance_valid(candidate) or int(candidate.get("team")) == team or float(candidate.get("health")) <= 0.0:
+			continue
+		var distance := global_position.distance_squared_to(candidate.global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = candidate as Node3D
+	return best
 
 func fire_guns() -> void:
 	if weapon_cooldown > 0.0:
 		return
 	weapon_cooldown = 3.0
-	if is_instance_valid(target) and target.has_method("apply_damage"):
+	if is_instance_valid(target) and target.has_method("apply_damage") and global_position.distance_to(target.global_position) <= 70.0:
 		target.apply_damage(24.0, team, target.global_position)
 
 func apply_damage(amount: float, attacker_team: int, _impact: Vector3 = Vector3.ZERO) -> void:
