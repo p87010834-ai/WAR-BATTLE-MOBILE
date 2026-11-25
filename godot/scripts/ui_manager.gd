@@ -8,6 +8,8 @@ var page_title: Label
 var content_box: VBoxContainer
 var current_page := "Главное меню"
 var compact_layout := false
+var local_data := ConfigFile.new()
+var local_data_path := "user://interface_data.cfg"
 
 const ACCENT := Color(1.0, 0.58, 0.22)
 const PAGES := [
@@ -19,6 +21,7 @@ const PAGES := [
 func _ready() -> void:
 	game_manager = get_tree().get_first_node_in_group("game_manager")
 	compact_layout = get_viewport().get_visible_rect().size.x < 760.0
+	local_data.load(local_data_path)
 	_build_interface()
 
 func _build_interface() -> void:
@@ -168,8 +171,18 @@ func _open_page(page: String) -> void:
 			_add_heading("АРХИВ СРАЖЕНИЙ")
 			_add_text("Система сохраняет локальные телеметрические записи завершённых боёв в папку user://replays.")
 			_add_text("Воспроизведение, перемотка, свободная камера и экспорт повтора пока не реализованы.")
-		"Друзья", "Отряды", "Кланы", "Магазин", "Рейтинг", "События":
-			_build_online_placeholder(page)
+		"Друзья":
+			_build_friends_page()
+		"Отряды":
+			_build_squad_page()
+		"Кланы":
+			_build_clan_page()
+		"Магазин":
+			_build_shop_page()
+		"Рейтинг":
+			_build_rating_page()
+		"События":
+			_build_events_page()
 		"Боевой пропуск":
 			_build_season_page()
 
@@ -377,3 +390,108 @@ func _build_settings_page() -> void:
 
 func _restart_match() -> void:
 	get_tree().reload_current_scene()
+
+
+func _save_local_data() -> void:
+	local_data.save(local_data_path)
+
+func _build_friends_page() -> void:
+	_add_heading("СПИСОК ДРУЗЕЙ")
+	_add_text("Локальный список контактов на этом устройстве. Онлайн-приглашения появятся после запуска серверов.")
+	var friends: Array = local_data.get_value("social", "friends", [])
+	for friend in friends:
+		_add_text("● " + str(friend))
+	var field := LineEdit.new()
+	field.placeholder_text = "Позывной друга"
+	content_box.add_child(field)
+	_add_action("ДОБАВИТЬ КОНТАКТ", func():
+		var nick := field.text.strip_edges()
+		if nick.length() >= 3 and nick.length() <= 16 and not nick in friends:
+			friends.append(nick)
+			local_data.set_value("social", "friends", friends)
+			_save_local_data()
+			_open_page("Друзья")
+		else:
+			_add_text("Нужен уникальный позывной длиной 3–16 символов.")
+	)
+
+func _build_squad_page() -> void:
+	_add_heading("ОТРЯД")
+	var created := bool(local_data.get_value("squad", "created", false))
+	_add_text("Статус: " + ("отряд создан локально" if created else "вы не состоите в отряде"))
+	_add_text("Размер отряда: до 4 игроков. Совместный онлайн-поиск пока не подключён.")
+	_add_action("СОЗДАТЬ ОТРЯД", func():
+		local_data.set_value("squad", "created", true)
+		local_data.set_value("squad", "created_at", Time.get_datetime_string_from_system())
+		_save_local_data()
+		_open_page("Отряды")
+	)
+	_add_action("РАСПУСТИТЬ ОТРЯД", func():
+		local_data.set_value("squad", "created", false)
+		_save_local_data()
+		_open_page("Отряды")
+	)
+
+func _build_clan_page() -> void:
+	_add_heading("КЛАНОВЫЙ ЦЕНТР")
+	var clan := str(local_data.get_value("clan", "name", ""))
+	_add_text("Ваш клан: " + (clan if not clan.is_empty() else "не создан"))
+	var field := LineEdit.new()
+	field.placeholder_text = "Название клана"
+	field.text = clan
+	content_box.add_child(field)
+	_add_action("СОЗДАТЬ / ПЕРЕИМЕНОВАТЬ", func():
+		var value := field.text.strip_edges()
+		if value.length() >= 3 and value.length() <= 20:
+			local_data.set_value("clan", "name", value)
+			_save_local_data()
+			_open_page("Кланы")
+		else:
+			_add_text("Название должно содержать 3–20 символов.")
+	)
+	_add_text("Участники, роли, чат и война за территории требуют серверной версии.")
+
+func _build_shop_page() -> void:
+	_add_heading("АРСЕНАЛ / ВНЕШНИЙ ВИД")
+	_add_text("Демонстрационные бесплатные варианты оформления. Реальных платежей и покупок за деньги здесь нет.")
+	var owned: Array = local_data.get_value("shop", "unlocked", ["Стандартный камуфляж"])
+	for skin in ["Песчаный камуфляж", "Лесной камуфляж", "Зимний камуфляж"]:
+		var is_owned := skin in owned
+		_add_text(skin + (" — открыт" if is_owned else " — доступен в демо"))
+		if not is_owned:
+			_add_action("ОТКРЫТЬ БЕСПЛАТНО: " + skin.to_upper(), func():
+				owned.append(skin)
+				local_data.set_value("shop", "unlocked", owned)
+				_save_local_data()
+				_open_page("Магазин")
+			)
+
+func _build_rating_page() -> void:
+	_add_heading("ЛИЧНАЯ СТАТИСТИКА")
+	if not is_instance_valid(game_manager):
+		_add_text("Статистика пока недоступна.")
+		return
+	var p = game_manager.profile
+	var rate := 0.0 if p.total_battles == 0 else 100.0 * float(p.total_wins) / float(p.total_battles)
+	_add_text("Боёв: %d" % p.total_battles)
+	_add_text("Побед: %d" % p.total_wins)
+	_add_text("Поражений: %d" % maxi(0, p.total_battles - p.total_wins))
+	_add_text("Доля побед: %.1f%%" % rate)
+	_add_text("Глобальная таблица лидеров и рейтинговый подбор требуют серверной статистики.")
+
+func _build_events_page() -> void:
+	_add_heading("ТЕКУЩЕЕ СОБЫТИЕ")
+	_add_text("Операция «Стальной рубеж» — локальное демонстрационное событие.")
+	var claimed := bool(local_data.get_value("events", "steel_claimed", false))
+	_add_text("Награда за участие: 150 XP профиля (один раз на устройстве).")
+	if not claimed:
+		_add_action("ПОЛУЧИТЬ НАГРАДУ СОБЫТИЯ", func():
+			if is_instance_valid(game_manager):
+				game_manager.profile.add_experience(150)
+			local_data.set_value("events", "steel_claimed", true)
+			_save_local_data()
+			_open_page("События")
+		)
+	else:
+		_add_text("Награда уже получена.")
+	_add_text("Сезонные сетевые события и глобальные таблицы появятся после подключения сервера.")
