@@ -28,22 +28,6 @@ var _visual_root: Node3D
 var _wave_phase := 0.0
 var _turn_visual := 0.0
 
-	# Fine naval detailing: deck access hatches, ventilation louvers and armor fasteners.
-	var hatch_mat := _ship_material(Color(0.19, 0.22, 0.22), 0.58, 0.68)
-	var fastener_mat := _ship_material(Color(0.48, 0.49, 0.45), 0.82, 0.42)
-	for hatch_z in [-5.2, -2.8, 4.6, 7.4]:
-		_ship_box(Vector3(0.82, 0.045, 0.62), Vector3(0.0, 1.105, hatch_z), hatch_mat)
-		for side in [-1.0, 1.0]:
-			for bolt_index in range(4):
-				_ship_cylinder(0.025, 0.025, Vector3(side * 0.34, 1.14, hatch_z - 0.22 + float(bolt_index) * 0.145), Vector3.ZERO, fastener_mat, 6)
-	for side in [-1.0, 1.0]:
-		# Louver banks and pipe runs along the superstructure.
-		for louver_index in range(5):
-			_ship_box(Vector3(0.42, 0.035, 0.075), Vector3(side * 1.32, 2.15 + float(louver_index) * 0.10, 0.55), dark)
-		_ship_cylinder(0.045, 2.4, Vector3(side * 1.76, 1.55, -1.2), Vector3(PI / 2.0, 0, 0), steel, 8)
-		# Armored turret-roof periscopes and hatch handles.
-		_ship_box(Vector3(0.16, 0.12, 0.12), Vector3(side * 0.42, 2.05, -5.1), glass)
-		_ship_box(Vector3(0.34, 0.045, 0.055), Vector3(side * 0.42, 2.19, -5.1), fastener_mat)
 func _ready() -> void:
 	add_to_group("combat_vehicles")
 	add_to_group("naval_vehicles")
