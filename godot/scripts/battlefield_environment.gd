@@ -70,8 +70,8 @@ func _add_roads() -> void:
 	]
 	for segment in segments:
 		_box(self, segment[2], segment[0], _materials["road"], segment[1])
-	for x in [-49.0, -25.0, 23.0, 47.0]:
-		_box(self, Vector3(1.2, 0.055, 5.8), Vector3(x, 0.06, 12.0), _materials["concrete"], 0.0)
+	for road_x: float in [-49.0, -25.0, 23.0, 47.0]:
+		_box(self, Vector3(1.2, 0.055, 5.8), Vector3(road_x, 0.06, 12.0), _materials["concrete"], 0.0)
 
 func _add_ruins() -> void:
 	var sites := [Vector3(-55.0, 0.0, -43.0), Vector3(55.0, 0.0, -42.0), Vector3(-58.0, 0.0, 48.0), Vector3(58.0, 0.0, 47.0)]
