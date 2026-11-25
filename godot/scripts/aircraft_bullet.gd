@@ -21,11 +21,11 @@ func _physics_process(delta: float) -> void:
 	var finish := start + direction.normalized() * speed * delta
 	var query := PhysicsRayQueryParameters3D.create(start, finish)
 	query.collide_with_areas = false
-	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
 	if not hit.is_empty():
-		var target := hit.collider
-		if target and target.has_method("apply_damage"):
-			target.apply_damage(damage, team, hit.position)
+		var target: Node = hit.get("collider") as Node
+		if is_instance_valid(target) and target.has_method("apply_damage"):
+			target.apply_damage(damage, team, hit.get("position", finish))
 		queue_free()
 	else:
 		global_position = finish
