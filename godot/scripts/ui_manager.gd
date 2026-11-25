@@ -171,11 +171,7 @@ func _open_page(page: String) -> void:
 		child.queue_free()
 	match page:
 		"Главное меню":
-			_add_heading("КОМАНДОВАНИЕ")
-			_add_text("WAR BATTLE MOBILE — ранний прототип объединённых боёв. Выберите раздел или вернитесь в сражение.")
-			_add_action("ПРОДОЛЖИТЬ БОЙ", _hide_menu)
-			_add_action("ПЕРЕЗАПУСТИТЬ БОЙ", _restart_match)
-			_add_text("Текущий режим: локальная тестовая арена с ботами. Полноценный сетевой сервис ещё не подключён.")
+			_build_main_menu_page()
 		"Ангар":
 			_build_hangar_page()
 		"Профиль":
@@ -221,6 +217,22 @@ func _open_page(page: String) -> void:
 			_build_events_page()
 		"Боевой пропуск":
 			_build_season_page()
+
+func _build_main_menu_page() -> void:
+	_add_heading("ЦЕНТР КОМАНДОВАНИЯ")
+	_add_text("WAR BATTLE MOBILE")
+	_add_text("Объединённые бои бронетехники, авиации и флота. Выберите действие или настройте свою технику.")
+	if is_instance_valid(game_manager):
+		var profile = game_manager.profile
+		_add_text("УРОВЕНЬ ПРОФИЛЯ: %d  •  БОЁВ: %d  •  ПОБЕД: %d" % [profile.account_level, profile.total_battles, profile.total_wins])
+	else:
+		_add_text("Профиль загружается…")
+	_add_action("ПРОДОЛЖИТЬ СРАЖЕНИЕ", _hide_menu)
+	_add_action("ОТКРЫТЬ АНГАР", _open_page.bind("Ангар"))
+	_add_action("ПРОФИЛЬ И ПРОГРЕСС", _open_page.bind("Профиль"))
+	_add_action("НАСТРОЙКИ И ГРАФИКА", _open_page.bind("Настройки"))
+	_add_action("ПЕРЕЗАПУСТИТЬ ТЕСТОВЫЙ БОЙ", _restart_match)
+	_add_text("СТАТУС СБОРКИ: игровой прототип. Онлайн-серверы, матчмейкинг и сетевые социальные функции пока не подключены.")
 
 func _add_heading(value: String) -> void:
 	var label := Label.new()
