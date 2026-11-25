@@ -31,19 +31,25 @@ func _process(delta: float) -> void:
 				cloud.position.x = -110.0
 
 func _create_cloud_layer() -> void:
-	for i in range(12):
+	# Broad layered cloud banks instead of isolated shiny spheres.
+	for i in range(10):
 		var cloud := Node3D.new()
-		cloud.position = Vector3(randf_range(-100.0, 100.0), randf_range(38.0, 55.0), randf_range(-90.0, 90.0))
-		for j in range(4):
+		cloud.position = Vector3(randf_range(-110.0, 110.0), randf_range(42.0, 58.0), randf_range(-105.0, 105.0))
+		cloud.scale = Vector3(randf_range(1.0, 1.45), 1.0, randf_range(0.9, 1.35))
+		var puff_count := randi_range(7, 10)
+		for j in range(puff_count):
 			var puff := MeshInstance3D.new()
 			var mesh := SphereMesh.new()
-			mesh.radius = randf_range(3.0, 7.0)
-			mesh.height = mesh.radius * 0.55
+			mesh.radius = randf_range(4.5, 8.5)
+			mesh.height = mesh.radius * randf_range(0.42, 0.62)
+			mesh.radial_segments = 20
+			mesh.rings = 12
 			puff.mesh = mesh
-			puff.position = Vector3(randf_range(-5.0, 5.0), randf_range(-1.0, 1.0), randf_range(-4.0, 4.0))
+			puff.position = Vector3(randf_range(-8.0, 8.0), randf_range(-1.1, 1.1), randf_range(-6.5, 6.5))
 			var mat := StandardMaterial3D.new()
-			mat.albedo_color = Color(0.72, 0.76, 0.78, 0.72)
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = Color(0.78, 0.81, 0.82) if i % 3 == 0 else Color(0.68, 0.73, 0.76)
+			mat.roughness = 1.0
+			mat.metallic = 0.0
 			puff.material_override = mat
 			cloud.add_child(puff)
 		add_child(cloud)
