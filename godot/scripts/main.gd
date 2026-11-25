@@ -64,7 +64,8 @@ func _process(delta: float) -> void:
 	if weather_cycle_timer <= 0.0 and is_instance_valid(weather_manager):
 		weather_cycle_timer = 75.0
 		weather_cycle_index = (weather_cycle_index + 1) % 4
-		weather_manager.set_weather(weather_cycle_index as WbmWeatherManager.Weather, [0.0, 0.42, 0.62, 0.78][weather_cycle_index])
+		var weather_states := [WbmWeatherManager.Weather.CLEAR, WbmWeatherManager.Weather.OVERCAST, WbmWeatherManager.Weather.RAIN, WbmWeatherManager.Weather.FOG]
+		weather_manager.set_weather(weather_states[weather_cycle_index], [0.0, 0.42, 0.62, 0.78][weather_cycle_index])
 	if match_time <= 0.0 or team_score[0] >= 1000 or team_score[1] >= 1000:
 		match_over = true
 		var won: bool = int(team_score[0]) > int(team_score[1])
