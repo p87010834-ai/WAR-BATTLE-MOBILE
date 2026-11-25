@@ -99,7 +99,8 @@ func _process(delta: float) -> void:
 			var plane := active_vehicle as WbmAircraft
 			health_label.text = "САМОЛЁТ  %d%%  |  СКОРОСТЬ %d  |  ВЫСОТА %d м" % [health_percent, roundi(plane.speed), roundi(plane.global_position.y)]
 		elif active_vehicle is WbmShip:
-			health_label.text = "КОРАБЛЬ  %d%%" % health_percent
+			var vessel := active_vehicle as WbmShip
+			health_label.text = "КОРАБЛЬ  %d%%  |  СКОРОСТЬ %.1f  |  %s" % [health_percent, vessel.current_speed, vessel.module_status]
 		else:
 			health_label.text = "ТАНК  %d%%  |  %s" % [health_percent, (active_vehicle as WbmTank).module_status]
 	if is_instance_valid(player):
