@@ -18,6 +18,11 @@ var is_player := false
 var target: Node3D
 var _visual_material: StandardMaterial3D
 var stall_warning := false
+var engine_health := 100.0
+var control_health := 100.0
+var oil_leak_time := 0.0
+var module_status := "СИСТЕМЫ ИСПРАВНЫ"
+var _crash_emitted := false
 
 func _ready() -> void:
 	add_to_group("combat_vehicles")
@@ -30,11 +35,24 @@ func _physics_process(delta: float) -> void:
 		_player_flight(delta)
 	else:
 		_ai_flight(delta)
-	velocity += Vector3.DOWN * 9.81 * delta * (0.15 if speed > 18.0 else 1.0)
+	if engine_health < 55.0 and engine_health > 0.0:
+		oil_leak_time += delta
+		if oil_leak_time > 10.0:
+			engine_health = maxf(0.0, engine_health - delta * 1.8)
+	if engine_health <= 0.0:
+		speed = move_toward(speed, 16.0, throttle_acceleration * delta)
+		velocity.y -= 7.5 * delta
+	velocity += Vector3.DOWN * 9.81 * delta * (0.15 if speed > 18.0 and engine_health > 0.0 else 1.0)
 	move_and_slide()
 	if global_position.y < 3.0:
 		global_position.y = 3.0
 		velocity.y = maxf(0.0, velocity.y)
+		if engine_health <= 0.0 and not _crash_emitted:
+			_crash_emitted = true
+			health = 0.0
+			destroyed.emit(self)
+			queue_free()
+			return
 	if global_position.y > 150.0:
 		global_position.y = 150.0
 		velocity.y = minf(0.0, velocity.y)
@@ -48,7 +66,7 @@ func _ai_flight(delta: float) -> void:
 	var to_target := target.global_position - global_position
 	var aim_point := target.global_position + Vector3.UP * 1.5
 	speed = move_toward(speed, max_speed * 0.72, throttle_acceleration * delta)
-	var control_authority := clampf(speed / 45.0, 0.35, 1.0)
+	var control_authority := clampf(speed / 45.0, 0.2, 1.0) * clampf(control_health / 100.0, 0.25, 1.0)
 	if to_target.length() > 0.5:
 		var desired_transform := global_transform.looking_at(aim_point, Vector3.UP)
 		global_transform = global_transform.interpolate_with(desired_transform, clampf(turn_rate * control_authority * delta, 0.0, 1.0))
@@ -77,7 +95,7 @@ func _player_flight(delta: float) -> void:
 	throttle = clampf(throttle + Input.get_axis("air_throttle_down", "air_throttle_up") * delta * 0.35, 0.12, 1.0)
 	speed = move_toward(speed, max_speed * throttle, throttle_acceleration * delta)
 	stall_warning = speed < 22.0
-	var control_authority := clampf(speed / 45.0, 0.35, 1.0)
+	var control_authority := clampf(speed / 45.0, 0.2, 1.0) * clampf(control_health / 100.0, 0.25, 1.0)
 	rotate_object_local(Vector3.FORWARD, roll * turn_rate * control_authority * delta)
 	rotate_object_local(Vector3.RIGHT, pitch * turn_rate * control_authority * delta)
 	rotate_y(yaw * turn_rate * 0.65 * control_authority * delta)
@@ -119,6 +137,18 @@ func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.Z
 		return
 	if impact != Vector3.ZERO and health > amount:
 		_add_aircraft_scorch(impact)
+	var local_hit := to_local(impact) if impact != Vector3.ZERO else Vector3.ZERO
+	if absf(local_hit.x) > 1.65:
+		engine_health = maxf(0.0, engine_health - amount * 1.35)
+		if engine_health < 55.0:
+			module_status = "УТЕЧКА МАСЛА / ДВИГАТЕЛЬ"
+		else:
+			module_status = "ДВИГАТЕЛЬ ПОВРЕЖДЁН"
+	elif local_hit.z > 1.5:
+		control_health = maxf(0.0, control_health - amount * 1.5)
+		module_status = "РУЛЕВОЕ УПРАВЛЕНИЕ %d%%" % roundi(control_health)
+	else:
+		module_status = "ФЮЗЕЛЯЖ ПОВРЕЖДЁН"
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
 		destroyed.emit(self)
