@@ -19,6 +19,7 @@ var muzzle: Marker3D
 var hull_material: StandardMaterial3D
 
 func _ready() -> void:
+	add_to_group("combat_vehicles")
 	health = max_health
 	_build_vehicle()
 	if not is_player:
@@ -102,7 +103,9 @@ func _player_drive(delta: float) -> void:
 		fire_shell()
 
 func _bot_drive(delta: float) -> void:
-	if not is_instance_valid(target) or target.health <= 0.0:
+	if not is_instance_valid(target) or target.health <= 0.0 or target.team == team:
+		target = _find_nearest_opponent()
+	if not is_instance_valid(target):
 		velocity = Vector3.ZERO
 		return
 	var to_target := target.global_position - global_position
@@ -119,6 +122,21 @@ func _bot_drive(delta: float) -> void:
 	if distance < 42.0 and ai_fire_timer <= 0.0:
 		fire_shell()
 		ai_fire_timer = randf_range(1.8, 3.0)
+
+func _find_nearest_opponent() -> WbmTank:
+	var nearest: WbmTank
+	var nearest_distance := INF
+	for candidate in get_tree().get_nodes_in_group("combat_vehicles"):
+		if candidate == self or not candidate is WbmTank:
+			continue
+		var vehicle := candidate as WbmTank
+		if vehicle.team == team or vehicle.health <= 0.0:
+			continue
+		var distance := global_position.distance_squared_to(vehicle.global_position)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest = vehicle
+	return nearest
 
 func fire_shell() -> void:
 	if reload_left > 0.0:
