@@ -12,7 +12,7 @@ signal destroyed(tank: WbmTank)
 
 var health := 100.0
 var reload_left := 0.0
-var target: WbmTank
+var target: Node3D
 var ai_fire_timer := 0.0
 var turret: Node3D
 var muzzle: Marker3D
@@ -165,7 +165,7 @@ func _player_drive(delta: float) -> void:
 		fire_shell()
 
 func _bot_drive(delta: float) -> void:
-	if not is_instance_valid(target) or target.health <= 0.0 or target.team == team:
+	if not is_instance_valid(target) or float(target.get("health")) <= 0.0 or int(target.get("team")) == team:
 		target = _find_nearest_opponent()
 	if not is_instance_valid(target):
 		velocity = Vector3.ZERO
@@ -186,14 +186,14 @@ func _bot_drive(delta: float) -> void:
 		fire_shell()
 		ai_fire_timer = randf_range(1.8, 3.0)
 
-func _find_nearest_opponent() -> WbmTank:
-	var nearest: WbmTank
+func _find_nearest_opponent() -> Node3D:
+	var nearest: Node3D
 	var nearest_distance := INF
 	for candidate in get_tree().get_nodes_in_group("combat_vehicles"):
-		if candidate == self or not candidate is WbmTank:
+		if candidate == self or not candidate is Node3D or not candidate.has_method("apply_damage"):
 			continue
-		var vehicle := candidate as WbmTank
-		if vehicle.team == team or vehicle.health <= 0.0:
+		var vehicle := candidate as Node3D
+		if int(vehicle.get("team")) == team or float(vehicle.get("health")) <= 0.0:
 			continue
 		var distance := global_position.distance_squared_to(vehicle.global_position)
 		if distance < nearest_distance:
