@@ -167,7 +167,14 @@ func _build_world() -> void:
 	env.fog_density = 0.0018
 	env.glow_enabled = true
 	env.glow_intensity = 0.28
-	env.glow_strength = 0.55
+	env.glow_strength = 0.38
+	env.ssao_enabled = true
+	env.ssao_radius = 1.6
+	env.ssao_intensity = 1.35
+	env.ssao_power = 1.25
+	env.ssil_enabled = true
+	env.ssil_radius = 3.0
+	env.ssil_intensity = 0.55
 	world_env.environment = env
 	add_child(world_env)
 
@@ -178,6 +185,9 @@ func _build_world() -> void:
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.directional_shadow_max_distance = 115.0
+	sun.directional_shadow_fade_start = 0.82
+	sun.shadow_bias = 0.035
+	sun.shadow_normal_bias = 1.1
 	add_child(sun)
 
 	var ground := StaticBody3D.new()
