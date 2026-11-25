@@ -19,3 +19,9 @@ static func get_by_id(vehicle_id: String) -> Dictionary:
 		if str(item.id) == vehicle_id:
 			return item
 	return {}
+
+static func get_all() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for item in VEHICLES:
+		result.append(item)
+	return result
