@@ -27,6 +27,8 @@ var score := 0
 var team_score := [0, 0]
 var score_remainder := [0.0, 0.0]
 var match_time := 600.0
+var weather_cycle_timer := 75.0
+var weather_cycle_index := 0
 var match_over := false
 var camera_pivot: Node3D
 var player_spawn := Vector3(0, 0.15, 28)
@@ -58,6 +60,11 @@ func _process(delta: float) -> void:
 	if match_over:
 		return
 	match_time = maxf(0.0, match_time - delta)
+	weather_cycle_timer -= delta
+	if weather_cycle_timer <= 0.0 and is_instance_valid(weather_manager):
+		weather_cycle_timer = 75.0
+		weather_cycle_index = (weather_cycle_index + 1) % 4
+		weather_manager.set_weather(weather_cycle_index as WbmWeatherManager.Weather, [0.0, 0.42, 0.62, 0.78][weather_cycle_index])
 	if match_time <= 0.0 or team_score[0] >= 1000 or team_score[1] >= 1000:
 		match_over = true
 		var won: bool = int(team_score[0]) > int(team_score[1])
