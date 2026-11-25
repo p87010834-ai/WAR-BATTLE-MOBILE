@@ -259,6 +259,7 @@ func _build_aircraft() -> void:
 		_air_box(Vector3(0.32, 0.14, 0.9), Vector3(side * 4.65, -0.18, 0.35), dark)
 		_air_box(Vector3(0.12, 0.16, 0.42), Vector3(side * 5.25, -0.05, -0.34), glass)
 
+	var marking := _air_material(Color(0.95, 0.48, 0.12) if team == 0 else Color(0.78, 0.22, 0.13), 0.22, 0.62)
 	# Fixed landing gear assemblies with oleo struts, hubs, brake discs and doors.
 	var tyre_mat := _air_material(Color(0.025, 0.03, 0.032), 0.0, 0.96)
 	var hub_mat := _air_material(Color(0.24, 0.27, 0.29), 0.82, 0.38)
@@ -286,7 +287,6 @@ func _build_aircraft() -> void:
 	_air_cylinder(0.035, 0.9, Vector3(0, 0.02, -3.25), Vector3(PI / 2.0, 0, 0), steel_air(), 8)
 	_air_box(Vector3(0.14, 0.08, 0.65), Vector3(0, -0.15, 1.15), dark)
 	# Original squadron bands and maintenance panels.
-	var marking := _air_material(Color(0.95, 0.48, 0.12) if team == 0 else Color(0.78, 0.22, 0.13), 0.22, 0.62)
 	for side in [-1.0, 1.0]:
 		_air_box(Vector3(0.72, 0.035, 0.28), Vector3(side * 3.9, -0.005, -0.3), marking)
 		_air_box(Vector3(0.36, 0.035, 0.22), Vector3(side * 4.65, -0.005, -0.3), dark)
