@@ -33,6 +33,7 @@ var enemy_spawns := [Vector3(-26, 0.15, -24), Vector3(0, 0.15, -30), Vector3(26,
 var ally_spawns := [Vector3(-9, 0.15, 23), Vector3(9, 0.15, 23)]
 
 func _ready() -> void:
+	add_to_group("game_manager")
 	_build_world()
 	profile.load_profile()
 	settings.load_settings()
