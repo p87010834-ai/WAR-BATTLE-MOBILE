@@ -109,9 +109,7 @@ func _player_drive(delta: float) -> void:
 	velocity.x = forward.x * throttle * effective_speed
 	velocity.z = forward.z * throttle * effective_speed
 	velocity.y -= 24.0 * delta
-	if Input.is_action_pressed("repair"):
-		return
-	if Input.is_action_just_pressed("fire") and gun_disabled_left <= 0.0:
+	if not Input.is_action_pressed("repair") and Input.is_action_just_pressed("fire") and gun_disabled_left <= 0.0:
 		fire_shell()
 
 func _bot_drive(delta: float) -> void:
