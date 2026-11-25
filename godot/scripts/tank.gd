@@ -90,6 +90,16 @@ func _build_vehicle() -> void:
 	for side in [-1.0, 1.0]:
 		_add_cylinder(self, 0.13, 0.12, Vector3(side * 0.92, 1.2, -2.18), Vector3(PI / 2.0, 0, 0), lamp_mat, 12)
 	_add_box(self, Vector3(0.18, 0.18, 1.0), Vector3(0, 1.55, 2.2), steel)
+	# Original irregular camouflage panels and team identification.
+	var camo := _make_material(Color(0.12, 0.17, 0.12) if team == 0 else Color(0.22, 0.095, 0.075), 0.12, 0.92)
+	var camo_light := _make_material(Color(0.34, 0.31, 0.20) if team == 0 else Color(0.48, 0.27, 0.20), 0.08, 0.95)
+	for patch_index in range(7):
+		var px := [-0.92, 0.62, -0.35, 0.88, -0.7, 0.25, 0.0][patch_index]
+		var pz := [-1.25, -0.82, 0.12, 0.75, 1.25, 1.05, -0.25][patch_index]
+		var patch_mat: Material = camo if patch_index % 2 == 0 else camo_light
+		_add_box(self, Vector3(0.48, 0.025, 0.72), Vector3(px, 1.515, pz), patch_mat)
+	_add_box(self, Vector3(0.08, 0.035, 0.72), Vector3(-1.505, 1.55, -0.15), camo_light)
+	_add_box(self, Vector3(0.08, 0.035, 0.72), Vector3(1.505, 1.55, -0.15), camo_light)
 
 func _make_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
@@ -249,10 +259,24 @@ func _apply_module_damage(impact_position: Vector3) -> void:
 	if is_instance_valid(hull_material):
 		hull_material.albedo_color = Color(0.38, 0.22, 0.12) if (engine_damaged or track_damaged) else Color(0.48, 0.34, 0.16)
 
+func _add_impact_scorch(world_position: Vector3) -> void:
+	var mark := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.24
+	mesh.height = 0.07
+	mark.mesh = mesh
+	var mat := _make_material(Color(0.045, 0.035, 0.028), 0.0, 1.0)
+	mark.material_override = mat
+	mark.position = to_local(world_position)
+	mark.scale = Vector3(1.0, 0.18, 1.35)
+	add_child(mark)
+
 func apply_damage(amount: float, attacker_team: int, impact_position: Vector3 = Vector3.ZERO) -> void:
 	if attacker_team == team or health <= 0.0:
 		return
 	_apply_module_damage(impact_position)
+	if impact_position != Vector3.ZERO and health > amount:
+		_add_impact_scorch(impact_position)
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
 		destroyed.emit(self)
