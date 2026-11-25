@@ -8,6 +8,7 @@ var repair_button: Button
 var flight_buttons: Array[Button] = []
 
 func _ready() -> void:
+	add_to_group("game_touch_controls")
 	game_manager = get_tree().get_first_node_in_group("game_manager")
 	_build_joystick()
 	_build_fire_button()
