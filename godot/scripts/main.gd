@@ -227,13 +227,13 @@ func _create_tank(at: Vector3, faction: int, controlled: bool) -> WbmTank:
 
 func _get_alive_tanks() -> Array[WbmTank]:
 	var result: Array[WbmTank] = []
-	if is_instance_valid(player):
+	if is_instance_valid(player) and player.health > 0.0:
 		result.append(player)
 	for tank in allies:
-		if is_instance_valid(tank):
+		if is_instance_valid(tank) and tank.health > 0.0:
 			result.append(tank)
 	for tank in enemies:
-		if is_instance_valid(tank):
+		if is_instance_valid(tank) and tank.health > 0.0:
 			result.append(tank)
 	return result
 
