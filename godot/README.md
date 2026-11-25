@@ -10,6 +10,7 @@ Development is isolated on branch `godot-migration`; the legacy Unity project an
 - Stationary field repair for the player (E / mobile button).
 - Swept ray collision for fast tank shells.
 - Virtual joystick, mobile fire and repair controls.
+- Responsive combat HUD anchors: top status panel stretches with screen width and control hints stay attached to the bottom edge.
 - Aircraft prototype: procedural low-poly test airframe, pitch/roll/yaw, throttle and ray-tested cannon projectile.
 - Naval prototype: procedural test ship, movement, steering, health and weapon placeholder.
 - Weather prototype: moving procedural cloud clusters and fog controls.
