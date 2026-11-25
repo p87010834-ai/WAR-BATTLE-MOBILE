@@ -96,6 +96,10 @@ func _build_vehicle() -> void:
 			_road_wheels.append(road_wheel)
 			var hub := _add_cylinder(self, 0.17, 0.215, Vector3(side * 1.70, 0.66, wheel_z), Vector3(0, 0, PI / 2.0), steel, 12)
 			_road_wheels.append(hub)
+			for hub_bolt_index in range(6):
+				var hub_angle: float = TAU * float(hub_bolt_index) / 6.0
+				var hub_bolt_at := Vector3(side * 1.825, 0.66 + sin(hub_angle) * 0.125, wheel_z + cos(hub_angle) * 0.125)
+				_add_cylinder(self, 0.027, 0.025, hub_bolt_at, Vector3(0, 0, PI / 2.0), dark, 6)
 		_add_cylinder(self, 0.43, 0.2, Vector3(side * 1.69, 0.66, -2.12), Vector3(0, 0, PI / 2.0), steel, 16)
 		_add_cylinder(self, 0.43, 0.2, Vector3(side * 1.69, 0.66, 2.12), Vector3(0, 0, PI / 2.0), steel, 16)
 
