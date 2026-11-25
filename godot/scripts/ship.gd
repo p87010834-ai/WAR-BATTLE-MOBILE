@@ -99,10 +99,24 @@ func fire_guns() -> void:
 			var damage := 26.0 * clampf(weapons_health / 100.0, 0.25, 1.0)
 			target.apply_damage(damage, team, target.global_position)
 
+func _add_ship_scorch(world_position: Vector3) -> void:
+	var mark := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.42
+	mesh.height = 0.09
+	mark.mesh = mesh
+	var mat := _ship_material(Color(0.045, 0.035, 0.03), 0.0, 1.0)
+	mark.material_override = mat
+	mark.position = to_local(world_position)
+	mark.scale = Vector3(1.5, 0.16, 0.85)
+	add_child(mark)
+
 func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.ZERO) -> void:
 	if attacker_team == team or health <= 0.0:
 		return
 	var damage := maxf(0.0, amount)
+	if impact != Vector3.ZERO and health > damage:
+		_add_ship_scorch(impact)
 	health = maxf(0.0, health - damage)
 	var local_hit := to_local(impact) if impact != Vector3.ZERO else Vector3.ZERO
 	if absf(local_hit.x) > 1.8:
@@ -202,6 +216,14 @@ func _build_ship() -> void:
 
 	_ship_box(Vector3(0.75, 0.5, 1.2), Vector3(0, 1.35, 8.0), dark)
 	_ship_cylinder(0.28, 0.85, Vector3(0, 2.0, 7.4), Vector3.ZERO, steel, 12)
+	# Hull waterline stripe and original fleet identification.
+	var waterline := _ship_material(Color(0.075, 0.12, 0.14), 0.28, 0.82)
+	_ship_box(Vector3(4.42, 0.18, 12.7), Vector3(0, -0.68, 0.2), waterline)
+	var fleet_mark := _ship_material(Color(0.95, 0.48, 0.12) if team == 0 else Color(0.78, 0.22, 0.13), 0.12, 0.78)
+	_ship_box(Vector3(0.12, 0.12, 1.1), Vector3(-2.03, 1.13, 0.2), fleet_mark)
+	_ship_box(Vector3(0.12, 0.12, 1.1), Vector3(2.03, 1.13, 0.2), fleet_mark)
+	for deck_line in range(5):
+		_ship_box(Vector3(2.8, 0.018, 0.035), Vector3(0, 1.095, -4.1 + deck_line * 1.65), steel)
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(5.0, 2.0, 18.0)
