@@ -21,6 +21,7 @@ var steering_health := 100.0
 var weapons_health := 100.0
 var module_status := "ВСЕ СИСТЕМЫ ИСПРАВНЫ"
 var _destroyed_emitted := false
+var repair_tick := 0.0
 var _hull_material: StandardMaterial3D
 
 func _ready() -> void:
@@ -37,6 +38,13 @@ func _physics_process(delta: float) -> void:
 
 	var throttle := 0.0
 	if is_player:
+		if Input.is_action_pressed("ship_repair"):
+			repair_tick += delta
+			if repair_tick >= 1.0:
+				repair_tick = 0.0
+				repair_modules(4.0)
+		else:
+			repair_tick = 0.0
 		var steering := Input.get_action_strength("ship_turn_left") - Input.get_action_strength("ship_turn_right")
 		throttle = Input.get_action_strength("ship_forward") - Input.get_action_strength("ship_reverse")
 		var steering_factor := clampf(steering_health / 100.0, 0.0, 1.0)
