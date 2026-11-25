@@ -74,6 +74,16 @@ jobs:
             godot --headless --path godot --check-only --script "res://${script#godot/}"
           done < <(find godot/scripts -type f -name "*.gd" | sort)
 
+      - name: Verify vehicle model scripts are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          for script in tank.gd aircraft.gd ship.gd; do
+            test -s "godot/scripts/$script"
+            grep -q "func _build_" "godot/scripts/$script"
+            echo "Vehicle model script present: $script"
+          done
+
       - name: Run headless smoke test
         shell: bash
         run: |
