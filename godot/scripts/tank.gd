@@ -26,24 +26,6 @@ var repair_cooldown := 0.0
 var _road_wheels: Array[MeshInstance3D] = []
 var _suspension_phase := 0.0
 
-	# Fine-scale exterior pass: hatch fasteners, weld beads, vision blocks and tow eyes.
-	var detail_steel := _make_material(Color(0.31, 0.33, 0.30), 0.78, 0.48)
-	var optic := _make_material(Color(0.025, 0.095, 0.12), 0.72, 0.16)
-	for side in [-1.0, 1.0]:
-		for hatch_bolt in range(8):
-			var angle: float = TAU * float(hatch_bolt) / 8.0
-			_add_cylinder(turret, 0.022, 0.026, Vector3(0.55 + cos(angle) * 0.30, 0.91, 0.42 + sin(angle) * 0.30), Vector3.ZERO, detail_steel, 6)
-		for vision_index in range(3):
-			_add_box(turret, Vector3(0.12, 0.045, 0.075), Vector3(side * (0.22 + float(vision_index) * 0.12), 0.91, 0.82), optic)
-		# Hull-side maintenance covers and individual fasteners.
-		_add_box(self, Vector3(0.035, 0.38, 0.52), Vector3(side * 1.53, 1.03, 0.55), detail_steel)
-		for fastener in range(4):
-			_add_cylinder(self, 0.025, 0.03, Vector3(side * 1.56, 0.88 + float(fastener % 2) * 0.22, 0.34 + float(fastener / 2) * 0.30), Vector3(0, 0, PI / 2.0), dark, 6)
-	# Headlamp guards and rear towing eyes.
-	for side in [-1.0, 1.0]:
-		_add_box(self, Vector3(0.34, 0.055, 0.06), Vector3(side * 0.92, 1.36, -2.25), steel)
-		_add_cylinder(self, 0.12, 0.045, Vector3(side * 0.92, 1.22, -2.25), Vector3(PI / 2.0, 0, 0), detail_steel, 16)
-		_add_cylinder(self, 0.055, 0.05, Vector3(side * 1.18, 0.60, 2.42), Vector3(0, 0, PI / 2.0), detail_steel, 10)
 func _ready() -> void:
 	add_to_group("combat_vehicles")
 	health = max_health
