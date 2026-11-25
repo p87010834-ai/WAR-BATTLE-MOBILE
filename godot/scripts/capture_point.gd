@@ -1,6 +1,8 @@
 extends Node3D
 class_name WbmCapturePoint
 
+signal captured(team: int)
+
 @export var point_name := "АЛЬФА"
 @export var capture_radius := 13.0
 @export var capture_speed := 24.0
@@ -67,6 +69,7 @@ func update_control(tanks: Array[WbmTank], delta: float) -> void:
 		if progress >= 100.0:
 			owner_team = attacking_team
 			progress = 100.0
+			captured.emit(owner_team)
 	_refresh_visual()
 
 func _refresh_visual() -> void:
