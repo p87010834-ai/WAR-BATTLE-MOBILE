@@ -125,6 +125,11 @@ func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.Z
 		queue_free()
 
 func _build_aircraft() -> void:
+	var collision := CollisionShape3D.new()
+	var collision_shape := SphereShape3D.new()
+	collision_shape.radius = 2.35
+	collision.shape = collision_shape
+	add_child(collision)
 	_visual_material = StandardMaterial3D.new()
 	_visual_material.albedo_color = Color(0.24, 0.31, 0.35) if team == 0 else Color(0.42, 0.19, 0.15)
 	_visual_material.metallic = 0.62
