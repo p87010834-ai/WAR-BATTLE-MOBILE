@@ -5,6 +5,7 @@ var active_vehicle: Node3D
 var current_vehicle_mode := "tank"
 var profile := WbmPlayerProfile.new()
 var weather_manager: WbmWeatherManager
+var audio_manager: WbmAudioManager
 var settings := WbmSettingsManager.new()
 var missions := WbmMissionSystem.new()
 var achievements := WbmAchievementSystem.new()
@@ -38,6 +39,9 @@ func _ready() -> void:
 	profile.load_profile()
 	settings.load_settings()
 	settings.apply_audio()
+	audio_manager = WbmAudioManager.new()
+	audio_manager.name = "AudioManager"
+	add_child(audio_manager)
 	season.load()
 	replay_recorder = WbmReplayRecorder.new()
 	replay_recorder.name = "ReplayRecorder"
@@ -136,16 +140,35 @@ func _build_world() -> void:
 	var world_env := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
-	env.sky = Sky.new()
+	var sky := Sky.new()
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color(0.075, 0.16, 0.27)
+	sky_material.sky_horizon_color = Color(0.48, 0.57, 0.62)
+	sky_material.ground_bottom_color = Color(0.075, 0.085, 0.09)
+	sky_material.ground_horizon_color = Color(0.24, 0.29, 0.30)
+	sky_material.sun_angle_max = 18.0
+	sky.sky_material = sky_material
+	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.48, 0.53, 0.58)
-	env.ambient_light_energy = 0.7
+	env.ambient_light_energy = 0.82
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.05
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.48, 0.55, 0.58)
+	env.fog_density = 0.0018
+	env.glow_enabled = true
+	env.glow_intensity = 0.28
+	env.glow_strength = 0.55
 	world_env.environment = env
 	add_child(world_env)
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-48, -32, 0)
 	sun.light_energy = 1.25
+	sun.shadow_enabled = true
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_max_distance = 115.0
 	add_child(sun)
 
 	var ground := StaticBody3D.new()
@@ -153,9 +176,36 @@ func _build_world() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(180, 180)
 	ground_mesh.mesh = plane
-	var ground_mat := StandardMaterial3D.new()
-	ground_mat.albedo_color = Color(0.24, 0.27, 0.22)
-	ground_mat.roughness = 1.0
+	var ground_shader := Shader.new()
+	ground_shader.code = """
+shader_type spatial;
+render_mode diffuse_burley, specular_schlick_ggx;
+float hash21(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+float noise2(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), f.x),
+		mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+void fragment() {
+	vec2 p = WORLD_POSITION.xz * 0.19;
+	float n = noise2(p) * 0.55 + noise2(p * 3.7) * 0.28 + noise2(p * 11.0) * 0.17;
+	vec3 soil = vec3(0.105, 0.125, 0.105);
+	vec3 grass = vec3(0.23, 0.255, 0.19);
+	vec3 dry = vec3(0.29, 0.255, 0.19);
+	vec3 col = mix(soil, grass, smoothstep(0.25, 0.72, n));
+	col = mix(col, dry, smoothstep(0.72, 0.94, n) * 0.32);
+	ALBEDO = col;
+	ROUGHNESS = 0.96;
+}
+"""
+	var ground_mat := ShaderMaterial.new()
+	ground_mat.shader = ground_shader
 	ground_mesh.material_override = ground_mat
 	ground.add_child(ground_mesh)
 	var ground_collision := CollisionShape3D.new()
@@ -172,10 +222,28 @@ func _build_world() -> void:
 	ocean.mesh = ocean_mesh
 	ocean.position = Vector3(0, 0.035, -69)
 	var ocean_material := StandardMaterial3D.new()
-	ocean_material.albedo_color = Color(0.035, 0.16, 0.23)
-	ocean_material.roughness = 0.28
-	ocean_material.metallic = 0.18
-	ocean.material_override = ocean_material
+	var water_shader := Shader.new()
+	water_shader.code = """
+shader_type spatial;
+render_mode cull_back, diffuse_burley, specular_schlick_ggx;
+uniform vec3 deep_color : source_color = vec3(0.012, 0.075, 0.12);
+uniform vec3 shallow_color : source_color = vec3(0.055, 0.23, 0.28);
+void vertex() {
+	float wave_a = sin(VERTEX.x * 0.19 + TIME * 1.25) * 0.13;
+	float wave_b = cos(VERTEX.z * 0.24 - TIME * 0.82) * 0.10;
+	float wave_c = sin((VERTEX.x + VERTEX.z) * 0.11 + TIME * 0.6) * 0.07;
+	VERTEX.y += wave_a + wave_b + wave_c;
+}
+void fragment() {
+	float ripple = sin(UV.x * 145.0 + TIME * 1.8) * cos(UV.y * 105.0 - TIME) * 0.035;
+	ALBEDO = mix(deep_color, shallow_color, clamp(UV.y * 0.55 + 0.28 + ripple, 0.0, 1.0));
+	METALLIC = 0.24;
+	ROUGHNESS = 0.2;
+}
+"""
+	var water_material := ShaderMaterial.new()
+	water_material.shader = water_shader
+	ocean.material_override = water_material
 	add_child(ocean)
 
 	for i in range(22):
@@ -199,6 +267,7 @@ func _build_world() -> void:
 			block.position.x += 28.0
 		add_child(block)
 
+	_add_environment_props()
 	camera_pivot = Node3D.new()
 	camera_pivot.top_level = true
 	add_child(camera_pivot)
@@ -207,6 +276,57 @@ func _build_world() -> void:
 	camera.rotation_degrees = Vector3(24, 0, 0)
 	camera.current = true
 	camera_pivot.add_child(camera)
+
+
+func _add_environment_props() -> void:
+	var rock_materials: Array[StandardMaterial3D] = []
+	for color in [Color(0.20, 0.22, 0.21), Color(0.29, 0.28, 0.24), Color(0.16, 0.19, 0.18)]:
+		var material := StandardMaterial3D.new()
+		material.albedo_color = color
+		material.roughness = 0.98
+		rock_materials.append(material)
+	var bark := StandardMaterial3D.new()
+	bark.albedo_color = Color(0.19, 0.13, 0.085)
+	bark.roughness = 1.0
+	var pine := StandardMaterial3D.new()
+	pine.albedo_color = Color(0.075, 0.13, 0.095)
+	pine.roughness = 1.0
+	for i in range(26):
+		var rock := MeshInstance3D.new()
+		var mesh := SphereMesh.new()
+		mesh.radius = randf_range(0.7, 2.0)
+		mesh.height = mesh.radius * randf_range(0.45, 0.9)
+		rock.mesh = mesh
+		rock.material_override = rock_materials[i % rock_materials.size()]
+		rock.position = Vector3(randf_range(-78.0, 78.0), mesh.height * 0.25, randf_range(-76.0, 68.0))
+		rock.scale = Vector3(randf_range(0.8, 1.5), 1.0, randf_range(0.8, 1.4))
+		if Vector2(rock.position.x, rock.position.z - 18.0).length() > 24.0:
+			add_child(rock)
+	for i in range(18):
+		var tree := Node3D.new()
+		tree.position = Vector3(randf_range(-82.0, 82.0), 0.0, randf_range(-76.0, 62.0))
+		if Vector2(tree.position.x, tree.position.z - 18.0).length() < 34.0:
+			continue
+		var trunk := MeshInstance3D.new()
+		var trunk_mesh := CylinderMesh.new()
+		trunk_mesh.top_radius = 0.16
+		trunk_mesh.bottom_radius = 0.28
+		trunk_mesh.height = randf_range(2.5, 4.0)
+		trunk.mesh = trunk_mesh
+		trunk.position.y = trunk_mesh.height * 0.5
+		trunk.material_override = bark
+		tree.add_child(trunk)
+		for tier in range(3):
+			var crown := MeshInstance3D.new()
+			var crown_mesh := CylinderMesh.new()
+			crown_mesh.top_radius = 0.0
+			crown_mesh.bottom_radius = 1.7 - tier * 0.34
+			crown_mesh.height = 2.6
+			crown.mesh = crown_mesh
+			crown.position.y = 2.1 + tier * 1.45
+			crown.material_override = pine
+			tree.add_child(crown)
+		add_child(tree)
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
