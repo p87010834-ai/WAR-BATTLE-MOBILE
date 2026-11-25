@@ -534,7 +534,8 @@ func _on_capture_point_captured(team: int) -> void:
 		missions.add_progress("capture_3")
 
 func _on_tank_destroyed(tank: WbmTank) -> void:
-	if tank.is_player:
+	# The player's tank remains the persistent player vehicle while another vehicle is controlled.
+	if tank == player:
 		_respawn_player()
 	elif tank.team == 1:
 		enemies.erase(tank)
