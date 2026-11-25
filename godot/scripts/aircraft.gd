@@ -28,6 +28,9 @@ func _ready() -> void:
 	add_to_group("combat_vehicles")
 	health = max_health
 	_build_aircraft()
+	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+	if audio:
+		audio.attach_engine(self, "aircraft")
 
 func _physics_process(delta: float) -> void:
 	fire_cooldown = maxf(0.0, fire_cooldown - delta)
@@ -131,6 +134,9 @@ func fire_weapon() -> void:
 	bolt.set_meta("direction", -global_transform.basis.z)
 	get_tree().current_scene.add_child(bolt)
 	bolt.global_position = global_position - global_transform.basis.z * 4.0
+	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+	if audio:
+		audio.play_event("gun", bolt.global_position, -8.0)
 
 func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.ZERO) -> void:
 	if attacker_team == team or health <= 0.0:
@@ -151,6 +157,9 @@ func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.Z
 		module_status = "ФЮЗЕЛЯЖ ПОВРЕЖДЁН"
 	health = maxf(0.0, health - amount)
 	if health <= 0.0:
+		var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+		if audio:
+			audio.play_event("explosion", global_position, 0.0)
 		destroyed.emit(self)
 		queue_free()
 
