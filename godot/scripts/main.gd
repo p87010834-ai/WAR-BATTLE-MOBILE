@@ -281,6 +281,9 @@ void fragment() {
 		add_child(block)
 
 	_add_environment_props()
+	var battlefield := WbmBattlefieldEnvironment.new()
+	battlefield.name = "BattlefieldEnvironment"
+	add_child(battlefield)
 	camera_pivot = Node3D.new()
 	camera_pivot.top_level = true
 	add_child(camera_pivot)
