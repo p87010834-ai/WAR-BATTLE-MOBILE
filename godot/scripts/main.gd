@@ -375,7 +375,10 @@ func _respawn_player() -> void:
 	await get_tree().create_timer(5.0).timeout
 	if not match_over:
 		player = _create_tank(player_spawn, 0, true)
+		active_vehicle = player
+		current_vehicle_mode = "tank"
 		camera_pivot.global_position = player.global_position
+		_update_vehicle_hud()
 
 func _respawn_bot(faction: int) -> void:
 	await get_tree().create_timer(7.0).timeout
