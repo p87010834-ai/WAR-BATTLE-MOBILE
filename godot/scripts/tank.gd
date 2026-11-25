@@ -145,8 +145,7 @@ func fire_shell() -> void:
 	get_tree().current_scene.add_child(shell)
 	shell.global_position = muzzle.global_position
 	var direction := -turret.global_transform.basis.z
-	var owner_team := team
-	shell.set_meta("team", owner_team)
+	shell.set_meta("team", team)
 	shell.set_meta("direction", direction)
 	shell.set_meta("speed", 55.0)
 	shell.set_meta("damage", 28.0)
