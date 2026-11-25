@@ -31,7 +31,7 @@ func _physics_process(delta: float) -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if not hit.is_empty():
 		var body: Object = hit.collider
-		if body is WbmTank:
+		if body is Node and body.has_method("apply_damage") and int(body.get("team")) != team:
 			body.apply_damage(damage, team, hit.position)
 		global_position = hit.position
 		queue_free()
