@@ -374,6 +374,37 @@ func _add_aircraft_scorch(impact: Vector3) -> void:
 	mark.scale = Vector3(1.25, 0.2, 0.7)
 	add_child(mark)
 
+	# Final airframe detailing: trailing-edge flaps, hinges, aerials, pitot probe and gun ports.
+	var control_surface_mat := _air_material(Color(0.17, 0.22, 0.24), 0.62, 0.58)
+	var fastener_mat := _air_material(Color(0.36, 0.39, 0.39), 0.82, 0.42)
+	for side in [-1.0, 1.0]:
+		# Segmented flap panels and hinge fairings along both wing trailing edges.
+		for flap_index in range(3):
+			var flap_x: float = side * (1.15 + float(flap_index) * 1.28)
+			var flap := _air_box(Vector3(1.12, 0.075, 0.48), Vector3(flap_x, -0.13, 0.76), control_surface_mat)
+			flap.rotation.x = -0.035
+			for hinge_index in range(2):
+				_air_cylinder(0.045, 0.18, Vector3(flap_x + side * (hinge_index - 0.5) * 0.72, -0.19, 0.48), Vector3(0, 0, PI / 2.0), fastener_mat, 8)
+		# Wing access covers and restrained fastener rows.
+		for panel_index in range(3):
+			var panel_x: float = side * (1.0 + float(panel_index) * 1.25)
+			_air_box(Vector3(0.62, 0.018, 0.34), Vector3(panel_x, -0.008, -0.35), control_surface_mat)
+			for bolt_index in range(4):
+				var bolt_x: float = panel_x + (float(bolt_index) - 1.5) * 0.13
+				_air_cylinder(0.018, 0.022, Vector3(bolt_x, 0.006, -0.48), Vector3.ZERO, fastener_mat, 6)
+		# Exhaust lips and inspection details on the engine nacelles.
+		_air_cylinder(0.235, 0.12, Vector3(side * 2.45, -0.05, 1.98), Vector3(PI / 2.0, 0, 0), fastener_mat, 16)
+		_air_box(Vector3(0.12, 0.06, 0.38), Vector3(side * 2.45, 0.20, 0.85), dark)
+	# Pitot tube on the port wing and dorsal radio aerial.
+	_air_cylinder(0.025, 0.82, Vector3(-5.15, -0.04, -0.72), Vector3(PI / 2.0, 0, 0), fastener_mat, 8)
+	_air_cylinder(0.025, 0.62, Vector3(0, 0.72, 1.35), Vector3(0.16, 0, 0), dark, 8)
+	_air_cylinder(0.035, 0.16, Vector3(0, 0.99, 1.63), Vector3.ZERO, fastener_mat, 8)
+	# Recessed-looking gun ports and small service panels at the wing roots.
+	for side in [-1.0, 1.0]:
+		for port_index in range(2):
+			_air_cylinder(0.055, 0.035, Vector3(side * (1.35 + float(port_index) * 0.34), -0.005, -1.02), Vector3(PI / 2.0, 0, 0), dark, 10)
+		_air_box(Vector3(0.32, 0.025, 0.22), Vector3(side * 0.82, 0.015, -0.38), marking)
+
 func _air_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
