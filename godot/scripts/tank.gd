@@ -142,14 +142,14 @@ func fire_shell() -> void:
 	mat.emission = Color(1.0, 0.24, 0.035)
 	visual.material_override = mat
 	shell.add_child(visual)
-	get_tree().current_scene.add_child(shell)
-	shell.global_position = muzzle.global_position
 	var direction := -turret.global_transform.basis.z
 	shell.set_meta("team", team)
 	shell.set_meta("direction", direction)
 	shell.set_meta("speed", 55.0)
 	shell.set_meta("damage", 28.0)
 	shell.set_script(load("res://scripts/shell.gd"))
+	get_tree().current_scene.add_child(shell)
+	shell.global_position = muzzle.global_position
 
 func apply_damage(amount: float, attacker_team: int) -> void:
 	if attacker_team == team or health <= 0.0:
