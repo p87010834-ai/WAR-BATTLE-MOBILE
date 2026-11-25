@@ -386,6 +386,32 @@ func _build_ship() -> void:
 	collision.shape = shape
 	add_child(collision)
 
+	# Final deck completion: continuous safety rails, navigation beacons and bridge instruments.
+	var rail_mat := _ship_material(Color(0.42, 0.44, 0.42), 0.82, 0.4)
+	var beacon_mat := _ship_material(Color(0.92, 0.52, 0.14), 0.08, 0.28)
+	beacon_mat.emission_enabled = true
+	beacon_mat.emission = Color(0.22, 0.075, 0.012)
+	for side in [-1.0, 1.0]:
+		# Two continuous handrails connecting the deck-edge stanchions.
+		for rail_height in [1.42, 1.58]:
+			_ship_box(Vector3(0.055, 0.055, 10.2), Vector3(side * 1.94, rail_height, -0.15), rail_mat)
+		# Deck floodlights and low-profile navigation lamps.
+		for lamp_z in [-4.4, -0.8, 3.0, 6.4]:
+			_ship_box(Vector3(0.22, 0.12, 0.18), Vector3(side * 1.72, 1.35, lamp_z), dark)
+			_ship_cylinder(0.075, 0.055, Vector3(side * 1.72, 1.43, lamp_z), Vector3.ZERO, beacon_mat, 10)
+		# Bridge-side armored viewports and signal-light brackets.
+		_ship_box(Vector3(0.045, 0.28, 0.42), Vector3(side * 1.30, 3.20, 2.22), glass)
+		_ship_box(Vector3(0.16, 0.08, 0.12), Vector3(side * 1.28, 3.48, 2.22), steel)
+	# Bridge rangefinder housings and compact searchlight pair.
+	for side in [-1.0, 1.0]:
+		_ship_cylinder(0.16, 0.22, Vector3(side * 0.72, 3.92, 2.08), Vector3.ZERO, dark, 12)
+		_ship_cylinder(0.12, 0.08, Vector3(side * 0.72, 4.06, 2.08), Vector3.ZERO, beacon_mat, 12)
+	# Bow and stern mooring fairleads with visible cheek plates.
+	for side in [-1.0, 1.0]:
+		for fairlead_z in [-8.55, 8.15]:
+			_ship_box(Vector3(0.22, 0.12, 0.52), Vector3(side * 1.72, 1.18, fairlead_z), steel)
+			_ship_cylinder(0.11, 0.10, Vector3(side * 1.80, 1.28, fairlead_z), Vector3(0, 0, PI / 2.0), dark, 12)
+
 func _ship_material(color: Color, metal: float, rough: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
