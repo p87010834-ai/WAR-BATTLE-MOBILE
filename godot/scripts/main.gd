@@ -191,6 +191,7 @@ func _build_capture_points() -> void:
 		var point := WbmCapturePoint.new()
 		point.point_name = ["АЛЬФА", "БРАВО", "ЧАРЛИ"][i]
 		point.position = [Vector3(-32, 0.08, 0), Vector3(0, 0.08, -7), Vector3(32, 0.08, 0)][i]
+		point.captured.connect(_on_capture_point_captured)
 		add_child(point)
 		capture_points.append(point)
 
@@ -226,6 +227,10 @@ func _get_alive_tanks() -> Array[WbmTank]:
 		if is_instance_valid(tank):
 			result.append(tank)
 	return result
+
+func _on_capture_point_captured(team: int) -> void:
+	if team == 0:
+		missions.add_progress("capture_3")
 
 func _on_tank_destroyed(tank: WbmTank) -> void:
 	if tank.is_player:
