@@ -21,7 +21,8 @@ func _process(_delta: float) -> void:
 		if mode != current_mode:
 			_release_vehicle_actions()
 			current_mode = mode
-	repair_button.visible = current_mode == "tank"
+	repair_button.visible = current_mode == "tank" or current_mode == "ship"
+	repair_button.text = "РЕМОНТ" if current_mode == "tank" else "АВАРИЙНЫЙ РЕМОНТ"
 	for button in flight_buttons:
 		button.visible = current_mode == "aircraft"
 
@@ -79,8 +80,17 @@ func _build_repair_button() -> void:
 	repair_button.add_theme_stylebox_override("normal", _button_style(Color(0.12, 0.38, 0.22, 0.92)))
 	repair_button.add_theme_stylebox_override("pressed", _button_style(Color(0.2, 0.62, 0.3, 1.0)))
 	add_child(repair_button)
-	repair_button.button_down.connect(func(): Input.action_press("repair"))
-	repair_button.button_up.connect(func(): Input.action_release("repair"))
+	repair_button.button_down.connect(_repair_down)
+	repair_button.button_up.connect(_repair_up)
+
+func _repair_down() -> void:
+	var action := "ship_repair" if current_mode == "ship" else "repair"
+	Input.action_press(action)
+
+func _repair_up() -> void:
+	for action in ["repair", "ship_repair"]:
+		if Input.is_action_pressed(action):
+			Input.action_release(action)
 
 func _button_style(color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -176,7 +186,7 @@ func _fire_up() -> void:
 	Input.action_release(action)
 
 func _release_vehicle_actions() -> void:
-	for action in ["turn_left", "turn_right", "move_forward", "move_backward", "air_yaw_left", "air_yaw_right", "air_pitch_up", "air_pitch_down", "air_roll_left", "air_roll_right", "air_throttle_up", "air_throttle_down", "ship_turn_left", "ship_turn_right", "ship_forward", "ship_reverse", "fire", "air_fire", "ship_fire"]:
+	for action in ["turn_left", "turn_right", "move_forward", "move_backward", "air_yaw_left", "air_yaw_right", "air_pitch_up", "air_pitch_down", "air_roll_left", "air_roll_right", "air_throttle_up", "air_throttle_down", "ship_turn_left", "ship_turn_right", "ship_forward", "ship_reverse", "fire", "air_fire", "ship_fire", "repair", "ship_repair"]:
 		if Input.is_action_pressed(action):
 			Input.action_release(action)
 
