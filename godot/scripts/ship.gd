@@ -29,6 +29,9 @@ func _ready() -> void:
 	add_to_group("naval_vehicles")
 	health = max_health
 	_build_ship()
+	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+	if audio:
+		audio.attach_engine(self, "ship")
 
 func _physics_process(delta: float) -> void:
 	weapon_cooldown = maxf(0.0, weapon_cooldown - delta)
@@ -91,6 +94,9 @@ func fire_guns() -> void:
 	if weapon_cooldown > 0.0 or weapons_health <= 0.0 or health <= 0.0:
 		return
 	weapon_cooldown = 2.4 if weapons_health > 45.0 else 4.0
+	var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+	if audio:
+		audio.play_event("naval", global_position, 0.0)
 	if is_instance_valid(target) and target.has_method("apply_damage"):
 		var distance := global_position.distance_to(target.global_position)
 		var forward := -global_transform.basis.z
@@ -132,6 +138,9 @@ func apply_damage(amount: float, attacker_team: int, impact: Vector3 = Vector3.Z
 		_hull_material.albedo_color = Color(0.34, 0.22, 0.17) if health < max_health * 0.35 else (Color(0.29, 0.25, 0.20) if health < max_health * 0.7 else (Color(0.22, 0.30, 0.31) if team == 0 else Color(0.36, 0.20, 0.17)))
 	if health <= 0.0 and not _destroyed_emitted:
 		_destroyed_emitted = true
+		var audio := get_tree().get_first_node_in_group("wbm_audio_manager")
+		if audio:
+			audio.play_event("explosion", global_position, 1.0)
 		destroyed.emit(self)
 		queue_free()
 
