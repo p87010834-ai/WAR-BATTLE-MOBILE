@@ -42,7 +42,9 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 		return result
 	multiplayer.multiplayer_peer = peer
 	is_host = false
-	connected = true
+	connected = false
+	connecting = true
+	connection_status_changed.emit(false, "Подключение к серверу...")
 	return OK
 
 func leave_session() -> void:
