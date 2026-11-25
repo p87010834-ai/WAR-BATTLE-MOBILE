@@ -94,8 +94,8 @@ func _build_vehicle() -> void:
 	var camo := _make_material(Color(0.12, 0.17, 0.12) if team == 0 else Color(0.22, 0.095, 0.075), 0.12, 0.92)
 	var camo_light := _make_material(Color(0.34, 0.31, 0.20) if team == 0 else Color(0.48, 0.27, 0.20), 0.08, 0.95)
 	for patch_index in range(7):
-		var px := [-0.92, 0.62, -0.35, 0.88, -0.7, 0.25, 0.0][patch_index]
-		var pz := [-1.25, -0.82, 0.12, 0.75, 1.25, 1.05, -0.25][patch_index]
+		var px: float = float([-0.92, 0.62, -0.35, 0.88, -0.7, 0.25, 0.0][patch_index])
+		var pz: float = float([-1.25, -0.82, 0.12, 0.75, 1.25, 1.05, -0.25][patch_index])
 		var patch_mat: Material = camo if patch_index % 2 == 0 else camo_light
 		_add_box(self, Vector3(0.48, 0.025, 0.72), Vector3(px, 1.515, pz), patch_mat)
 	_add_box(self, Vector3(0.08, 0.035, 0.72), Vector3(-1.505, 1.55, -0.15), camo_light)
