@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 		match_over = true
 		if not result_recorded:
 			result_recorded = true
-			var won := team_score[0] > team_score[1]
+			var won: bool = int(team_score[0]) > int(team_score[1])
 			profile.add_battle_result(won)
 			missions.add_progress("play_3")
 			achievements.unlock("first_battle")
