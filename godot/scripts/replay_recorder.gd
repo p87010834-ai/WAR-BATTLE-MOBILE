@@ -5,9 +5,12 @@ const MAX_SAMPLES := 18000
 var recording := false
 var elapsed := 0.0
 var samples: Array[Dictionary] = []
+var last_sample_time_by_id: Dictionary = {}
+var sample_interval := 0.2
 
 func start_recording() -> void:
 	samples.clear()
+	last_sample_time_by_id.clear()
 	elapsed = 0.0
 	recording = true
 
@@ -17,6 +20,10 @@ func stop_recording() -> void:
 func record_vehicle(vehicle: Node3D, vehicle_id: String, team: int, health: float) -> void:
 	if not recording or not is_instance_valid(vehicle) or samples.size() >= MAX_SAMPLES:
 		return
+	var previous_time := float(last_sample_time_by_id.get(vehicle_id, -sample_interval))
+	if elapsed - previous_time < sample_interval:
+		return
+	last_sample_time_by_id[vehicle_id] = elapsed
 	samples.append({
 		"t": elapsed,
 		"id": vehicle_id,
